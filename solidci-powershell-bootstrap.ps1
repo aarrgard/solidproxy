@@ -32,5 +32,5 @@ $solidCiPowershellLocation=Join-Path $solidCiNugetPackageLocation "content"
 $solidCiPowershellLocation=Join-Path $solidCiPowershellLocation "Content" 
 $solidCiPowershellLocation=Join-Path $solidCiPowershellLocation "Powershell"
 
-Write-Host "Using $solidCiPowershellLocation as location for rpcPowershellScripts variable"
-Write-Output ("##vso[task.setvariable variable=rpcPowershellScripts;]$solidCiPowershellLocation")
+Write-Host "Using $solidCiPowershellLocation as location for SolidCIPowershellScripts variable"
+Write-Output ("##vso[task.setvariable variable=SolidCIPowershellScripts;]$solidCiPowershellLocation")
