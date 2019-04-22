@@ -47,7 +47,7 @@ steps:
   displayName: SolidCI - Nuget prepare
   inputs:
     targetType: "filePath"
-    filePath: $(solidCIPowershellFolder)/AzurePipelineScripts/rpc-nuget-prepare.ps1
+    filePath: $(solidCIPowershellFolder)/AzurePipelineScripts/solidci-nuget-prepare.ps1
   env: 
     projectFolder: $(projectFolder)
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
