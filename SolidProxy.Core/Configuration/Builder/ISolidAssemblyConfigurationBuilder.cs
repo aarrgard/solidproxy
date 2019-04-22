@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -11,6 +12,13 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Returns all the configured interfaces.
         /// </summary>
         IEnumerable<ISolidInterfaceConfigurationBuilder> Interfaces { get; }
+
+        /// <summary>
+        /// Configures the specified interface.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        ISolidInterfaceConfigurationBuilder ConfigureInterface(Type t);
 
         /// <summary>
         /// Configures the specified interface.

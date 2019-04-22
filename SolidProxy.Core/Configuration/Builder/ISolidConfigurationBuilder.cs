@@ -11,7 +11,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Returns all the interface assemblies
         /// </summary>
-        IEnumerable<ISolidAssemblyConfigurationBuilder> AssemblyScopes { get; }
+        IEnumerable<ISolidAssemblyConfigurationBuilder> AssemblyBuilders { get; }
 
         /// <summary>
         /// Configures the specified assembly.

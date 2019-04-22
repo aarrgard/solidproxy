@@ -13,4 +13,10 @@
     <PackageReference Include="SolidCI.Azure" Version="1.0.0-build004" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SolidProxy.Core\SolidProxy.Core.csproj" />
+    <ProjectReference Include="..\SolidProxy.MicrosoftDI\SolidProxy.MicrosoftDI.csproj" />
+    <ProjectReference Include="..\SolidProxy.UnityDI\SolidProxy.UnityDI.csproj" />
+  </ItemGroup>
+
 </Project>

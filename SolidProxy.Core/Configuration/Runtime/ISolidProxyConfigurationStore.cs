@@ -18,7 +18,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <summary>
         /// The configuration builder - may be shared across IoC containers.
         /// </summary>
-        ISolidConfigurationBuilder RpcConfigurationBuilder { get; }
+        ISolidConfigurationBuilder SolidConfigurationBuilder { get; }
 
         /// <summary>
         /// Returns the proxy configuration for specified interface.
