@@ -17,3 +17,4 @@ The solid proxy project can be used to implement and/or wrap registrations in an
         }
     }
  
+Have a look at the [wiki](https://github.com/aarrgard/solidproxy/wiki) for more info.
