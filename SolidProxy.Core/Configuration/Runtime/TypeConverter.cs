@@ -12,7 +12,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     public class TypeConverter
     {
         /// <summary>
-        /// Returns the type "root" type. Strips off Task<> and Nullable<>.
+        /// Returns the type "root" type. Strips off Task<>
         /// </summary>
         /// <param name="methodReturnType"></param>
         /// <returns></returns>
@@ -27,13 +27,6 @@ namespace SolidProxy.Core.Configuration.Runtime
                 else
                 {
                     return typeof(object);
-                }
-            }
-            if (type.IsGenericType)
-            {
-                if (typeof(Nullable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
-                {
-                    return GetRootType(type.GetGenericArguments()[0]);
                 }
             }
             return type;
