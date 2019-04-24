@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SolidProxy.MicrosoftDI
+namespace SolidProxy.UnityDI
 {
     public class Class1
     {

@@ -30,7 +30,7 @@ namespace SolidProxy.Core
     /// <summary>
     /// Represents a proxy.
     /// </summary>
-    public interface IRpcProxy<T> : ISolidProxy where T : class
+    public interface ISolidProxy<T> : ISolidProxy where T : class
     {
         /// <summary>
         /// Returns the proxy implementing the interface.

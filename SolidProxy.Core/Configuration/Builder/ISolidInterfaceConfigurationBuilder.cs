@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
@@ -8,6 +9,11 @@ namespace SolidProxy.Core.Configuration.Builder
     /// </summary>
     public interface ISolidInterfaceConfigurationBuilder : ISolidConfigurationScope
     {
+        /// <summary>
+        /// Returns the interface type.
+        /// </summary>
+        Type InterfaceType { get; }
+
         /// <summary>
         /// Returns all the configured methods.
         /// </summary>
