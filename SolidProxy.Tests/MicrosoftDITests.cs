@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Proxy;
 
 namespace Tests
@@ -39,7 +40,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), $"[Type.FullName:{typeof(ITestInterface).FullName}]");
+            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
             sc.AddSolidPipeline();
 
             var sp = sc.BuildServiceProvider();
@@ -55,7 +56,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), $"[Method.Name:get_{nameof(ITestInterface.Int1)}]");
+            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.Name.EndsWith(nameof(ITestInterface.Int1)) ? SolidScopeType.Method : SolidScopeType.None);
             sc.AddSolidPipeline();
 
             var sp = sc.BuildServiceProvider();

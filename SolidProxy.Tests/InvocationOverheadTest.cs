@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using SolidProxy.Core.Configuration.Builder;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ namespace SolidProxy.Tests
             await RunTests($"plain-{nameof(ResolveOnceAndGetInt)}", sc.BuildServiceProvider(), ResolveOnceAndGetInt);
             await RunTests($"plain-{nameof(ResolveOnceAndGetIntAsync)}", sc.BuildServiceProvider(), ResolveOnceAndGetIntAsync);
 
-            sc.AddSolidProxy(o => { }, $"[Type.FullName:{typeof(ITestInterface).FullName}]");
+            sc.AddSolidProxy(o => o.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
             sc.AddSolidPipeline();
 
             await RunTests($"wrapped-{nameof(ResolveAndGetInt)}", sc.BuildServiceProvider(), ResolveAndGetInt);
@@ -62,15 +63,16 @@ namespace SolidProxy.Tests
             logger.LogInformation($"{numIterations} {test} invocations took {sw.Elapsed}");
         }
 
-        private async Task ResolveAndGetInt(ServiceProvider serviceProvider, int numIterations)
+        private Task ResolveAndGetInt(ServiceProvider serviceProvider, int numIterations)
         {
             for (int i = 0; i < numIterations; i++)
             {
                 var res = serviceProvider.GetRequiredService<ITestInterface>().GetInt(i);
                 if (res != i) throw new Exception();
             }
+            return Task.CompletedTask;
         }
-        private async Task ResolveOnceAndGetInt(ServiceProvider serviceProvider, int numIterations)
+        private Task ResolveOnceAndGetInt(ServiceProvider serviceProvider, int numIterations)
         {
             var testInterface = serviceProvider.GetRequiredService<ITestInterface>();
             for (int i = 0; i < numIterations; i++)
@@ -78,6 +80,7 @@ namespace SolidProxy.Tests
                 var res = testInterface.GetInt(i);
                 if (res != i) throw new Exception();
             }
+            return Task.CompletedTask;
         }
         private async Task ResolveOnceAndGetIntAsync(ServiceProvider serviceProvider, int numIterations)
         {
