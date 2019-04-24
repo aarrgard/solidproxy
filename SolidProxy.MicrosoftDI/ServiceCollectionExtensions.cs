@@ -16,6 +16,60 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
+        public static IServiceCollection AddSolidProxy(this IServiceCollection services, Action<ISolidConfigurationScope> action = default(Action<ISolidConfigurationScope>), params string[] matchers)
+        {
+            // match services 
+            var signatureMatcher = new SignatureMatcher();
+            foreach (var service in services.ToList())
+            {
+                foreach (var method in service.ServiceType.GetMethods())
+                {
+                    bool matched = false;
+                    if (matchers.Length == 0)
+                    {
+                        matched = true;
+                        action(services.GetSolidConfigurationBuilder());
+                    }
+                    else if (signatureMatcher.AssemblyMatches(method, matchers))
+                    {
+                        matched = true;
+                        action(services.GetSolidConfigurationBuilder()
+                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly));
+
+                    }
+                    else if (signatureMatcher.TypeMatches(method, matchers))
+                    {
+                        matched = true;
+                        action(services.GetSolidConfigurationBuilder()
+                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
+                            .ConfigureInterface(service.ServiceType));
+                    }
+                    else if (signatureMatcher.MethodMatches(method, matchers))
+                    {
+                        matched = true;
+                        action(services.GetSolidConfigurationBuilder()
+                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
+                            .ConfigureInterface(service.ServiceType)
+                            .ConfigureMethod(method));
+                    }
+
+                    if(matched)
+                    {
+                        services.GetSolidConfigurationBuilder()
+                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
+                            .ConfigureInterface(service.ServiceType)
+                            .ConfigureMethod(method);
+                    }
+                }
+            }
+            return services;
+        }
+
+        /// <summary>
+        /// Adds a proxy invocation step.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
         public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, params string[] matchers)
         {
             if(!invocationStepType.IsGenericType)
@@ -30,50 +84,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 throw new Exception($"Invocation step type implement {typeof(ISolidProxyInvocationStep).FullName}");
             }
-
-            // match services 
-            var signatureMatcher = new SignatureMatcher();
-            foreach (var service in services.ToList())
-            {
-                foreach(var method in service.ServiceType.GetMethods())
-                {
-                    if (matchers.Length == 0)
-                    {
-                        services.GetSolidConfigurationBuilder()
-                            .AddSolidInvocationStep(invocationStepType)
-                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                            .ConfigureInterface(service.ServiceType)
-                            .ConfigureMethod(method);
-                    }
-                    else if (signatureMatcher.AssemblyMatches(method, matchers))
-                    {
-                        services.GetSolidConfigurationBuilder()
-                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                            .AddSolidInvocationStep(invocationStepType)
-                            .ConfigureInterface(service.ServiceType)
-                            .ConfigureMethod(method);
-
-                    }
-                    else if (signatureMatcher.TypeMatches(method, matchers))
-                    {
-                        services.GetSolidConfigurationBuilder()
-                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                            .ConfigureInterface(service.ServiceType)
-                            .AddSolidInvocationStep(invocationStepType)
-                            .ConfigureMethod(method);
-
-                    }
-                    else if (signatureMatcher.MethodMatches(method, matchers))
-                    {
-                        services.GetSolidConfigurationBuilder()
-                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                            .ConfigureInterface(service.ServiceType)
-                            .ConfigureMethod(method)
-                            .AddSolidInvocationStep(invocationStepType);
-                    }
-                }
-            }
-
+            services.AddSolidProxy(o => o.AddSolidInvocationStep(invocationStepType), matchers);
             return services;
         }
 
