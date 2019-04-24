@@ -29,7 +29,7 @@ namespace SolidProxy.Tests
         }
 
         [Test]
-        public async Task TestAddInterfaceInvocationStep()
+        public async Task TestInvocationOverhead()
         {
             var sc = new ServiceCollection();
             sc.AddLogging(o =>
