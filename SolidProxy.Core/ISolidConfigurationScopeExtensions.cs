@@ -1,36 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using SolidProxy.Core.Proxy;
+﻿using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
-namespace SolidProxy.Core.Configuration.Runtime
-{
-    public static class ISolidConfigurationScopeExtensions
-    {
-        public static IEnumerable<ISolidProxyInvocationStep> GetSolidInvocationSteps<T>(this T configScope) where T : ISolidProxyInvocationConfiguration
-        {
-            var pipelineSteps = (IList<ISolidProxyInvocationStep>)configScope[nameof(GetSolidInvocationSteps)];
-            if (pipelineSteps == null)
-            {
-                var stepTypes = configScope.GetSolidInvocationStepTypes().ToList();
-                var sp = configScope.ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
-                pipelineSteps = stepTypes.Select(t => {
-                    if (t.IsGenericTypeDefinition)
-                    {
-                        t = t.MakeGenericType(new[] { configScope.MethodInfo.DeclaringType, configScope.MethodInfo.ReturnType, configScope.PipelineType });
-                    }
-                    return (ISolidProxyInvocationStep)sp.GetRequiredService(t);
-                }).ToList();
-
-                // cache the pipeline.
-                configScope[nameof(GetSolidInvocationSteps)] = pipelineSteps;
-            }
-
-            return pipelineSteps;
-        }
-    }
-}
 
 namespace SolidProxy.Core.Configuration
 {
@@ -53,12 +23,15 @@ namespace SolidProxy.Core.Configuration
         /// <returns></returns>
         public static TScope AddSolidInvocationStep<TScope>(this TScope configScope, Type pipelineType) where TScope : ISolidConfigurationScope
         {
-            var invocationSteps = (IList<Type>)configScope[nameof(GetSolidInvocationStepTypes)];
+            var invocationSteps =configScope.GetValue<IList<Type>>(nameof(GetSolidInvocationStepTypes), false);
             if (invocationSteps == null)
             {
-                configScope[nameof(GetSolidInvocationStepTypes)] = invocationSteps = new List<Type>();
+                configScope.SetValue(nameof(GetSolidInvocationStepTypes), invocationSteps = new List<Type>());
             }
-            invocationSteps.Add(pipelineType);
+            if(!invocationSteps.Contains(pipelineType))
+            {
+                invocationSteps.Add(pipelineType);
+            }
             return configScope;
         }
 
@@ -69,16 +42,17 @@ namespace SolidProxy.Core.Configuration
         /// <returns></returns>
         public static IEnumerable<Type> GetSolidInvocationStepTypes<T>(this T configScope) where T : ISolidConfigurationScope
         {
-            var pipelineSteps = (IList<Type>)configScope[nameof(GetSolidInvocationStepTypes)] ?? Type.EmptyTypes;
-            var parentScope = configScope.ParentScope;
-            if (parentScope != null)
+            var pipelineSteps = new List<Type>();
+            AddSolidInvocationStepTypes(configScope, pipelineSteps);
+            return pipelineSteps;
+        }
+        private static void AddSolidInvocationStepTypes(ISolidConfigurationScope configScope, List<Type> pipelineSteps)
+        {
+            if(configScope.ParentScope != null)
             {
-                return parentScope.GetSolidInvocationStepTypes().Union(pipelineSteps);
+                AddSolidInvocationStepTypes(configScope.ParentScope, pipelineSteps);
             }
-            else
-            {
-                return pipelineSteps;
-            }
+            pipelineSteps.AddRange(configScope.GetValue<IList<Type>>(nameof(GetSolidInvocationStepTypes), false) ?? Type.EmptyTypes);
         }
 
         /// <summary>
@@ -90,7 +64,7 @@ namespace SolidProxy.Core.Configuration
         /// <param name="fact"></param>
         public static void SetSolidImplementationFactory<T1, T2>(this T1 configScope, Func<IServiceProvider, T2> fact) where T1 : ISolidConfigurationScope where T2 : class
         {
-            configScope[nameof(GetSolidImplementationFactory)] = fact;
+            configScope.SetValue(nameof(GetSolidImplementationFactory), fact);
         }
 
         /// <summary>
@@ -102,7 +76,7 @@ namespace SolidProxy.Core.Configuration
         /// <returns></returns>
         public static Func<IServiceProvider, T2> GetSolidImplementationFactory<T1, T2>(this T1 configScope) where T1 : ISolidConfigurationScope where T2 : class
         {
-            return (Func<IServiceProvider, T2>)configScope[nameof(GetSolidImplementationFactory)];
+            return configScope.GetValue<Func<IServiceProvider, T2>>(nameof(GetSolidImplementationFactory), true);
         }
     }
 }

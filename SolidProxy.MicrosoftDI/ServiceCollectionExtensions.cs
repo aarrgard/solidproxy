@@ -4,6 +4,7 @@ using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -64,6 +65,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     }
                 }
             }
+            services.AddSolidPipeline();
             return services;
         }
 
@@ -84,7 +86,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
             if(!typeof(ISolidProxyInvocationStep).IsAssignableFrom(invocationStepType))
             {
-                throw new Exception($"Invocation step type implement {typeof(ISolidProxyInvocationStep).FullName}");
+                throw new Exception($"Invocation step type must implement {typeof(ISolidProxyInvocationStep).FullName}");
             }
             services.AddSolidProxy(matcher, o => o.AddSolidInvocationStep(invocationStepType));
             return services;
@@ -122,11 +124,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidPipeline(this IServiceCollection services)
+        private static IServiceCollection AddSolidPipeline(this IServiceCollection services)
         {
-            services.DoIfMissing<IProxyGenerator>(() => services.AddSingleton<IProxyGenerator, ProxyGenerator>());
-            services.DoIfMissing<ISolidProxyConfigurationStore>(() => services.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
-            services.DoIfMissing<ISolidConfigurationBuilder>(() => services.AddSingleton<ISolidConfigurationBuilder>(sp => sp.GetRequiredService<SolidConfigurationBuilder>()));
+            var serviceTypes = GetServiceTypes(services);
+            serviceTypes.DoIfMissing<IProxyGenerator>(() => services.AddSingleton<IProxyGenerator, ProxyGenerator>());
+            serviceTypes.DoIfMissing<ISolidProxyConfigurationStore>(() => services.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
+            serviceTypes.DoIfMissing<ISolidConfigurationBuilder>(() => services.AddSingleton<ISolidConfigurationBuilder>(sp => sp.GetRequiredService<SolidConfigurationBuilder>()));
 
             // create the proxies
             services.GetSolidConfigurationBuilder()
@@ -134,7 +137,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .SelectMany(o => o.Interfaces)
                 .ToList()
                 .ForEach(o => {
-                    s_RegisterService.MakeGenericMethod(new[] { o.InterfaceType }).Invoke(null, new[] { services });
+                    s_RegisterService.MakeGenericMethod(new[] { o.InterfaceType }).Invoke(null, new object[] { serviceTypes, services });
                 });
 
             // register all the pipline step types in the container
@@ -149,16 +152,23 @@ namespace Microsoft.Extensions.DependencyInjection
                 .ToList()
                 .ForEach(o =>
                 {
-                    services.DoIfMissing(o, () => services.AddSingleton(o, o));
+                    serviceTypes.DoIfMissing(o, () => services.AddSingleton(o, o));
                 });
 
 
             return services;
         }
 
-        private static void RegisterService<T>(this IServiceCollection services) where T : class
+        private static HashSet<Type> GetServiceTypes(IServiceCollection services)
         {
-            services.DoIfMissing<RpcProxy<T>>(() =>
+            var serviceTypes = new HashSet<Type>();
+            services.ToList().ForEach(o => serviceTypes.Add(o.ServiceType));
+            return serviceTypes;
+        }
+
+        private static void RegisterService<T>(HashSet<Type> serviceTypes, IServiceCollection services) where T : class
+        {
+            serviceTypes.DoIfMissing<RpcProxy<T>>(() =>
             {
                 // get the service definition and remove it(added later)
                 var service = services.Single(o => o.ServiceType == typeof(T));
@@ -168,18 +178,25 @@ namespace Microsoft.Extensions.DependencyInjection
                 var rpcConfig = services.GetSolidConfigurationBuilder();
                 var interfaceConfig = rpcConfig.ConfigureInterface<T>();
 
+                bool hasImplementation = false;
                 if (service.ImplementationFactory != null)
                 {
+                    hasImplementation = true;
                     interfaceConfig.SetSolidImplementationFactory(sp => (T)service.ImplementationFactory.Invoke(sp));
                 }
                 else if (service.ImplementationInstance != null)
                 {
+                    hasImplementation = true;
                     interfaceConfig.SetSolidImplementationFactory(sp => (T)service.ImplementationInstance);
                 }
                 else if (service.ImplementationType != null)
                 {
-                    services.DoIfMissing(service.ImplementationType, () => services.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
-                    interfaceConfig.SetSolidImplementationFactory(sp => (T)sp.GetRequiredService(service.ImplementationType));
+                    if(service.ImplementationType.IsClass)
+                    {
+                        hasImplementation = true;
+                        serviceTypes.DoIfMissing(service.ImplementationType, () => services.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
+                        interfaceConfig.SetSolidImplementationFactory(sp => (T)sp.GetRequiredService(service.ImplementationType));
+                    }
                 }
                 else
                 {
@@ -210,8 +227,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 //
                 typeof(T).GetMethods().ToList().ForEach(o =>
                 {
-                    interfaceConfig.ConfigureMethod(o)
-                        .AddSolidInvocationStep(typeof(SolidProxyInvocationStep<,,>));
+                    var methodConfigScope = interfaceConfig.ConfigureMethod(o);
+                    if(hasImplementation)
+                    {
+                        methodConfigScope.AddSolidInvocationStep(typeof(SolidProxyInvocationStep<,,>));
+                    }
+                       
                 });
             });
         }
@@ -222,7 +243,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="T"></typeparam>
         /// <param name="services"></param>
         /// <param name="action"></param>
-        public static void DoIfMissing<T>(this IServiceCollection services, Action action)
+        public static void DoIfMissing<T>(this HashSet<Type> services, Action action)
         {
             services.DoIfMissing(typeof(T), action);
         }
@@ -233,13 +254,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="serviceType"></param>
         /// <param name="action"></param>
-        public static void DoIfMissing(this IServiceCollection services, Type serviceType, Action action)
+        public static void DoIfMissing(this HashSet<Type> services, Type serviceType, Action action)
         {
-            if (services.Any(o => o.ServiceType == serviceType))
+            if (services.Contains(serviceType))
             {
                 return;
             }
             action();
+            services.Add(serviceType);
         }
     }
 }

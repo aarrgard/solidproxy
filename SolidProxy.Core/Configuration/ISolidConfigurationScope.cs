@@ -15,11 +15,16 @@ namespace SolidProxy.Core.Configuration
         ISolidConfigurationScope ParentScope { get; }
 
         /// <summary>
-        /// Gets/sets a configuration value in this scope.
+        /// Gets a configuration value in this scope.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        object this[string key] { get; set; }
+        T GetValue<T>(string key, bool searchParentScopes);
+
+        /// <summary>
+        /// Sets the value
+        /// </summary>
+        void SetValue<T>(string key, T value);
 
         /// <summary>
         /// Returns true if this or any of the parent scopes are locked.

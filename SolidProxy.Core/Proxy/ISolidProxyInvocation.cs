@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
+using System.Collections.Generic;
 
 namespace SolidProxy.Core.Proxy
 {
@@ -8,6 +9,22 @@ namespace SolidProxy.Core.Proxy
     /// </summary>
     public interface ISolidProxyInvocation
     {
+        /// <summary>
+        /// Returns the scoped value associated with this invocation
+        /// </summary>
+        /// <typeparam name="T">The type of value</typeparam>
+        /// <param name="v">the name of the value</param>
+        /// <returns></returns>
+        T GetValue<T>(string key);
+
+        /// <summary>
+        /// Sets the value for supplied key.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key to associated the value with</param>
+        /// <param name="value">The value</param>
+        void SetValue<T>(string key, T value);
+
         /// <summary>
         /// This is the service provider that the proxy belongs to
         /// </summary>
@@ -34,6 +51,8 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         /// <returns></returns>
         object GetReturnValue();
+
+        bool IsLastStep { get; }
     }
 
     /// <summary>
@@ -45,5 +64,10 @@ namespace SolidProxy.Core.Proxy
     public interface ISolidProxyInvocation<TObject, TReturnType, TPipeline> : ISolidProxyInvocation where TObject : class
     {
         new ISolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> SolidProxyInvocationConfiguration { get; }
+
+        /// <summary>
+        /// Returns the invocation steps.
+        /// </summary>
+        IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
     }
 }

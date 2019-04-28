@@ -41,7 +41,6 @@ namespace Tests
             sc.AddScoped<ITestInterface, TestImplementation>();
 
             sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
-            sc.AddSolidPipeline();
 
             var sp = sc.BuildServiceProvider();
 
@@ -57,7 +56,6 @@ namespace Tests
             sc.AddScoped<ITestInterface, TestImplementation>();
 
             sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.Name.EndsWith(nameof(ITestInterface.Int1)) ? SolidScopeType.Method : SolidScopeType.None);
-            sc.AddSolidPipeline();
 
             var sp = sc.BuildServiceProvider();
 

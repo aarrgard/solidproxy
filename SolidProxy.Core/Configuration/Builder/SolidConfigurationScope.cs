@@ -11,25 +11,23 @@ namespace SolidProxy.Core.Configuration.Builder
             ParentScope = parentScope;
         }
 
-        public object this[string key]
+        public T GetValue<T>(string key, bool searchParentScope)
         {
-            get
+            object val;
+            if (_items.TryGetValue(key, out val))
             {
-                object val;
-                if (_items.TryGetValue(key, out val))
-                {
-                    return val;
-                }
-                if (ParentScope != null)
-                {
-                    return ParentScope[key];
-                }
-                return null;
+                return (T)val;
             }
-            set
+            if(searchParentScope &&  ParentScope != null)
             {
-                _items[key] = value;
+                return ParentScope.GetValue<T>(key, searchParentScope);
             }
+            return default(T);
+        }
+
+        public void SetValue<T>(string key, T value)
+        {
+            _items[key] = value;
         }
 
 

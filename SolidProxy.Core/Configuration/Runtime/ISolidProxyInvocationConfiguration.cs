@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Proxy;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -57,5 +58,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// Converts the pipeline type to the type returned by the method.
         /// </summary>
         Func<Task<TPipeline>, TReturnType> TPipelineToTReturnTypeConverter { get; }
+
+        /// <summary>
+        /// Returns the invocation steps configured for this invocation.
+        /// </summary>
+        /// <returns></returns>
+        IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps();
     }
 }
