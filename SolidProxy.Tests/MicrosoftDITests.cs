@@ -40,7 +40,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
+            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
 
             var sp = sc.BuildServiceProvider();
 
@@ -55,7 +55,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.Name.EndsWith(nameof(ITestInterface.Int1)) ? SolidScopeType.Method : SolidScopeType.None);
+            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)) ? SolidScopeType.Method : SolidScopeType.None);
 
             var sp = sc.BuildServiceProvider();
 

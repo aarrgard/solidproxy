@@ -13,5 +13,9 @@ namespace SolidProxy.Core.Configuration.Builder
         public SolidInterfaceConfigurationBuilder<T> ProxyConfiguration { get; }
 
         public MethodInfo MethodInfo { get; }
+
+        ISolidInterfaceConfigurationBuilder<T> ISolidMethodConfigurationBuilder<T>.ParentScope => (ISolidInterfaceConfigurationBuilder<T>) ParentScope;
+
+        ISolidInterfaceConfigurationBuilder ISolidMethodConfigurationBuilder.ParentScope => (ISolidInterfaceConfigurationBuilder) ParentScope;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SolidProxy.Core
+namespace SolidProxy.Core.Proxy
 {
     /// <summary>
     /// Represents a proxy.

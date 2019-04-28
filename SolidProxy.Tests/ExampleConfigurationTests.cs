@@ -35,7 +35,7 @@ namespace SolidProxy.Tests
             services.AddSingleton<ISingletonInterface>();
             services.AddTransient<ITransientInterface>();
 
-            services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>), mi => mi.Name == "GetValue" ? SolidScopeType.Method : SolidScopeType.None);
+            services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue" ? SolidScopeType.Method : SolidScopeType.None);
 
             var sp = services.BuildServiceProvider();
 

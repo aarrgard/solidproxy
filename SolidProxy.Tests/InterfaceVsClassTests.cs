@@ -56,7 +56,7 @@ namespace SolidProxy.Tests
 
             services.AddSolidProxyInvocationStep(
                 typeof(Handler<,>),
-                mi => mi.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
             );
 
             var sp = services.BuildServiceProvider();
@@ -72,7 +72,7 @@ namespace SolidProxy.Tests
 
             services.AddSolidProxyInvocationStep(
                 typeof(Handler<,>),
-                mi => mi.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
             );
 
             var sp = services.BuildServiceProvider();

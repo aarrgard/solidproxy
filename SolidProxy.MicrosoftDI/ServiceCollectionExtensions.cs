@@ -17,51 +17,59 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidProxy(this IServiceCollection services, Func<MethodInfo, SolidScopeType> matcher, Action<ISolidConfigurationScope> action = default(Action<ISolidConfigurationScope>))
+        public static IServiceCollection AddSolidProxy(this IServiceCollection services, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher, Action<ISolidConfigurationScope> action = default(Action<ISolidConfigurationScope>))
         {
             if (action == null) action = _ => { };
+            
+            //
             // match services 
+            //
             foreach (var service in services.ToList())
             {
+                //
+                // we are only interested in interfaces
+                //
+                if (!service.ServiceType.IsInterface)
+                {
+                    continue;
+                }
+
+                //
+                // we are only interested in concrete types
+                //
+                if (service.ServiceType.IsGenericType)
+                {
+                    continue;
+                }
+
                 foreach (var method in service.ServiceType.GetMethods())
                 {
-                    var scope = matcher(method);
-                    var matched = false;
+                    var config = services.GetSolidConfigurationBuilder()
+                        .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
+                        .ConfigureInterface(service.ServiceType)
+                        .ConfigureMethod(method);
+
+                    var scope = matcher(config);
                     switch (scope)
                     {
                         case SolidScopeType.None:
                             break;
                         case SolidScopeType.Global:
-                            matched = true;
-                            action(services.GetSolidConfigurationBuilder());
+                            config.SetEnabled();
+                            action(config.ParentScope.ParentScope.ParentScope);
                             break;
                         case SolidScopeType.Assembly:
-                            matched = true;
-                            action(services.GetSolidConfigurationBuilder()
-                                .ConfigureInterfaceAssembly(service.ServiceType.Assembly));
+                            config.SetEnabled();
+                            action(config.ParentScope.ParentScope);
                             break;
                         case SolidScopeType.Interface:
-                            matched = true;
-                            action(services.GetSolidConfigurationBuilder()
-                                .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                                .ConfigureInterface(service.ServiceType));
+                            config.SetEnabled();
+                            action(config.ParentScope);
                             break;
                         case SolidScopeType.Method:
-                            matched = true;
-                            action(services.GetSolidConfigurationBuilder()
-                                .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                                .ConfigureInterface(service.ServiceType)
-                                .ConfigureMethod(method));
+                            config.SetEnabled();
+                            action(config);
                             break;
-
-                    }
-
-                    if(matched)
-                    {
-                        services.GetSolidConfigurationBuilder()
-                            .ConfigureInterfaceAssembly(service.ServiceType.Assembly)
-                            .ConfigureInterface(service.ServiceType)
-                            .ConfigureMethod(method);
                     }
                 }
             }
@@ -74,7 +82,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, Func<MethodInfo, SolidScopeType> matcher)
+        public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher)
         {
             if(!invocationStepType.IsGenericType)
             {
@@ -133,8 +141,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // create the proxies
             services.GetSolidConfigurationBuilder()
-                .AssemblyBuilders
-                .SelectMany(o => o.Interfaces)
+                .AssemblyBuilders.Where(o => o.IsEnabled())
+                .SelectMany(o => o.Interfaces).Where(o => o.IsEnabled())
                 .ToList()
                 .ForEach(o => {
                     s_RegisterService.MakeGenericMethod(new[] { o.InterfaceType }).Invoke(null, new object[] { serviceTypes, services });
@@ -168,7 +176,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static void RegisterService<T>(HashSet<Type> serviceTypes, IServiceCollection services) where T : class
         {
-            serviceTypes.DoIfMissing<RpcProxy<T>>(() =>
+            serviceTypes.DoIfMissing<SolidProxy<T>>(() =>
             {
                 // get the service definition and remove it(added later)
                 var service = services.Single(o => o.ServiceType == typeof(T));
@@ -209,16 +217,16 @@ namespace Microsoft.Extensions.DependencyInjection
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
-                        services.AddScoped<RpcProxy<T>, RpcProxy<T>>();
-                        services.AddScoped(o => o.GetRequiredService<RpcProxy<T>>().Proxy);
+                        services.AddScoped<SolidProxy<T>, SolidProxy<T>>();
+                        services.AddScoped(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
                         break;
                     case ServiceLifetime.Transient:
-                        services.AddTransient<RpcProxy<T>, RpcProxy<T>>();
-                        services.AddTransient(o => o.GetRequiredService<RpcProxy<T>>().Proxy);
+                        services.AddTransient<SolidProxy<T>, SolidProxy<T>>();
+                        services.AddTransient(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
                         break;
                     case ServiceLifetime.Singleton:
-                        services.AddSingleton<RpcProxy<T>, RpcProxy<T>>();
-                        services.AddSingleton(o => o.GetRequiredService<RpcProxy<T>>().Proxy);
+                        services.AddSingleton<SolidProxy<T>, SolidProxy<T>>();
+                        services.AddSingleton(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
                         break;
                 }
 

@@ -9,14 +9,14 @@ namespace SolidProxy.Core.Proxy
     /// Wrapps an interface and implements logic to delegate to the proxy middleware structures.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class RpcProxy<T> : ISolidProxy<T>, IInterceptor where T : class
+    public class SolidProxy<T> : ISolidProxy<T>, IInterceptor where T : class
     {
         /// <summary>
         /// Constructs a new proxy for an interface.
         /// </summary>
         /// <param name="proxyConfigurationStore"></param>
         /// <param name="proxyGenerator"></param>
-        public RpcProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, IProxyGenerator proxyGenerator)
+        public SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, IProxyGenerator proxyGenerator)
         {
             ServiceProvider = serviceProvider;
             ProxyConfiguration = proxyConfiguration;

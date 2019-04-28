@@ -97,7 +97,7 @@ namespace SolidProxy.Tests
 
             services.AddSolidProxyInvocationStep(
                 typeof(Handler<,,>),
-                mi => mi.GetCustomAttributes(true).OfType<AopAttribute>().Where(o => o.SolidScopeType <= solidScopeType).Select(o => o.SolidScopeType).FirstOrDefault()
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Where(o => o.SolidScopeType <= solidScopeType).Select(o => o.SolidScopeType).FirstOrDefault()
             );
 
             var sp = services.BuildServiceProvider();

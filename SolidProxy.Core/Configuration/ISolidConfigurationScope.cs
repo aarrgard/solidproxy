@@ -24,7 +24,11 @@ namespace SolidProxy.Core.Configuration
         /// <summary>
         /// Sets the value
         /// </summary>
-        void SetValue<T>(string key, T value);
+        /// <typeparam name="T">The value type to write</typeparam>
+        /// <param name="key">the key</param>
+        /// <param name="value">the value</param>
+        /// <param name="writeInParentScopes">Should the value be written in all the parent scopes.</param>
+        void SetValue<T>(string key, T value, bool writeInParentScopes = false);
 
         /// <summary>
         /// Returns true if this or any of the parent scopes are locked.
@@ -35,6 +39,13 @@ namespace SolidProxy.Core.Configuration
         /// Locks this scope.
         /// </summary>
         void Lock();
+
+        /// <summary>
+        /// Exposes this configuration scope through supplied interface.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        T AsInterface<T>() where T : class; 
     }
 
     /// <summary>

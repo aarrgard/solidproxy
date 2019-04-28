@@ -1,10 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<Type, object> _interfaces = new ConcurrentDictionary<Type, object>();
 
         protected SolidConfigurationScope(ISolidConfigurationScope parentScope)
         {
@@ -25,9 +27,13 @@ namespace SolidProxy.Core.Configuration.Builder
             return default(T);
         }
 
-        public void SetValue<T>(string key, T value)
+        public void SetValue<T>(string key, T value, bool writeInParentScopes = false)
         {
             _items[key] = value;
+            if(writeInParentScopes && ParentScope != null)
+            {
+                ParentScope.SetValue(key, value, writeInParentScopes);
+            }
         }
 
 
@@ -47,6 +53,20 @@ namespace SolidProxy.Core.Configuration.Builder
         public void Lock()
         {
             Locked = true;
+        }
+
+        public T AsInterface<T>() where T:class
+        {
+            return (T)_interfaces.GetOrAdd(typeof(T), CreateInterface<T>());
+        }
+
+        private Func<Type, object> CreateInterface<T>() where T : class
+        {
+            return (t) =>
+            {
+                var proxy = new SolidProxy.Core.Proxy.SolidProxy<T>(null, null, null);
+                return proxy;
+            };
         }
     }
 
