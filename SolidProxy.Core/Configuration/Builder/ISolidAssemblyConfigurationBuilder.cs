@@ -26,5 +26,10 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         ISolidInterfaceConfigurationBuilder<T> ConfigureInterface<T>() where T : class;
+
+        /// <summary>
+        /// Returns the global configuration
+        /// </summary>
+        new ISolidConfigurationBuilder ParentScope { get; }
     }
 }

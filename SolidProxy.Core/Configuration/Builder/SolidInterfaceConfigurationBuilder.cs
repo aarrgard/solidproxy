@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
@@ -8,7 +9,7 @@ namespace SolidProxy.Core.Configuration.Builder
     public class SolidInterfaceConfigurationBuilder<T> : SolidConfigurationScope<T>, ISolidInterfaceConfigurationBuilder<T> where T : class
     {
 
-        public SolidInterfaceConfigurationBuilder(SolidAssemblyConfigurationBuilder parent, Type type)
+        public SolidInterfaceConfigurationBuilder(SolidAssemblyConfigurationBuilder parent, Type interfaceType)
             : base(parent)
         {
             MethodBuilders = new ConcurrentDictionary<MethodInfo, ISolidMethodConfigurationBuilder>();
@@ -19,6 +20,8 @@ namespace SolidProxy.Core.Configuration.Builder
         public IEnumerable<ISolidMethodConfigurationBuilder> Methods => MethodBuilders.Values;
 
         public Type InterfaceType => typeof(T);
+
+        ISolidAssemblyConfigurationBuilder ISolidInterfaceConfigurationBuilder<T>.ParentScope => (ISolidAssemblyConfigurationBuilder)ParentScope;
 
         public SolidMethodConfigurationBuilder<T> GetMethodBuilder(MethodInfo methodInfo)
         {
@@ -39,6 +42,16 @@ namespace SolidProxy.Core.Configuration.Builder
         ISolidMethodConfigurationBuilder ISolidInterfaceConfigurationBuilder.ConfigureMethod(MethodInfo methodInfo)
         {
             return GetMethodBuilder(methodInfo);
+        }
+
+        public ISolidMethodConfigurationBuilder<T> ConfigureMethod(Expression<Action<T>> expr)
+        {
+            var callExpr = expr.Body as MethodCallExpression;
+            if(callExpr == null)
+            {
+                throw new Exception($"Cannot determine method from expression {expr}");
+            }
+            return GetMethodBuilder(callExpr.Method);
         }
     }
 }

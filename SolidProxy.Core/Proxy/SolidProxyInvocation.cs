@@ -65,7 +65,7 @@ namespace SolidProxy.Core.Proxy
                 if (stepIdx >= InvocationSteps.Count)
                 {
                     var mi = SolidProxyInvocationConfiguration.MethodInfo;
-                    throw new Exception($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}");
+                    throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}");
                 }
                 InvocationStepIdx = stepIdx;
                 return InvocationSteps[stepIdx].Handle(CreateStepIterator(stepIdx+1), this);

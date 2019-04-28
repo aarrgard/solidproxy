@@ -22,6 +22,8 @@ namespace SolidProxy.Core.Configuration.Builder
 
         private ConcurrentDictionary<Type, ISolidInterfaceConfigurationBuilder> InterfaceBuilders { get; }
 
+        ISolidConfigurationBuilder ISolidAssemblyConfigurationBuilder.ParentScope => (ISolidConfigurationBuilder) ParentScope;
+
         public ISolidInterfaceConfigurationBuilder<T> ConfigureInterface<T>() where T : class
         {
             return (ISolidInterfaceConfigurationBuilder<T>)InterfaceBuilders.GetOrAdd(typeof(T), _ => new SolidInterfaceConfigurationBuilder<T>(this, _));

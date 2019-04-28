@@ -26,6 +26,13 @@ namespace SolidProxy.Tests
                 }
             }
         }
+        public class Handler2<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        {
+            public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
+            {
+                return Task.FromResult(default(TPipeline));
+            }
+        }
 
         public interface ITestInterface
         {

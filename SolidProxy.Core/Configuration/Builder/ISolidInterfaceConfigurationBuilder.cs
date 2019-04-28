@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
@@ -39,5 +40,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="methodInfo"></param>
         /// <returns></returns>
         new ISolidMethodConfigurationBuilder<T> ConfigureMethod(MethodInfo methodInfo);
+
+        /// <summary>
+        /// Configures the method that matches supplied exression.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        ISolidMethodConfigurationBuilder<T> ConfigureMethod(Expression<Action<T>> methodInfo);
+
+        /// <summary>
+        /// Returns the assebly configuration
+        /// </summary>
+        new ISolidAssemblyConfigurationBuilder ParentScope { get; }
     }
 }

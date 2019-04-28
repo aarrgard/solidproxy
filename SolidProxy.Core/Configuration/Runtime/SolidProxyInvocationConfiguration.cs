@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Proxy;
 
@@ -80,7 +79,12 @@ namespace SolidProxy.Core.Configuration.Runtime
                         }
                     }
 
-                    return (ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>)sp.GetRequiredService(t);
+                    var step = (ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>)sp.GetService(t);
+                    if(step == null)
+                    {
+                        throw new Exception($"No step configured for type: {t.FullName}");
+                    }
+                    return step;
                 }).ToList());
             }
 
