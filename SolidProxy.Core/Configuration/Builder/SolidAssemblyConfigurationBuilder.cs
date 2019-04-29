@@ -9,7 +9,7 @@ namespace SolidProxy.Core.Configuration.Builder
     public class SolidAssemblyConfigurationBuilder : SolidConfigurationScope, ISolidAssemblyConfigurationBuilder
     {
 
-        public SolidAssemblyConfigurationBuilder(ISolidConfigurationBuilder parent, Assembly assembly)
+        public SolidAssemblyConfigurationBuilder(SolidConfigurationBuilder parent, Assembly assembly)
             : base(parent)
         {
             Assembly = assembly;

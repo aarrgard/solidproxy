@@ -10,7 +10,11 @@ namespace SolidProxy.Tests
 {
     public class ExampleConfigurationInterfaceTests
     {
-        public interface ITestInterface
+        public interface IEnabledInterface
+        {
+            string GetValue();
+        }
+        public interface IDisabledInterface
         {
             string GetValue();
         }
@@ -27,7 +31,7 @@ namespace SolidProxy.Tests
             public static Func<IInvocationStepConfig, SolidScopeType> Matcher = (conf) =>
             {
                 if (!conf.Enabled) return SolidScopeType.None;
-                if(conf.MethodInfo.DeclaringType != typeof(ITestInterface)) return SolidScopeType.None;
+                if(conf.MethodInfo.DeclaringType.Assembly != typeof(IEnabledInterface).Assembly) return SolidScopeType.None;
                 return SolidScopeType.Interface;
             };
 
@@ -44,13 +48,15 @@ namespace SolidProxy.Tests
             }
         }
 
-        [Test,Ignore("Implement later")]
+        [Test]
         public void TestConfigurationInterfaceExample()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<ITestInterface>();
+            services.AddSingleton<IEnabledInterface>();
+            services.AddSingleton<IDisabledInterface>();
 
             services.GetSolidConfigurationBuilder().AsInterface<IInvocationStepConfig>().Enabled = true;
+            services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>().AsInterface<IInvocationStepConfig>().Enabled = false;
             //services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>));
             //var sp = services.BuildServiceProvider();
 

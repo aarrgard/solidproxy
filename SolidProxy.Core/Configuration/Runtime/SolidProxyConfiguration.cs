@@ -11,9 +11,9 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TInterface"></typeparam>
     public class SolidProxyConfiguration<TInterface> : SolidConfigurationScope, ISolidProxyConfiguration<TInterface> where TInterface : class
     {
-        public SolidProxyConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfigurationStore rpcProxyConfigurationStore) : base(parentScope)
+        public SolidProxyConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) : base(parentScope)
         {
-            SolidProxyConfigurationStore = rpcProxyConfigurationStore;
+            SolidProxyConfigurationStore = solidProxyConfigurationStore;
             InvocationConfigurations = new ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration>();
         }
 
@@ -24,10 +24,20 @@ namespace SolidProxy.Core.Configuration.Runtime
         {
             return InvocationConfigurations.GetOrAdd(methodInfo, _ =>
             {
-                var invocationType = TypeConverter.GetRootType(methodInfo.ReturnType);
+                var returnType = methodInfo.ReturnType;
+                var invocationType = returnType;
+                if(returnType == typeof(void))
+                {
+                    returnType = typeof(object);
+                    invocationType = typeof(object);
+                }
+                else
+                {
+                    invocationType = TypeConverter.GetRootType(methodInfo.ReturnType);
+                }
                 return (ISolidProxyInvocationConfiguration)GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                     .Single(o => o.Name == nameof(CreateRpcProxyInvocationConfiguration))
-                    .MakeGenericMethod(new[] { methodInfo.ReturnType, invocationType })
+                    .MakeGenericMethod(new[] { returnType, invocationType })
                     .Invoke(this, new[] { methodInfo });
             });
         }

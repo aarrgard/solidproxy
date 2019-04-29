@@ -1,4 +1,7 @@
-﻿using System;
+﻿using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.Ioc;
+using SolidProxy.Core.Proxy;
+using System;
 using System.Collections.Concurrent;
 
 namespace SolidProxy.Core.Configuration.Builder
@@ -6,11 +9,19 @@ namespace SolidProxy.Core.Configuration.Builder
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
-        private ConcurrentDictionary<Type, object> _interfaces = new ConcurrentDictionary<Type, object>();
 
         protected SolidConfigurationScope(ISolidConfigurationScope parentScope)
         {
             ParentScope = parentScope;
+            InternalServiceProvider = SetupInternalServiceProvider();
+        }
+
+        public SolidProxyServiceProvider InternalServiceProvider { get; }
+
+        protected virtual SolidProxyServiceProvider SetupInternalServiceProvider()
+        {
+            var sp = new SolidProxyServiceProvider(((SolidConfigurationScope)ParentScope)?.InternalServiceProvider);
+            return sp;
         }
 
         public T GetValue<T>(string key, bool searchParentScope)
@@ -57,7 +68,19 @@ namespace SolidProxy.Core.Configuration.Builder
 
         public T AsInterface<T>() where T:class
         {
-            return (T)_interfaces.GetOrAdd(typeof(T), CreateInterface<T>());
+            var i = (T)InternalServiceProvider.GetService(typeof(T));
+            if(i == null)
+            {
+                var proxyConfStore = (ISolidProxyConfigurationStore) InternalServiceProvider.GetService(typeof(ISolidProxyConfigurationStore));
+                var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<T>();
+                proxyConf.SetValue(nameof(ISolidConfigurationScope), this);
+                proxyConf.AddSolidInvocationStep(typeof(SolidConfigurationHandler<,,>));
+                InternalServiceProvider.AddScoped(proxyConfStore.GetProxyConfiguration<T>());
+                InternalServiceProvider.AddScoped<ISolidProxy<T>, SolidProxy<T>>();
+                var proxy = (ISolidProxy<T>) InternalServiceProvider.GetService(typeof(ISolidProxy<T>));
+                InternalServiceProvider.AddScoped(i = proxy.Proxy);
+            }
+            return i;
         }
 
         private Func<Type, object> CreateInterface<T>() where T : class
@@ -72,7 +95,7 @@ namespace SolidProxy.Core.Configuration.Builder
 
     public abstract class SolidConfigurationScope<T> : SolidConfigurationScope, ISolidConfigurationScope<T> where T : class
     {
-        protected SolidConfigurationScope(ISolidConfigurationScope parentScope)
+        protected SolidConfigurationScope(SolidConfigurationScope parentScope)
             : base(parentScope)
         {
         }
