@@ -21,6 +21,8 @@ namespace SolidProxy.Core.Configuration.Builder
         protected virtual SolidProxyServiceProvider SetupInternalServiceProvider()
         {
             var sp = new SolidProxyServiceProvider(((SolidConfigurationScope)ParentScope)?.InternalServiceProvider);
+            sp.AddScoped<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
+            sp.AddScoped<ISolidConfigurationBuilder, SolidConfigurationBuilder>();
             return sp;
         }
 
@@ -71,14 +73,15 @@ namespace SolidProxy.Core.Configuration.Builder
             var i = (T)InternalServiceProvider.GetService(typeof(T));
             if(i == null)
             {
-                var proxyConfStore = (ISolidProxyConfigurationStore) InternalServiceProvider.GetService(typeof(ISolidProxyConfigurationStore));
+                var proxyConfStore = InternalServiceProvider.GetRequiredService<ISolidProxyConfigurationStore>();
                 var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<T>();
                 proxyConf.SetValue(nameof(ISolidConfigurationScope), this);
                 proxyConf.AddSolidInvocationStep(typeof(SolidConfigurationHandler<,,>));
-                InternalServiceProvider.AddScoped(proxyConfStore.GetProxyConfiguration<T>());
+
+                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
                 InternalServiceProvider.AddScoped<ISolidProxy<T>, SolidProxy<T>>();
-                var proxy = (ISolidProxy<T>) InternalServiceProvider.GetService(typeof(ISolidProxy<T>));
-                InternalServiceProvider.AddScoped(i = proxy.Proxy);
+                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxy<T>>().Proxy);
+                i = InternalServiceProvider.GetRequiredService<T>();
             }
             return i;
         }

@@ -33,8 +33,6 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             var sp = base.SetupInternalServiceProvider();
             sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
-            sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
-            sp.AddSingleton<ISolidConfigurationBuilder>(this);
             sp.AddSingleton(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
             return sp;
         }

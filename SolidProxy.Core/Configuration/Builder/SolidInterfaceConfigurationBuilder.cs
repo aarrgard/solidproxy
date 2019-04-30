@@ -46,12 +46,29 @@ namespace SolidProxy.Core.Configuration.Builder
 
         public ISolidMethodConfigurationBuilder<T> ConfigureMethod(Expression<Action<T>> expr)
         {
-            var callExpr = expr.Body as MethodCallExpression;
-            if(callExpr == null)
-            {
-                throw new Exception($"Cannot determine method from expression {expr}");
-            }
-            return GetMethodBuilder(callExpr.Method);
+            return ConfigureMethod((LambdaExpression)expr);
         }
+
+        public ISolidMethodConfigurationBuilder<T> ConfigureMethod<T2>(Expression<Func<T, T2>> expr)
+        {
+            return ConfigureMethod((LambdaExpression)expr);
+        }
+
+        private ISolidMethodConfigurationBuilder<T> ConfigureMethod(LambdaExpression expr)
+        {
+            if (expr.Body is MethodCallExpression callExpr)
+            {
+                return GetMethodBuilder(callExpr.Method);
+            }
+            else if (expr.Body is MemberExpression mbrExpr)
+            {
+                if(mbrExpr.Member is PropertyInfo prop)
+                {
+                    return GetMethodBuilder(prop.GetGetMethod());
+                }
+            }
+            throw new Exception($"Cannot determine method from expression {expr}");
+        }
+
     }
 }
