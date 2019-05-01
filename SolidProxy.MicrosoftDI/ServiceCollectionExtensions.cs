@@ -211,7 +211,6 @@ namespace Microsoft.Extensions.DependencyInjection
                     throw new Exception("Cannot determine implementation type");
                 }
 
-                interfaceConfig.Lock();
                 services.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
 
                 switch (service.Lifetime)

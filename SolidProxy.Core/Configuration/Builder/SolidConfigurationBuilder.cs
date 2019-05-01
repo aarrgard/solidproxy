@@ -1,9 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using Castle.DynamicProxy;
-using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.Ioc;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -27,14 +24,6 @@ namespace SolidProxy.Core.Configuration.Builder
         public ISolidAssemblyConfigurationBuilder ConfigureInterfaceAssembly(Assembly assembly)
         {
             return AssemblyBuilders.GetOrAdd(assembly, _ => new SolidAssemblyConfigurationBuilder(this, _));
-        }
-
-        protected override SolidProxyServiceProvider SetupInternalServiceProvider()
-        {
-            var sp = base.SetupInternalServiceProvider();
-            sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
-            sp.AddSingleton(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
-            return sp;
         }
     }
 }

@@ -31,21 +31,18 @@ namespace SolidProxy.Core.Configuration
         void SetValue<T>(string key, T value, bool writeInParentScopes = false);
 
         /// <summary>
-        /// Returns true if this or any of the parent scopes are locked.
-        /// </summary>
-        bool Locked { get; }
-
-        /// <summary>
-        /// Locks this scope.
-        /// </summary>
-        void Lock();
-
-        /// <summary>
         /// Exposes this configuration scope through supplied interface.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T AsInterface<T>() where T : class; 
+        T AsInterface<T>() where T : class;
+
+        /// <summary>
+        /// Returns true if the type interface is configured on this scope or a parent scope.B
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        bool IsConfigured<T>() where T : class;
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
-﻿using SolidProxy.Core.Configuration.Runtime;
+﻿using Castle.DynamicProxy;
+using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Ioc;
 using SolidProxy.Core.Proxy;
 using System;
@@ -8,23 +9,25 @@ namespace SolidProxy.Core.Configuration.Builder
 {
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
+        private Lazy<SolidProxyServiceProvider> _internalServiceProvider = new Lazy<SolidProxyServiceProvider>(SetupInternalServiceProvider);
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+
+        private static SolidProxyServiceProvider SetupInternalServiceProvider()
+        {
+            var sp = new SolidProxyServiceProvider();
+            sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
+            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilder>();
+            sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
+            sp.AddSingleton(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
+            return sp;
+        }
 
         protected SolidConfigurationScope(ISolidConfigurationScope parentScope)
         {
             ParentScope = parentScope;
-            InternalServiceProvider = SetupInternalServiceProvider();
         }
 
-        public SolidProxyServiceProvider InternalServiceProvider { get; }
-
-        protected virtual SolidProxyServiceProvider SetupInternalServiceProvider()
-        {
-            var sp = new SolidProxyServiceProvider(((SolidConfigurationScope)ParentScope)?.InternalServiceProvider);
-            sp.AddScoped<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
-            sp.AddScoped<ISolidConfigurationBuilder, SolidConfigurationBuilder>();
-            return sp;
-        }
+        public SolidProxyServiceProvider InternalServiceProvider => _internalServiceProvider.Value;
 
         public T GetValue<T>(string key, bool searchParentScope)
         {
@@ -55,19 +58,6 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         public ISolidConfigurationScope ParentScope { get; }
 
-        /// <summary>
-        /// Specifies if this scope is locked
-        /// </summary>
-        public bool Locked { get; private set; }
-
-        /// <summary>
-        /// Locks this scope.
-        /// </summary>
-        public void Lock()
-        {
-            Locked = true;
-        }
-
         public T AsInterface<T>() where T:class
         {
             var i = (T)InternalServiceProvider.GetService(typeof(T));
@@ -86,13 +76,14 @@ namespace SolidProxy.Core.Configuration.Builder
             return i;
         }
 
-        private Func<Type, object> CreateInterface<T>() where T : class
+        public bool IsConfigured<T>() where T:class
         {
-            return (t) =>
+            var configured = InternalServiceProvider.GetService(typeof(T)) != null;
+            if(configured)
             {
-                var proxy = new SolidProxy.Core.Proxy.SolidProxy<T>(null, null, null);
-                return proxy;
-            };
+                return true;
+            }
+            return ParentScope?.IsConfigured<T>() ?? false;
         }
     }
 
