@@ -7,7 +7,7 @@ namespace SolidProxy.Core.Configuration.Builder
     public class SolidConfigurationBuilder : SolidConfigurationScope, ISolidConfigurationBuilder
     {
 
-        public SolidConfigurationBuilder() : base(null)
+        public SolidConfigurationBuilder() : base(SolidScopeType.Global, null)
         {
             AssemblyBuilders = new ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder>();
         }

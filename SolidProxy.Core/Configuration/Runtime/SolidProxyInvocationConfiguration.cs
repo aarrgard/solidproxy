@@ -21,7 +21,8 @@ namespace SolidProxy.Core.Configuration.Runtime
 
         private IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> _solidInvocationSteps;
 
-        public SolidProxyInvocationConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfiguration<TObject> proxyConfiguration, MethodInfo methodInfo) : base(parentScope)
+        public SolidProxyInvocationConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfiguration<TObject> proxyConfiguration, MethodInfo methodInfo) 
+            : base(SolidScopeType.Method, parentScope)
         {
             MethodInfo = methodInfo;
             ProxyConfiguration = proxyConfiguration;
@@ -84,8 +85,17 @@ namespace SolidProxy.Core.Configuration.Runtime
                     {
                         throw new Exception($"No step configured for type: {t.FullName}");
                     }
-                    return step;
-                }).ToList());
+                    if (SolidConfigurationHelper.ConfigureStep(step, this))
+                    {
+                        return step;
+                    }
+                    else
+                    {
+                        // step is not enabled.
+                        return null;
+                    }
+                }).Where(o => o != null)
+                .ToList());
             }
 
             return _solidInvocationSteps;

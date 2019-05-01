@@ -11,7 +11,8 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TInterface"></typeparam>
     public class SolidProxyConfiguration<TInterface> : SolidConfigurationScope, ISolidProxyConfiguration<TInterface> where TInterface : class
     {
-        public SolidProxyConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) : base(parentScope)
+        public SolidProxyConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
+            : base(SolidScopeType.Interface, parentScope)
         {
             SolidProxyConfigurationStore = solidProxyConfigurationStore;
             InvocationConfigurations = new ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration>();

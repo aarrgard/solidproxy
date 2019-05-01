@@ -70,6 +70,60 @@ namespace SolidProxy.Core.Ioc
             }
         }
 
+        private void AddRegistration(Registration registration)
+        {
+            if (registration.ServiceProvider != this)
+            {
+                throw new Exception("Registration does not belong to this service provider");
+            }
+            _registrations.AddOrUpdate(registration.ServiceType, registration, (key, existingRegistration) =>
+            {
+                //
+                // update registrations that previously resolved to null.
+                //
+                if (existingRegistration.RegistrationScope == RegistrationScope.Nonexisting)
+                {
+                    return registration;
+                }
+
+                //
+                // check that we do not alter registration settings
+                //
+                if (existingRegistration.ServiceType != registration.ServiceType)
+                {
+                    throw new Exception("Cannot change service type");
+                }
+                if (existingRegistration.ImplementationType != registration.ImplementationType)
+                {
+                    throw new Exception("Cannot change implementation type");
+                }
+                if (existingRegistration.RegistrationScope != registration.RegistrationScope)
+                {
+                    throw new Exception("Cannot change service scope");
+                }
+                if (existingRegistration.ServiceProvider != registration.ServiceProvider)
+                {
+                    throw new Exception("Cannot change service provider");
+                }
+
+                //
+                // update not resolved -> resolved
+                //
+                if (!existingRegistration.IsResolved && registration.IsResolved)
+                {
+                    return registration;
+                }
+                if (existingRegistration.IsResolved != registration.IsResolved)
+                {
+                    throw new Exception("Cannot unresolve a service");
+                }
+
+                return existingRegistration;
+            });
+            //Console.WriteLine($"Added {registration.ServiceType} as {registration.RegistrationScope}@{ContainerId}");
+        }
+
+
         private Registration CloneRegistration(Registration registration)
         {
             return new Registration(
@@ -109,61 +163,8 @@ namespace SolidProxy.Core.Ioc
                 this,
                 RegistrationScope.Singleton, 
                 serviceType, 
-                implementationType, 
-                Resolver));
-        }
-
-        private void AddRegistration(Registration registration)
-        {
-            if (registration.ServiceProvider != this)
-            {
-                throw new Exception("Registration does not belong to this service provider");
-            }
-            _registrations.AddOrUpdate(registration.ServiceType, registration, (key, existingRegistration) =>
-            {
-                //
-                // update registrations that previously resolved to null.
-                //
-                if(existingRegistration.RegistrationScope == RegistrationScope.Nonexisting)
-                {
-                    return registration;
-                }
-
-                //
-                // check that we do not alter registration settings
-                //
-                if (existingRegistration.ServiceType != registration.ServiceType)
-                {
-                    throw new Exception("Cannot change service type");
-                }
-                if (existingRegistration.ImplementationType != registration.ImplementationType)
-                {
-                    throw new Exception("Cannot change implementation type");
-                }
-                if (existingRegistration.RegistrationScope != registration.RegistrationScope)
-                {
-                    throw new Exception("Cannot change service scope");
-                }
-                if (existingRegistration.ServiceProvider != registration.ServiceProvider)
-                {
-                    throw new Exception("Cannot change service provider");
-                }
-
-                //
-                // update not resolved -> resolved
-                //
-                if(!existingRegistration.IsResolved && registration.IsResolved)
-                {
-                    return registration;
-                }
-                if (existingRegistration.IsResolved != registration.IsResolved)
-                {
-                    throw new Exception("Cannot unresolve a service");
-                }
-
-                return existingRegistration;
-            });
-            Console.WriteLine($"Added {registration.ServiceType} as {registration.RegistrationScope}@{ContainerId}");
+                implementationType,
+                CreateResolver(implementationType)));
         }
 
         /// <summary>
@@ -208,8 +209,8 @@ namespace SolidProxy.Core.Ioc
                 this,
                 RegistrationScope.Scoped, 
                 serviceType, 
-                implementationType, 
-                Resolver));
+                implementationType,
+                CreateResolver(implementationType)));
         }
 
         /// <summary>
@@ -228,15 +229,40 @@ namespace SolidProxy.Core.Ioc
         }
 
         /// <summary>
+        /// Adds a transient service
+        /// </summary>
+        /// <typeparam name="TService"></typeparam>
+        /// <typeparam name="TImpl"></typeparam>
+        public void AddTransient<TService, TImpl>()
+        {
+            AddTransient(typeof(TService), typeof(TImpl));
+        }
+
+        /// <summary>
+        /// Adds a transient service
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="implementationType"></param>
+        public void AddTransient(Type serviceType, Type implementationType)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Transient,
+                serviceType,
+                implementationType,
+                CreateResolver(implementationType)));
+        }
+
+        /// <summary>
         /// Resolves the service
         /// </summary>
         /// <param name="serviceType"></param>
         /// <returns></returns>
         public object GetService(Type serviceType)
         {
-            Console.WriteLine($"Resolving {serviceType.FullName} from {ContainerId}");
+            //Console.WriteLine($"Resolving {serviceType.FullName} from {ContainerId}");
             var registration = _registrations.GetOrAdd(serviceType, ResolveRegistration);
-            Console.WriteLine($"Located {serviceType.FullName} as {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId}");
+            //Console.WriteLine($"Located {serviceType.FullName} as {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId}");
             return Resolve(registration);
         }
 
@@ -258,8 +284,8 @@ namespace SolidProxy.Core.Ioc
                         this,
                         registration.RegistrationScope, 
                         serviceType, 
-                        implType, 
-                        Resolver);
+                        implType,
+                        CreateResolver(implType));
                     AddRegistration(registration);
                     return registration;
                 }
@@ -292,26 +318,29 @@ namespace SolidProxy.Core.Ioc
                 {
                     topServiceProvider = registration.ServiceProvider;
                 }
-                Console.WriteLine($"Registration for {registration.ServiceType.FullName} not resolved. Resolving {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId} from {topServiceProvider.ContainerId}");
+                //Console.WriteLine($"Registration for {registration.ServiceType.FullName} not resolved. Resolving {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId} from {topServiceProvider.ContainerId}");
                 registration.Resolved = registration.Resolver(topServiceProvider, registration);
                 registration.IsResolved = true;
                 AddRegistration(registration);
             }
             return registration.Resolved;
         }
-        private static object Resolver(SolidProxyServiceProvider serviceProvider, Registration registration)
+
+        private Func<SolidProxyServiceProvider, Registration, object> CreateResolver(Type implType)
         {
-            var implType = registration.ImplementationType;
             var ctr = implType.GetConstructors().OrderBy(o => o.GetParameters().Length).First();
             var argTypes = ctr.GetParameters().Select(o => o.ParameterType).ToArray();
-            var args = argTypes.Select(o => serviceProvider.GetService(o)).ToArray();
-            if (args.Any(o => o == null))
+            return (serviceProvider, registration) =>
             {
-                throw new Exception($"Cannot instantiate {implType.FullName}");
-            }
-            var impl = ctr.Invoke(args);
-            Console.WriteLine($"Created a {impl.GetType().FullName} as {registration.RegistrationScope}@{serviceProvider.ContainerId}");
-            return impl;
+                var args = argTypes.Select(o => serviceProvider.GetService(o)).ToArray();
+                if (args.Any(o => o == null))
+                {
+                    throw new Exception($"Cannot instantiate {implType.FullName}");
+                }
+                var impl = ctr.Invoke(args);
+                //Console.WriteLine($"Created a {impl.GetType().FullName} as {registration.RegistrationScope}@{serviceProvider.ContainerId}");
+                return impl;
+            };
         }
     }
 }

@@ -10,6 +10,11 @@ namespace SolidProxy.Core.Configuration
     public interface ISolidConfigurationScope
     {
         /// <summary>
+        /// Returns the scope type that this scope represents.
+        /// </summary>
+        SolidScopeType SolidScopeType { get; }
+
+        /// <summary>
         /// Returns the parent scope
         /// </summary>
         ISolidConfigurationScope ParentScope { get; }
@@ -35,14 +40,21 @@ namespace SolidProxy.Core.Configuration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T AsInterface<T>() where T : class;
+        T ConfigureStep<T>() where T : class,ISolidProxyInvocationStepConfig;
 
         /// <summary>
-        /// Returns true if the type interface is configured on this scope or a parent scope.B
+        /// Returns true if the type interface is configured on this scope or a parent scope.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        bool IsConfigured<T>() where T : class;
+        bool IsStepConfigured<T>() where T : class, ISolidProxyInvocationStepConfig;
+
+        /// <summary>
+        /// Returns true if the type interface is configured on this scope or a parent scope.
+        /// </summary>
+        /// <param name="setting"></param>
+        /// <returns></returns>
+        SolidScopeType GetStepScope(Type setting);
     }
 
     /// <summary>

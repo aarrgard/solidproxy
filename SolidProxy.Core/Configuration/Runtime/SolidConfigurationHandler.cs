@@ -2,8 +2,14 @@
 using System.Threading.Tasks;
 using SolidProxy.Core.Proxy;
 
-namespace SolidProxy.Core.Configuration.Builder
+namespace SolidProxy.Core.Configuration.Runtime
 {
+    /// <summary>
+    /// A handler that accesses the configuration values through an interface.
+    /// </summary>
+    /// <typeparam name="TObject"></typeparam>
+    /// <typeparam name="TReturnType"></typeparam>
+    /// <typeparam name="TPipeline"></typeparam>
     public class SolidConfigurationHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
     {
         public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)

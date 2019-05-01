@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.Core.Configuration;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;

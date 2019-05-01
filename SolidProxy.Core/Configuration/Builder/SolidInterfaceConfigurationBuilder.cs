@@ -10,7 +10,7 @@ namespace SolidProxy.Core.Configuration.Builder
     {
 
         public SolidInterfaceConfigurationBuilder(SolidAssemblyConfigurationBuilder parent, Type interfaceType)
-            : base(parent)
+            : base(SolidScopeType.Interface, parent)
         {
             MethodBuilders = new ConcurrentDictionary<MethodInfo, ISolidMethodConfigurationBuilder>();
         }

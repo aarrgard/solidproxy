@@ -82,7 +82,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher)
+        public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher = null)
         {
             if(!invocationStepType.IsGenericType)
             {
@@ -96,8 +96,18 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 throw new Exception($"Invocation step type must implement {typeof(ISolidProxyInvocationStep).FullName}");
             }
+            if(matcher == null)
+            {
+                matcher = GetConfigMatcher(invocationStepType);
+            }
             services.AddSolidProxy(matcher, o => o.AddSolidInvocationStep(invocationStepType));
             return services;
+        }
+
+        private static Func<ISolidMethodConfigurationBuilder, SolidScopeType> GetConfigMatcher(Type invocationStepType)
+        {
+            var settingsType = SolidConfigurationHelper.GetStepConfigType(invocationStepType);
+            return (mb) => mb.GetStepScope(settingsType);
         }
 
         private static MethodInfo s_RegisterService = typeof(ServiceCollectionExtensions)
@@ -160,7 +170,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .ToList()
                 .ForEach(o =>
                 {
-                    serviceTypes.DoIfMissing(o, () => services.AddSingleton(o, o));
+                    serviceTypes.DoIfMissing(o, () => services.AddTransient(o, o));
                 });
 
 

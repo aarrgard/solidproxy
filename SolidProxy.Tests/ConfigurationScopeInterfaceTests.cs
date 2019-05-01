@@ -2,27 +2,24 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Configuration.Builder;
 
 namespace SolidProxy.Tests
 {
     public class ConfigurationScopeInterfaceTests
     {
-        public interface IConfig1
+        public interface IConfig1 : ISolidProxyInvocationStepConfig
         {
-            bool Enabled { get; set; }
         }
-        public interface IConfig2
+        public interface IConfig2 : ISolidProxyInvocationStepConfig
         {
-            bool Enabled { get; set; }
         }
-        public interface IConfig3
+        public interface IConfig3 : ISolidProxyInvocationStepConfig
         {
-            bool Enabled { get; set; }
         }
-        public interface IConfig4
+        public interface IConfig4 : ISolidProxyInvocationStepConfig
         {
-            bool Enabled { get; set; }
         }
 
         [Test]
@@ -30,8 +27,8 @@ namespace SolidProxy.Tests
         {
             var services = new ServiceCollection();
 
-            var config1 = services.GetSolidConfigurationBuilder().AsInterface<IConfig1>();
-            var config2 = services.GetSolidConfigurationBuilder().AsInterface<IConfig2>();
+            var config1 = services.GetSolidConfigurationBuilder().ConfigureStep<IConfig1>();
+            var config2 = services.GetSolidConfigurationBuilder().ConfigureStep<IConfig2>();
 
             config1.Enabled = true;
             Assert.IsTrue(config1.Enabled);
@@ -50,19 +47,19 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
 
             var globalConfig = services.GetSolidConfigurationBuilder()
-                .AsInterface<IConfig1>();
+                .ConfigureStep<IConfig1>();
             var assemblyConfig = services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
-                .AsInterface<IConfig1>();
+                .ConfigureStep<IConfig1>();
             var interfaceConfig = services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
-                .AsInterface<IConfig1>();
+                .ConfigureStep<IConfig1>();
             var methodConfig = services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
                 .ConfigureMethod(o => o.Enabled)
-                .AsInterface<IConfig1>();
+                .ConfigureStep<IConfig1>();
 
             //
             // enable global value implicitly enables the sub scopes
@@ -111,48 +108,48 @@ namespace SolidProxy.Tests
                 .ConfigureInterface<IConfig1>()
                 .ConfigureMethod(o => o.Enabled);
 
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig1>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig2>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig3>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig4>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig1>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig2>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig3>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig4>());
 
             services.GetSolidConfigurationBuilder()
-                .AsInterface<IConfig1>();
+                .ConfigureStep<IConfig1>();
 
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig1>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig2>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig3>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig4>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig1>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig2>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig3>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig4>());
 
             services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
-                .AsInterface<IConfig2>();
+                .ConfigureStep<IConfig2>();
 
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig1>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig2>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig3>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig4>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig1>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig2>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig3>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig4>());
 
             services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
-                .AsInterface<IConfig3>();
+                .ConfigureStep<IConfig3>();
 
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig1>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig2>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig3>());
-            Assert.IsFalse(methodConfig.IsConfigured<IConfig4>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig1>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig2>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig3>());
+            Assert.IsFalse(methodConfig.IsStepConfigured<IConfig4>());
 
             services.GetSolidConfigurationBuilder()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
                 .ConfigureMethod(o => o.Enabled)
-                .AsInterface<IConfig4>();
+                .ConfigureStep<IConfig4>();
 
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig1>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig2>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig3>());
-            Assert.IsTrue(methodConfig.IsConfigured<IConfig4>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig1>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig2>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig3>());
+            Assert.IsTrue(methodConfig.IsStepConfigured<IConfig4>());
         }
     }
 }

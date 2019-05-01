@@ -18,14 +18,27 @@ namespace SolidProxy.Core.Configuration.Builder
             sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
             sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilder>();
             sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
-            sp.AddSingleton(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
+            sp.AddTransient(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
             return sp;
         }
 
-        protected SolidConfigurationScope(ISolidConfigurationScope parentScope)
+        protected SolidConfigurationScope(SolidScopeType solidScopeType, ISolidConfigurationScope parentScope)
         {
+            SolidScopeType = solidScopeType;
             ParentScope = parentScope;
         }
+
+
+        /// <summary>
+        /// Returns the parent scope
+        /// </summary>
+        public ISolidConfigurationScope ParentScope { get; }
+
+
+        /// <summary>
+        /// Returns the scope type
+        /// </summary>
+        public SolidScopeType SolidScopeType { get; }
 
         public SolidProxyServiceProvider InternalServiceProvider => _internalServiceProvider.Value;
 
@@ -52,13 +65,7 @@ namespace SolidProxy.Core.Configuration.Builder
             }
         }
 
-
-        /// <summary>
-        /// Returns the parent scope
-        /// </summary>
-        public ISolidConfigurationScope ParentScope { get; }
-
-        public T AsInterface<T>() where T:class
+        public T ConfigureStep<T>() where T: class,ISolidProxyInvocationStepConfig
         {
             var i = (T)InternalServiceProvider.GetService(typeof(T));
             if(i == null)
@@ -76,21 +83,34 @@ namespace SolidProxy.Core.Configuration.Builder
             return i;
         }
 
-        public bool IsConfigured<T>() where T:class
+        public bool IsStepConfigured<T>() where T : class, ISolidProxyInvocationStepConfig
         {
             var configured = InternalServiceProvider.GetService(typeof(T)) != null;
-            if(configured)
+            if (configured)
             {
                 return true;
             }
-            return ParentScope?.IsConfigured<T>() ?? false;
+            return ParentScope?.IsStepConfigured<T>() ?? false;
+        }
+
+        public SolidScopeType GetStepScope(Type settingsType)
+        {
+            var stepScopeType = ParentScope?.GetStepScope(settingsType) ?? SolidScopeType.None;
+            if(stepScopeType == SolidScopeType.None)
+            {
+                if(InternalServiceProvider.GetService(settingsType) != null)
+                {
+                    stepScopeType = SolidScopeType;
+                }
+            }
+            return stepScopeType;
         }
     }
 
     public abstract class SolidConfigurationScope<T> : SolidConfigurationScope, ISolidConfigurationScope<T> where T : class
     {
-        protected SolidConfigurationScope(SolidConfigurationScope parentScope)
-            : base(parentScope)
+        protected SolidConfigurationScope(SolidScopeType solidScopeType, SolidConfigurationScope parentScope)
+            : base(solidScopeType, parentScope)
         {
         }
     }

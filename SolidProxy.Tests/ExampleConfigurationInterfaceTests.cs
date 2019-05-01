@@ -1,9 +1,8 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
@@ -12,39 +11,31 @@ namespace SolidProxy.Tests
     {
         public interface IEnabledInterface
         {
-            string GetValue();
+            string GetValue1();
+            string GetValue2();
         }
         public interface IDisabledInterface
         {
             string GetValue();
         }
 
-        public interface IInvocationStepConfig
+        public interface IInvocationStepConfig : ISolidProxyInvocationStepConfig
         {
-            MethodInfo MethodInfo { get; }
-            bool Enabled { get; set; }
             int Retries { get; set; }
         }
 
         public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
         {
-            public static Func<IInvocationStepConfig, SolidScopeType> Matcher = (conf) =>
-            {
-                if (!conf.Enabled) return SolidScopeType.None;
-                if(conf.MethodInfo.DeclaringType.Assembly != typeof(IEnabledInterface).Assembly) return SolidScopeType.None;
-                return SolidScopeType.Interface;
-            };
-
-            public InvocationStep(IInvocationStepConfig stepConfig)
+            public void Configure(IInvocationStepConfig stepConfig)
             {
                 Retries = stepConfig.Retries;
             }
 
-            public int Retries { get; }
+            public int Retries { get; private set; }
 
             public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
             {
-                return Task.FromResult((TPipeline)(object)"");
+                return Task.FromResult((TPipeline)(object)(""+Retries));
             }
         }
 
@@ -55,15 +46,28 @@ namespace SolidProxy.Tests
             services.AddSingleton<IEnabledInterface>();
             services.AddSingleton<IDisabledInterface>();
 
-            services.GetSolidConfigurationBuilder().AsInterface<IInvocationStepConfig>().Enabled = true;
-            services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>().AsInterface<IInvocationStepConfig>().Enabled = false;
-            //services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>));
-            //var sp = services.BuildServiceProvider();
+            services.GetSolidConfigurationBuilder().ConfigureStep<IInvocationStepConfig>().Enabled = true;
+            services.GetSolidConfigurationBuilder().ConfigureStep<IInvocationStepConfig>().Retries = 123;
+            services.GetSolidConfigurationBuilder().ConfigureInterface<IEnabledInterface>()
+                .ConfigureMethod(o=>o.GetValue2()).ConfigureStep<IInvocationStepConfig>().Retries = 456;
+            services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>()
+                .ConfigureStep<IInvocationStepConfig>().Enabled = false;
 
-            //Assert.AreEqual("GlobalValue", sp.GetRequiredService<IConfiguration>().GetGlobalValue());
-            //Assert.AreEqual("AssemblyValue", sp.GetRequiredService<IConfiguration>().GetAssemblyValue());
-            //Assert.AreEqual("InterfaceValue", sp.GetRequiredService<IConfiguration>().GetInterfaceValue());
-            //Assert.AreEqual("MethodValue", sp.GetRequiredService<IConfiguration>().GetMethodValue());
+            services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>));
+
+            var sp = services.BuildServiceProvider();
+
+            Assert.AreEqual("123", sp.GetRequiredService<IEnabledInterface>().GetValue1());
+            Assert.AreEqual("456", sp.GetRequiredService<IEnabledInterface>().GetValue2());
+            try
+            {
+                var res = sp.GetRequiredService<IDisabledInterface>().GetValue();
+                Assert.Fail();
+            }
+            catch (NotImplementedException)
+            {
+                // ok
+            }
         }
 
     }
