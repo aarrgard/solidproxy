@@ -3,6 +3,7 @@ using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
+using SolidProxy.MicrosoftDI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,19 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// Builds a service provider from supplied collections.
+        /// </summary>
+        /// <param name="sc"></param>
+        /// <param name="serviceCollection"></param>
+        /// <returns></returns>
+        public static IServiceProvider BuildServiceProvider(this IServiceCollection sc, ServiceCollection serviceCollection)
+        {
+            sc.ToList().ForEach(sd => serviceCollection.Add(sd));
+            return serviceCollection.BuildServiceProvider();
+        }
+
+
         /// <summary>
         /// Adds a proxy invocation step.
         /// </summary>

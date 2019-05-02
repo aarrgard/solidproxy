@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -8,10 +9,10 @@ namespace SolidProxy.Core.Ioc
     /// <summary>
     /// Implements a simple IoC container that we use when setting up configuration.
     /// </summary>
-    public class SolidProxyServiceProvider : IServiceProvider
+    public class SolidProxyServiceProvider : IServiceProvider, IDisposable
     {
         private enum RegistrationScope { Singleton, Scoped, Transient, Nonexisting };
-        private struct Registration
+        private class Registration
         {
             public SolidProxyServiceProvider ServiceProvider;
             public RegistrationScope RegistrationScope;
@@ -21,7 +22,7 @@ namespace SolidProxy.Core.Ioc
             public bool IsResolved;
             public Object Resolved;
 
-            public Registration(SolidProxyServiceProvider serviceProvider, RegistrationScope registrationScope, Type serviceType, Type implementationType, Func<SolidProxyServiceProvider, Registration, object> resolver) : this()
+            public Registration(SolidProxyServiceProvider serviceProvider, RegistrationScope registrationScope, Type serviceType, Type implementationType, Func<SolidProxyServiceProvider, Registration, object> resolver)
             {
                 ServiceProvider = serviceProvider;
                 RegistrationScope = registrationScope;
@@ -30,7 +31,7 @@ namespace SolidProxy.Core.Ioc
                 Resolver = resolver;
             }
 
-            public Registration(SolidProxyServiceProvider serviceProvider, RegistrationScope registrationScope, Type serviceType, Type implementationType, object resolved) : this()
+            public Registration(SolidProxyServiceProvider serviceProvider, RegistrationScope registrationScope, Type serviceType, Type implementationType, object resolved)
             {
                 ServiceProvider = serviceProvider;
                 RegistrationScope = registrationScope;
@@ -39,9 +40,41 @@ namespace SolidProxy.Core.Ioc
                 Resolved = resolved;
                 IsResolved = true;
             }
+
+            public object Resolve(SolidProxyServiceProvider topServiceProvider)
+            {
+                if (!IsResolved)
+                {
+                    lock (this)
+                    {
+                        if (!IsResolved)
+                        {
+                            if (RegistrationScope == RegistrationScope.Singleton)
+                            {
+                                topServiceProvider = ServiceProvider;
+                            }
+                            //Console.WriteLine($"Registration for {registration.ServiceType.FullName} not resolved. Resolving {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId} from {topServiceProvider.ContainerId}");
+                            Resolved = Resolver(topServiceProvider, this);
+                            IsResolved = true;
+                            if(Resolved is IDisposable disposable)
+                            {
+                                topServiceProvider._disposeChain.Add(disposable);
+                            }
+                        }
+                    }
+                }
+                return Resolved;
+            }
         }
+
+        public void Dispose()
+        {
+            _disposeChain.ToList().ForEach(o => o.Dispose());
+        }
+
         private ConcurrentDictionary<Type, Registration> _registrations;
         private SolidProxyServiceProvider _parentServiceProvider;
+        private IList<IDisposable> _disposeChain;
 
         /// <summary>
         /// Constructs a new IoC container. The parent provider may be null.
@@ -51,6 +84,7 @@ namespace SolidProxy.Core.Ioc
         {
             _parentServiceProvider = parentServiceProvider;
             _registrations = new ConcurrentDictionary<Type, Registration>();
+            _disposeChain = new List<IDisposable>();
 
             var serviceProviderRegistration = new Registration(
                 this,
@@ -105,14 +139,6 @@ namespace SolidProxy.Core.Ioc
                 {
                     throw new Exception("Cannot change service provider");
                 }
-
-                //
-                // update not resolved -> resolved
-                //
-                if (!existingRegistration.IsResolved && registration.IsResolved)
-                {
-                    return registration;
-                }
                 if (existingRegistration.IsResolved != registration.IsResolved)
                 {
                     throw new Exception("Cannot unresolve a service");
@@ -136,8 +162,7 @@ namespace SolidProxy.Core.Ioc
         }
 
         /// <summary>
-        /// Adds a singleton implementation. Navigates to the root container and
-        /// registers the singleton there
+        /// Adds a singleton implementation.
         /// </summary>
         /// <typeparam name="TService"></typeparam>
         /// <typeparam name="TImpl"></typeparam>
@@ -147,24 +172,48 @@ namespace SolidProxy.Core.Ioc
         }
 
         /// <summary>
-        /// Adds a singleton implementation. Navigates to the root container and
-        /// registers the singleton there
+        /// Adds a singleton implementation.
         /// </summary>
         /// <param name="serviceType"></param>
         /// <param name="implementationType"></param>
         public void AddSingleton(Type serviceType, Type implementationType)
         {
-            if (_parentServiceProvider != null)
-            {
-                _parentServiceProvider.AddSingleton(serviceType, implementationType);
-                return;
-            }
             AddRegistration(new Registration(
                 this,
-                RegistrationScope.Singleton, 
-                serviceType, 
+                RegistrationScope.Singleton,
+                serviceType,
                 implementationType,
                 CreateResolver(implementationType)));
+        }
+
+        /// <summary>
+        /// Adds a singleton implementation. 
+        /// </summary>
+        /// <typeparam name="TService"></typeparam>
+        /// <param name="factory"></param>
+        public void AddSingleton<TService>(Func<IServiceProvider, TService> factory)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Singleton,
+                typeof(TService),
+                typeof(TService),
+                (sp, r) => factory(sp)));
+        }
+
+        /// <summary>
+        /// Adds a singleton implementation. 
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="implementationType"></param>
+        public void AddSingleton(Type serviceType, object implementation)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Singleton,
+                serviceType,
+                serviceType,
+                (sp, r) => implementation));
         }
 
         /// <summary>
@@ -175,11 +224,6 @@ namespace SolidProxy.Core.Ioc
         /// <param name="impl"></param>
         public void AddSingleton<TService>(TService impl)
         {
-            if (_parentServiceProvider != null)
-            {
-                _parentServiceProvider.AddSingleton(impl);
-                return;
-            }
             AddRegistration(new Registration(
                 this,
                 RegistrationScope.Singleton, 
@@ -223,9 +267,39 @@ namespace SolidProxy.Core.Ioc
             AddRegistration(new Registration(
                 this,
                 RegistrationScope.Scoped,
-                typeof(TService), 
-                typeof(TService), 
+                typeof(TService),
+                typeof(TService),
                 (sp, r) => factory(sp)));
+        }
+
+        /// <summary>
+        /// Adds a scoped service
+        /// </summary>
+        /// <typeparam name="TService"></typeparam>
+        /// <param name="impl"></param>
+        public void AddScoped(Type serviceType, Func<IServiceProvider, object> factory)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Scoped,
+                serviceType,
+                serviceType,
+                (sp, r) => factory(sp)));
+        }
+
+        /// <summary>
+        /// Adds a scoped service
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="factory"></param>
+        public void AddScoped(Type serviceType, object implementation)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Scoped,
+                serviceType,
+                serviceType,
+                (sp, r) => implementation));
         }
 
         /// <summary>
@@ -254,6 +328,35 @@ namespace SolidProxy.Core.Ioc
         }
 
         /// <summary>
+        /// Adds a transient service
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="implementationType"></param>
+        public void AddTransient(Type serviceType, Func<IServiceProvider, object> factory)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Transient,
+                serviceType,
+                serviceType,
+                (sp, r) => factory(sp)));
+        }
+        /// <summary>
+        /// Adds a transient service
+        /// </summary>
+        /// <param name="serviceType"></param>
+        /// <param name="implementation"></param>
+        public void AddTransient(Type serviceType, object implementation)
+        {
+            AddRegistration(new Registration(
+                this,
+                RegistrationScope.Transient,
+                serviceType,
+                serviceType,
+                (sp, r) => implementation));
+        }
+
+        /// <summary>
         /// Resolves the service
         /// </summary>
         /// <param name="serviceType"></param>
@@ -263,7 +366,7 @@ namespace SolidProxy.Core.Ioc
             //Console.WriteLine($"Resolving {serviceType.FullName} from {ContainerId}");
             var registration = _registrations.GetOrAdd(serviceType, ResolveRegistration);
             //Console.WriteLine($"Located {serviceType.FullName} as {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId}");
-            return Resolve(registration);
+            return registration.Resolve(this);
         }
 
         private Registration ResolveRegistration(Type serviceType)
@@ -289,6 +392,10 @@ namespace SolidProxy.Core.Ioc
                     AddRegistration(registration);
                     return registration;
                 }
+                if(typeof(IEnumerable<>).IsAssignableFrom(genType))
+                {
+                    throw new NotImplementedException();
+                }
             }
             if (_parentServiceProvider != null)
             {
@@ -307,23 +414,6 @@ namespace SolidProxy.Core.Ioc
                 serviceType, 
                 serviceType, 
                 (sp, r) => null);
-        }
-
-        private object Resolve(Registration registration)
-        {
-            if (!registration.IsResolved)
-            {
-                var topServiceProvider = this;
-                if(registration.RegistrationScope == RegistrationScope.Singleton)
-                {
-                    topServiceProvider = registration.ServiceProvider;
-                }
-                //Console.WriteLine($"Registration for {registration.ServiceType.FullName} not resolved. Resolving {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId} from {topServiceProvider.ContainerId}");
-                registration.Resolved = registration.Resolver(topServiceProvider, registration);
-                registration.IsResolved = true;
-                AddRegistration(registration);
-            }
-            return registration.Resolved;
         }
 
         private Func<SolidProxyServiceProvider, Registration, object> CreateResolver(Type implType)
