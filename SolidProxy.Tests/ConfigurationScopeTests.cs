@@ -10,19 +10,13 @@ namespace SolidProxy.Tests
 {
     public class ConfigurationScopeTests
     {
-        public class AopAttribute : Attribute
-        {
-            public AopAttribute(SolidScopeType solidScopeType)
-            {
-                SolidScopeType = solidScopeType;
-            }
+        public class Advice1<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
+        public class Advice2<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
+        public class Advice3<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
 
-            public SolidScopeType SolidScopeType { get; }
-        }
-
-        public class Handler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        public class AdviceBase<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
         {
-            private static readonly string StepCountKey = typeof(Handler<TObject, TReturnType, TPipeline>).FullName + ".StepCount";
+            private static readonly string StepCountKey = typeof(AdviceBase<TObject, TReturnType, TPipeline>).FullName + ".StepCount";
 
             public async Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
             {
@@ -41,71 +35,38 @@ namespace SolidProxy.Tests
 
         public interface ITestInterface
         {
-            [Aop(SolidScopeType.Global)]
-            int GetGlobalValue();
+            int Get0Value();
 
-            [Aop(SolidScopeType.Assembly)]
-            int GetAssemblyValue();
+            int Get1Value();
 
-            [Aop(SolidScopeType.Interface)]
-            int GetInterfaceValue();
+            int Get12Value();
 
-            [Aop(SolidScopeType.Method)]
-            int GetMethodValue();
-        }
-        [Test]
-        public void TestNoneConfigurationScopes()
-        {
-            try
-            {
-                DoTest(SolidScopeType.None, 0, 0, 0, 0);
-            }
-            catch (Exception e)
-            {
-                Assert.IsTrue(e.Message.Contains("Cannot instantiate implementation"));
-            }
+            int Get123Value();
         }
 
         [Test]
-        public void TestGlobalConfigurationScopes()
-        {
-            DoTest(SolidScopeType.Global, 1, 1, 1, 1);
-        }
-
-        [Test]
-        public void TestAssemblyConfigurationScopes()
-        {
-            DoTest(SolidScopeType.Assembly, 2, 2, 2, 2);
-        }
-
-        [Test]
-        public void TestInterfaceConfigurationScopes()
-        {
-            DoTest(SolidScopeType.Interface, 3, 3, 3, 3);
-        }
-
-        [Test]
-        public void TestMethodConfigurationScopes()
-        {
-            DoTest(SolidScopeType.Method, 3, 3, 3, 4);
-        }
-
-        private void DoTest(SolidScopeType solidScopeType, int gcount, int acount, int icount, int mcount)
+        public void Test0Advices()
         {
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationStep(
-                typeof(Handler<,,>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Where(o => o.SolidScopeType <= solidScopeType).Select(o => o.SolidScopeType).FirstOrDefault()
-            );
+            services.AddSolidProxyInvocationAdvice(typeof(Advice1<,,>), mi => mi.MethodInfo.Name.Contains("1"));
+            services.AddSolidProxyInvocationAdvice(typeof(Advice2<,,>), mi => mi.MethodInfo.Name.Contains("2"));
+            services.AddSolidProxyInvocationAdvice(typeof(Advice3<,,>), mi => mi.MethodInfo.Name.Contains("3"));
 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
-            Assert.AreEqual(gcount, test.GetGlobalValue());
-            Assert.AreEqual(acount, test.GetAssemblyValue());
-            Assert.AreEqual(icount, test.GetInterfaceValue());
-            Assert.AreEqual(mcount, test.GetMethodValue());
+            try
+            {
+                test.Get0Value();
+                Assert.Fail();
+            }
+            catch (NotImplementedException e)
+            {
+            }
+            Assert.AreEqual(1, test.Get1Value());
+            Assert.AreEqual(2, test.Get12Value());
+            Assert.AreEqual(3, test.Get123Value());
         }
     }
 }

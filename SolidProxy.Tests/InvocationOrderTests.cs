@@ -13,7 +13,7 @@ namespace SolidProxy.Tests
     {
         public class AopAttribute : Attribute {  }
 
-        public class HandlerBase<TObject> : ISolidProxyInvocationStep<TObject, IList<string>, IList<string>> where TObject : class
+        public class HandlerBase<TObject> : ISolidProxyInvocationAdvice<TObject, IList<string>, IList<string>> where TObject : class
         {
             public Task<IList<string>> Handle(Func<Task<IList<string>>> next, ISolidProxyInvocation<TObject, IList<string>, IList<string>> invocation)
             {
@@ -51,54 +51,26 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler1<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler2<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler3<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler4<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
             Assert.AreEqual("Handler1`1,Handler2`1,Handler3`1,Handler4`1", String.Join(",", test.GetHandlers()));
-        }
-
-        [Test]
-        public void TestInvocationOrderScoped()
-        {
-            var services = new ServiceCollection();
-            services.AddTransient<ITestInterface>();
-
-            services.AddSolidProxyInvocationStep(
-                typeof(Handler1<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
-            );
-            services.AddSolidProxyInvocationStep(
-                typeof(Handler2<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Interface : SolidScopeType.None
-            );
-            services.AddSolidProxyInvocationStep(
-                typeof(Handler3<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Assembly : SolidScopeType.None
-            );
-            services.AddSolidProxyInvocationStep(
-                typeof(Handler4<>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Global : SolidScopeType.None
-            );
-
-            var sp = services.BuildServiceProvider();
-            var test = sp.GetRequiredService<ITestInterface>();
-            Assert.AreEqual("Handler4`1,Handler3`1,Handler2`1,Handler1`1", String.Join(",", test.GetHandlers()));
         }
     }
 }

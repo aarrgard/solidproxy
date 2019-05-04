@@ -68,6 +68,6 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the invocation steps.
         /// </summary>
-        IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
+        IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
     }
 }

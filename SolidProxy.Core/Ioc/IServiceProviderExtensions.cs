@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SolidProxy.Core
+namespace SolidProxy.Core.IoC
 {
     public static class IServiceProviderExtensions
     {

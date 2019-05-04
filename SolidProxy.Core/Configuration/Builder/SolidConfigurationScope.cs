@@ -1,6 +1,6 @@
 ﻿using Castle.DynamicProxy;
 using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.Ioc;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
@@ -65,7 +65,7 @@ namespace SolidProxy.Core.Configuration.Builder
             }
         }
 
-        public T ConfigureStep<T>() where T: class,ISolidProxyInvocationStepConfig
+        public T ConfigureAdvice<T>() where T: class,ISolidProxyInvocationAdviceConfig
         {
             var i = (T)InternalServiceProvider.GetService(typeof(T));
             if(i == null)
@@ -73,7 +73,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 var proxyConfStore = InternalServiceProvider.GetRequiredService<ISolidProxyConfigurationStore>();
                 var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<T>();
                 proxyConf.SetValue(nameof(ISolidConfigurationScope), this);
-                proxyConf.AddSolidInvocationStep(typeof(SolidConfigurationHandler<,,>));
+                proxyConf.AddSolidInvocationAdvice(typeof(SolidConfigurationHandler<,,>));
 
                 InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
                 InternalServiceProvider.AddScoped<ISolidProxy<T>, SolidProxy<T>>();
@@ -83,24 +83,19 @@ namespace SolidProxy.Core.Configuration.Builder
             return i;
         }
 
-        public bool IsStepConfigured<T>() where T : class, ISolidProxyInvocationStepConfig
+        public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
         {
-            var configured = InternalServiceProvider.GetService(typeof(T)) != null;
-            if (configured)
-            {
-                return true;
-            }
-            return ParentScope?.IsStepConfigured<T>() ?? false;
+            return IsAdviceConfigured(typeof(T));
         }
 
-        public SolidScopeType GetStepScope(Type settingsType)
+        public bool IsAdviceConfigured(Type settingsType)
         {
-            var stepScopeType = ParentScope?.GetStepScope(settingsType) ?? SolidScopeType.None;
-            if(stepScopeType == SolidScopeType.None)
+            var stepScopeType = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
+            if(!stepScopeType)
             {
                 if(InternalServiceProvider.GetService(settingsType) != null)
                 {
-                    stepScopeType = SolidScopeType;
+                    stepScopeType = true;
                 }
             }
             return stepScopeType;

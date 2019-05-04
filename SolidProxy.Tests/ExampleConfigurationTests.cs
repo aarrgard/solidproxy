@@ -19,7 +19,7 @@ namespace SolidProxy.Tests
             int GetNotImplementedValue();
         }
 
-        public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
         {
             public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
             {
@@ -34,7 +34,7 @@ namespace SolidProxy.Tests
             services.AddSingleton<ISingletonInterface>();
             services.AddTransient<ITransientInterface>();
 
-            services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue" ? SolidScopeType.Method : SolidScopeType.None);
+            services.AddSolidProxyInvocationAdvice(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue");
 
             var sp = services.BuildServiceProvider();
 

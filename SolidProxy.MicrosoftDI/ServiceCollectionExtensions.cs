@@ -31,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidProxy(this IServiceCollection services, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher, Action<ISolidConfigurationScope> action = default(Action<ISolidConfigurationScope>))
+        public static IServiceCollection AddSolidProxy(this IServiceCollection services, Func<ISolidMethodConfigurationBuilder, bool> pointcut, Action<ISolidMethodConfigurationBuilder> action = null)
         {
             if (action == null) action = _ => { };
             
@@ -63,27 +63,10 @@ namespace Microsoft.Extensions.DependencyInjection
                         .ConfigureInterface(service.ServiceType)
                         .ConfigureMethod(method);
 
-                    var scope = matcher(config);
-                    switch (scope)
+                    if (pointcut(config))
                     {
-                        case SolidScopeType.None:
-                            break;
-                        case SolidScopeType.Global:
-                            config.SetEnabled();
-                            action(config.ParentScope.ParentScope.ParentScope);
-                            break;
-                        case SolidScopeType.Assembly:
-                            config.SetEnabled();
-                            action(config.ParentScope.ParentScope);
-                            break;
-                        case SolidScopeType.Interface:
-                            config.SetEnabled();
-                            action(config.ParentScope);
-                            break;
-                        case SolidScopeType.Method:
-                            config.SetEnabled();
-                            action(config);
-                            break;
+                        config.SetEnabled();
+                        action(config);
                     }
                 }
             }
@@ -92,36 +75,36 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Adds a proxy invocation step.
+        /// Adds a proxy invocation advice.
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSolidProxyInvocationStep(this IServiceCollection services, Type invocationStepType, Func<ISolidMethodConfigurationBuilder, SolidScopeType> matcher = null)
+        public static IServiceCollection AddSolidProxyInvocationAdvice(this IServiceCollection services, Type adviceStepType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
-            if(!invocationStepType.IsGenericType)
+            if(!adviceStepType.IsGenericType)
             {
                 throw new Exception("Invocation step type must be a generic type");
             }
-            if(!invocationStepType.IsClass)
+            if(!adviceStepType.IsClass)
             {
                 throw new Exception("Invocation step type must be a concrete type(class)");
             }
-            if(!typeof(ISolidProxyInvocationStep).IsAssignableFrom(invocationStepType))
+            if(!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceStepType))
             {
-                throw new Exception($"Invocation step type must implement {typeof(ISolidProxyInvocationStep).FullName}");
+                throw new Exception($"Invocation step type must implement {typeof(ISolidProxyInvocationAdvice).FullName}");
             }
-            if(matcher == null)
+            if(pointcut == null)
             {
-                matcher = GetConfigMatcher(invocationStepType);
+                pointcut = GetPointcut(adviceStepType);
             }
-            services.AddSolidProxy(matcher, o => o.AddSolidInvocationStep(invocationStepType));
+            services.AddSolidProxy(pointcut, o => o.AddSolidInvocationAdvice(adviceStepType));
             return services;
         }
 
-        private static Func<ISolidMethodConfigurationBuilder, SolidScopeType> GetConfigMatcher(Type invocationStepType)
+        private static Func<ISolidMethodConfigurationBuilder, bool> GetPointcut(Type adviceStepType)
         {
-            var settingsType = SolidConfigurationHelper.GetStepConfigType(invocationStepType);
-            return (mb) => mb.GetStepScope(settingsType);
+            var settingsType = SolidConfigurationHelper.GetAdviceConfigType(adviceStepType);
+            return (mb) => mb.IsAdviceConfigured(settingsType);
         }
 
         private static MethodInfo s_RegisterService = typeof(ServiceCollectionExtensions)
@@ -179,7 +162,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AssemblyBuilders
                 .SelectMany(o => o.Interfaces)
                 .SelectMany(o => o.Methods)
-                .SelectMany(o => o.GetSolidInvocationStepTypes())
+                .SelectMany(o => o.GetSolidInvocationAdviceTypes())
                 .Distinct()
                 .ToList()
                 .ForEach(o =>
@@ -261,7 +244,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     var methodConfigScope = interfaceConfig.ConfigureMethod(o);
                     if(hasImplementation)
                     {
-                        methodConfigScope.AddSolidInvocationStep(typeof(SolidProxyInvocationStep<,,>));
+                        methodConfigScope.AddSolidInvocationAdvice(typeof(SolidProxyInvocationAdvice<,,>));
                     }
                        
                 });

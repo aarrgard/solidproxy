@@ -46,7 +46,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         private SolidProxyInvocationConfiguration<TInterface, MRet, TRet> CreateRpcProxyInvocationConfiguration<MRet, TRet>(MethodInfo methodInfo)
         {
             var methodConfig = SolidProxyConfigurationStore.SolidConfigurationBuilder.ConfigureInterface<TInterface>().ConfigureMethod(methodInfo);
-            return new SolidProxyInvocationConfiguration<TInterface, MRet, TRet>(methodConfig, this, methodInfo);
+            return new SolidProxyInvocationConfiguration<TInterface, MRet, TRet>(methodConfig, this);
         }
     }
 }

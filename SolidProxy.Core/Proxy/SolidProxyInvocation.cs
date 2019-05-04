@@ -32,7 +32,7 @@ namespace SolidProxy.Core.Proxy
         public ISolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> SolidProxyInvocationConfiguration { get; }
         ISolidProxyInvocationConfiguration ISolidProxyInvocation.SolidProxyInvocationConfiguration => SolidProxyInvocationConfiguration;
         public object[] Arguments { get; }
-        public IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
+        public IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
         public int InvocationStepIdx { get; private set; }
         public IDictionary<string, object> InvocationValues {
             get

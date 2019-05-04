@@ -16,7 +16,7 @@ namespace SolidProxy.Tests
             string GetInterfaceValue();
             string GetMethodValue();
         }
-        public class ConfiguartionHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        public class ConfiguartionHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
         {
             public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
             {
@@ -33,7 +33,7 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddSingleton<IConfiguration>();
 
-            services.AddSolidProxyInvocationStep(typeof(ConfiguartionHandler<,,>), mi => mi.MethodInfo.DeclaringType == typeof(IConfiguration) ? SolidScopeType.Interface : SolidScopeType.None);
+            services.AddSolidProxyInvocationAdvice(typeof(ConfiguartionHandler<,,>), mi => mi.MethodInfo.DeclaringType == typeof(IConfiguration));
             services.GetSolidConfigurationBuilder().SetValue("Global", "GlobalValue");
             services.GetSolidConfigurationBuilder().ConfigureInterface<IConfiguration>().ParentScope.SetValue("Assembly", "AssemblyValue");
             services.GetSolidConfigurationBuilder().ConfigureInterface<IConfiguration>().SetValue("Interface", "InterfaceValue");

@@ -21,7 +21,7 @@ namespace Tests
             public int Int2 => 2;
         }
 
-        public class ProxyMiddleware<TObject, MRet, TRet> : ISolidProxyInvocationStep<TObject, MRet, TRet> where TObject : class
+        public class ProxyMiddleware<TObject, MRet, TRet> : ISolidProxyInvocationAdvice<TObject, MRet, TRet> where TObject : class
         {
             public Task<TRet> Handle(Func<Task<TRet>> next, ISolidProxyInvocation<TObject, MRet, TRet> invocation)
             {
@@ -40,7 +40,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
+            sc.AddSolidProxyInvocationAdvice(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.DeclaringType == typeof(ITestInterface));
 
             var sp = sc.BuildServiceProvider();
 
@@ -55,7 +55,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.AddSolidProxyInvocationStep(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)) ? SolidScopeType.Method : SolidScopeType.None);
+            sc.AddSolidProxyInvocationAdvice(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
 
             var sp = sc.BuildServiceProvider();
 

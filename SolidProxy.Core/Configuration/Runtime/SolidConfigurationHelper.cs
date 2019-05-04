@@ -9,7 +9,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     public class SolidConfigurationHelper
     {
         private static ConcurrentDictionary<Type, MethodInfo> ConfigMethods = new ConcurrentDictionary<Type, MethodInfo>();
-        private static ConcurrentDictionary<Type, Func<ISolidProxyInvocationStep, ISolidConfigurationScope, bool>> ConfigFunctions = new ConcurrentDictionary<Type, Func<ISolidProxyInvocationStep, ISolidConfigurationScope, bool>>();
+        private static ConcurrentDictionary<Type, Func<ISolidProxyInvocationAdvice, ISolidConfigurationScope, bool>> ConfigFunctions = new ConcurrentDictionary<Type, Func<ISolidProxyInvocationAdvice, ISolidConfigurationScope, bool>>();
 
         /// <summary>
         /// Returns the configuration method for supplied step type
@@ -42,7 +42,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <param name="stepType"></param>
         /// <returns></returns>
-        public static Type GetStepConfigType(Type stepType)
+        public static Type GetAdviceConfigType(Type stepType)
         {
             var configMethod = GetConfigMethod(stepType);
             if(configMethod == null)
@@ -51,7 +51,7 @@ namespace SolidProxy.Core.Configuration.Runtime
             }
             var types = configMethod.GetParameters()
                 .Select(o => o.ParameterType)
-                .Where(o => typeof(ISolidProxyInvocationStepConfig).IsAssignableFrom(o))
+                .Where(o => typeof(ISolidProxyInvocationAdviceConfig).IsAssignableFrom(o))
                 .ToList();
 
             if (types.Count != 1)
@@ -68,27 +68,27 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <param name="step"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static bool ConfigureStep(ISolidProxyInvocationStep step, ISolidConfigurationScope config)
+        public static bool ConfigureStep(ISolidProxyInvocationAdvice step, ISolidConfigurationScope config)
         {
             var configAction = ConfigFunctions.GetOrAdd(step.GetType(), GetConfigFunction);
             return configAction.Invoke(step, config);
         }
 
-        private static Func<ISolidProxyInvocationStep, ISolidConfigurationScope, bool> GetConfigFunction(Type type)
+        private static Func<ISolidProxyInvocationAdvice, ISolidConfigurationScope, bool> GetConfigFunction(Type type)
         {
             var configMethod = GetConfigMethod(type);
             if(configMethod == null)
             {
                 return (config, step) => { return true; };
             }
-            var configType = GetStepConfigType(type);
+            var configType = GetAdviceConfigType(type);
             var configScopeMethod = typeof(ISolidConfigurationScope)
                 .GetMethods()
-                .Where(o => o.Name == nameof(ISolidConfigurationScope.ConfigureStep))
+                .Where(o => o.Name == nameof(ISolidConfigurationScope.ConfigureAdvice))
                 .Single();
             configScopeMethod = configScopeMethod.MakeGenericMethod(new[] { configType });
             return (step, configScope) => {
-                var config = (ISolidProxyInvocationStepConfig)configScopeMethod.Invoke(configScope, null);
+                var config = (ISolidProxyInvocationAdviceConfig)configScopeMethod.Invoke(configScope, null);
                 configMethod.Invoke(step, new object[] { config });
                 return config.Enabled;
             };

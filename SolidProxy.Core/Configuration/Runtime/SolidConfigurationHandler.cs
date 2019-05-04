@@ -10,7 +10,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TReturnType"></typeparam>
     /// <typeparam name="TPipeline"></typeparam>
-    public class SolidConfigurationHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+    public class SolidConfigurationHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
     {
         public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
         {

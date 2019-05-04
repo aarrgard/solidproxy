@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using SolidProxy.Core.Ioc;
+using SolidProxy.Core.IoC;
 
 namespace SolidProxy.MicrosoftDI
 {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace SolidProxy.Core.Ioc
+namespace SolidProxy.Core.IoC
 {
     /// <summary>
     /// Implements a simple IoC container that we use when setting up configuration.

@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -12,7 +14,24 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         new ISolidInterfaceConfigurationBuilder ParentScope { get; }
 
+        /// <summary>
+        /// The method that this configuration applies to
+        /// </summary>
         MethodInfo MethodInfo { get; }
+
+        /// <summary>
+        /// Adds an advice to this method.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        ISolidMethodConfigurationBuilder AddSolidInvocationAdvice(Type adviceType);
+
+        /// <summary>
+        /// Returns all the advices configured on this method
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        IEnumerable<Type> GetSolidInvocationAdviceTypes();
     }
 
     /// <summary>

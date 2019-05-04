@@ -63,6 +63,6 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// Returns the invocation steps configured for this invocation.
         /// </summary>
         /// <returns></returns>
-        IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps();
+        IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps();
     }
 }

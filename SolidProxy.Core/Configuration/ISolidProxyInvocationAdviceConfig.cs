@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 namespace SolidProxy.Core.Configuration
 {
     /// <summary>
-    /// Represents a step in the proxy invocation pipeline.
+    /// Represents the congfiguration of an advice.
     /// </summary>
-    public interface ISolidProxyInvocationStepConfig
+    public interface ISolidProxyInvocationAdviceConfig
     {
         /// <summary>
-        /// Specifies if this step is enabled.
+        /// Specifies if this advice is enabled.
         /// </summary>
         bool Enabled { get; set; }
     }

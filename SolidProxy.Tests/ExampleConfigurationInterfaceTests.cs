@@ -19,12 +19,12 @@ namespace SolidProxy.Tests
             string GetValue();
         }
 
-        public interface IInvocationStepConfig : ISolidProxyInvocationStepConfig
+        public interface IInvocationStepConfig : ISolidProxyInvocationAdviceConfig
         {
             int Retries { get; set; }
         }
 
-        public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
         {
             public void Configure(IInvocationStepConfig stepConfig)
             {
@@ -46,14 +46,14 @@ namespace SolidProxy.Tests
             services.AddSingleton<IEnabledInterface>();
             services.AddSingleton<IDisabledInterface>();
 
-            services.GetSolidConfigurationBuilder().ConfigureStep<IInvocationStepConfig>().Enabled = true;
-            services.GetSolidConfigurationBuilder().ConfigureStep<IInvocationStepConfig>().Retries = 123;
+            services.GetSolidConfigurationBuilder().ConfigureAdvice<IInvocationStepConfig>().Enabled = true;
+            services.GetSolidConfigurationBuilder().ConfigureAdvice<IInvocationStepConfig>().Retries = 123;
             services.GetSolidConfigurationBuilder().ConfigureInterface<IEnabledInterface>()
-                .ConfigureMethod(o=>o.GetValue2()).ConfigureStep<IInvocationStepConfig>().Retries = 456;
+                .ConfigureMethod(o=>o.GetValue2()).ConfigureAdvice<IInvocationStepConfig>().Retries = 456;
             services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>()
-                .ConfigureStep<IInvocationStepConfig>().Enabled = false;
+                .ConfigureAdvice<IInvocationStepConfig>().Enabled = false;
 
-            services.AddSolidProxyInvocationStep(typeof(InvocationStep<,,>));
+            services.AddSolidProxyInvocationAdvice(typeof(InvocationStep<,,>));
 
             var sp = services.BuildServiceProvider();
 

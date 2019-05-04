@@ -19,12 +19,12 @@ namespace SolidProxy.Core.Configuration.Runtime
         private static readonly Func<Task<TPipeline>, TReturnType> s_TPipelineToTReturnTypeConverter;
         private static readonly Func<TReturnType, Task<TPipeline>> s_TReturnTypeToTPipelineConverter;
 
-        private IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> _solidInvocationSteps;
+        private IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> _solidInvocationSteps;
 
-        public SolidProxyInvocationConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfiguration<TObject> proxyConfiguration, MethodInfo methodInfo) 
-            : base(SolidScopeType.Method, parentScope)
+        public SolidProxyInvocationConfiguration(ISolidMethodConfigurationBuilder methodConfiguration, ISolidProxyConfiguration<TObject> proxyConfiguration) 
+            : base(SolidScopeType.Method, methodConfiguration)
         {
-            MethodInfo = methodInfo;
+            MethodConfiguration = methodConfiguration;
             ProxyConfiguration = proxyConfiguration;
         }
 
@@ -36,8 +36,9 @@ namespace SolidProxy.Core.Configuration.Runtime
 
 
         public ISolidProxyConfiguration ProxyConfiguration { get; }
+        public ISolidMethodConfigurationBuilder MethodConfiguration { get; }
 
-        public MethodInfo MethodInfo { get; }
+        public MethodInfo MethodInfo => MethodConfiguration.MethodInfo;
 
         public Type PipelineType => typeof(TPipeline);
 
@@ -54,13 +55,13 @@ namespace SolidProxy.Core.Configuration.Runtime
             return new SolidProxyInvocation<TObject, TReturnType, TPipeline>((ISolidProxy<TObject>)rpcProxy, this, args);
         }
 
-        public IList<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps()
+        public IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps()
         {
             if(_solidInvocationSteps == null)
             {
-                var stepTypes = this.GetSolidInvocationStepTypes().ToList();
+                var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
-                _solidInvocationSteps = new ReadOnlyCollection<ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>>(stepTypes.Select(t =>
+                _solidInvocationSteps = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>>(stepTypes.Select(t =>
                 {
                     if (t.IsGenericTypeDefinition)
                     {
@@ -80,7 +81,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                         }
                     }
 
-                    var step = (ISolidProxyInvocationStep<TObject, TReturnType, TPipeline>)sp.GetService(t);
+                    var step = (ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>)sp.GetService(t);
                     if(step == null)
                     {
                         throw new Exception($"No step configured for type: {t.FullName}");

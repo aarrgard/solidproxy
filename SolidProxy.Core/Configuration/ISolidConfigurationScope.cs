@@ -40,21 +40,21 @@ namespace SolidProxy.Core.Configuration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T ConfigureStep<T>() where T : class,ISolidProxyInvocationStepConfig;
+        T ConfigureAdvice<T>() where T : class,ISolidProxyInvocationAdviceConfig;
 
         /// <summary>
-        /// Returns true if the type interface is configured on this scope or a parent scope.
+        /// Returns true if the advice is configured on this scope or a parent scope.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        bool IsStepConfigured<T>() where T : class, ISolidProxyInvocationStepConfig;
+        bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig;
 
         /// <summary>
-        /// Returns true if the type interface is configured on this scope or a parent scope.
+        /// Returns true if the advice is configured on this scope or a parent scope.
         /// </summary>
         /// <param name="setting"></param>
         /// <returns></returns>
-        SolidScopeType GetStepScope(Type setting);
+        bool IsAdviceConfigured(Type setting);
     }
 
     /// <summary>

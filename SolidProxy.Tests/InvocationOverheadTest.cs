@@ -44,7 +44,7 @@ namespace SolidProxy.Tests
             await RunTests($"plain-{nameof(ResolveOnceAndGetInt)}", sc.BuildServiceProvider(), ResolveOnceAndGetInt);
             await RunTests($"plain-{nameof(ResolveOnceAndGetIntAsync)}", sc.BuildServiceProvider(), ResolveOnceAndGetIntAsync);
 
-            sc.AddSolidProxy(o => o.MethodInfo.DeclaringType == typeof(ITestInterface) ? SolidScopeType.Interface : SolidScopeType.None);
+            sc.AddSolidProxy(o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
 
             await RunTests($"wrapped-{nameof(ResolveAndGetInt)}", sc.BuildServiceProvider(), ResolveAndGetInt);
             await RunTests($"wrapped-{nameof(ResolveOnceAndGetInt)}", sc.BuildServiceProvider(), ResolveOnceAndGetInt);

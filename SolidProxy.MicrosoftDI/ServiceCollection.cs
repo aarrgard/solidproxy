@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
-using SolidProxy.Core.Ioc;
+using SolidProxy.Core.IoC;
 
 namespace SolidProxy.MicrosoftDI
 {

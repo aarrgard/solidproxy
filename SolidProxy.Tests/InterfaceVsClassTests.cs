@@ -12,7 +12,7 @@ namespace SolidProxy.Tests
     {
         public class AopAttribute : Attribute {  }
 
-        public class Handler<TObject, TReturnType> : ISolidProxyInvocationStep<TObject, TReturnType, int> where TObject : class
+        public class Handler<TObject, TReturnType> : ISolidProxyInvocationAdvice<TObject, TReturnType, int> where TObject : class
         {
             public async Task<int> Handle(Func<Task<int>> next, ISolidProxyInvocation<TObject, TReturnType, int> invocation)
             {
@@ -26,7 +26,7 @@ namespace SolidProxy.Tests
                 }
             }
         }
-        public class Handler2<TObject, TReturnType, TPipeline> : ISolidProxyInvocationStep<TObject, TReturnType, TPipeline> where TObject : class
+        public class Handler2<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
         {
             public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
             {
@@ -54,9 +54,9 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler<,>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 
             var sp = services.BuildServiceProvider();
@@ -70,9 +70,9 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface, TestImplementation>();
 
-            services.AddSolidProxyInvocationStep(
+            services.AddSolidProxyInvocationAdvice(
                 typeof(Handler<,>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any() ? SolidScopeType.Method : SolidScopeType.None
+                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 
             var sp = services.BuildServiceProvider();
