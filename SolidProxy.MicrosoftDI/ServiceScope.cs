@@ -4,6 +4,9 @@ using SolidProxy.Core.IoC;
 
 namespace SolidProxy.MicrosoftDI
 {
+    /// <summary>
+    /// Represents a service scope compatible with .net core di.
+    /// </summary>
     public class ServiceScope : IServiceScope
     {
         public ServiceScope(SolidProxyServiceProvider solidProxyServiceProvider)
