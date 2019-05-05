@@ -65,22 +65,27 @@ namespace SolidProxy.Core.Configuration.Builder
             }
         }
 
-        public T ConfigureAdvice<T>() where T: class,ISolidProxyInvocationAdviceConfig
+        public TConfig ConfigureAdvice<TConfig>() where TConfig: class,ISolidProxyInvocationAdviceConfig
         {
-            var i = (T)InternalServiceProvider.GetService(typeof(T));
+            var i = (TConfig)InternalServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
                 var proxyConfStore = InternalServiceProvider.GetRequiredService<ISolidProxyConfigurationStore>();
-                var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<T>();
-                proxyConf.SetValue(nameof(ISolidConfigurationScope), this);
+                var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<TConfig>();
+                SetAdviceConfigValues<TConfig>(proxyConf);
                 proxyConf.AddSolidInvocationAdvice(typeof(SolidConfigurationHandler<,,>));
 
-                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
-                InternalServiceProvider.AddScoped<ISolidProxy<T>, SolidProxy<T>>();
-                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxy<T>>().Proxy);
-                i = InternalServiceProvider.GetRequiredService<T>();
+                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TConfig>());
+                InternalServiceProvider.AddScoped<ISolidProxy<TConfig>, SolidProxy<TConfig>>();
+                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxy<TConfig>>().Proxy);
+                i = InternalServiceProvider.GetRequiredService<TConfig>();
             }
             return i;
+        }
+
+        protected virtual void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope) where TConfig : class, ISolidProxyInvocationAdviceConfig
+        {
+            scope.SetValue(nameof(ISolidConfigurationScope), this);
         }
 
         public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
@@ -99,6 +104,25 @@ namespace SolidProxy.Core.Configuration.Builder
                 }
             }
             return stepScopeType;
+        }
+
+        public bool Enabled
+        {
+            get
+            {
+                return GetValue<bool>(nameof(Enabled), false);
+            }
+            set
+            {
+                if(value)
+                {
+                    SetValue(nameof(Enabled), true, true);
+                }
+                else
+                {
+                    SetValue(nameof(Enabled), false, false);
+                }
+            }
         }
     }
 

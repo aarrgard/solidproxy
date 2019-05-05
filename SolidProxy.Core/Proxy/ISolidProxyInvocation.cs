@@ -59,15 +59,15 @@ namespace SolidProxy.Core.Proxy
     /// Represents a proxy invocation.
     /// </summary>
     /// <typeparam name="TObject">The interface type</typeparam>
-    /// <typeparam name="TReturnType">The return type</typeparam>
-    /// <typeparam name="TPipeline">The return type</typeparam>
-    public interface ISolidProxyInvocation<TObject, TReturnType, TPipeline> : ISolidProxyInvocation where TObject : class
+    /// <typeparam name="TMethod">The return type</typeparam>
+    /// <typeparam name="TAdvice">The return type</typeparam>
+    public interface ISolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation where TObject : class
     {
-        new ISolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> SolidProxyInvocationConfiguration { get; }
+        new ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> SolidProxyInvocationConfiguration { get; }
 
         /// <summary>
         /// Returns the invocation steps.
         /// </summary>
-        IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> InvocationSteps { get; }
+        IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationSteps { get; }
     }
 }

@@ -51,7 +51,6 @@ namespace SolidProxy.Core.Configuration.Runtime
             }
             var types = configMethod.GetParameters()
                 .Select(o => o.ParameterType)
-                .Where(o => typeof(ISolidProxyInvocationAdviceConfig).IsAssignableFrom(o))
                 .ToList();
 
             if (types.Count != 1)
@@ -59,7 +58,14 @@ namespace SolidProxy.Core.Configuration.Runtime
                 throw new Exception($"The type {stepType.FullName} does not contain a constructor with _one_ settings param.");
             }
 
-            return types.First();
+            var type = types.First();
+
+            if(!typeof(ISolidProxyInvocationAdviceConfig).IsAssignableFrom(type))
+            {
+                throw new Exception($"The configuration for {stepType.FullName} does not implement {nameof(ISolidProxyInvocationAdviceConfig)}.");
+            }
+
+            return type;
         }
 
         /// <summary>

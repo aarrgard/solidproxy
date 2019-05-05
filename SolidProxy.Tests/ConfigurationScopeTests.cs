@@ -1,30 +1,28 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
     public class ConfigurationScopeTests
     {
-        public class Advice1<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
-        public class Advice2<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
-        public class Advice3<TObject, TReturnType, TPipeline> : AdviceBase<TObject, TReturnType, TPipeline> where TObject : class { }
+        public class Advice1<TObject, TMethod, TAdvice> : AdviceBase<TObject, TMethod, TAdvice> where TObject : class { }
+        public class Advice2<TObject, TMethod, TAdvice> : AdviceBase<TObject, TMethod, TAdvice> where TObject : class { }
+        public class Advice3<TObject, TMethod, TAdvice> : AdviceBase<TObject, TMethod, TAdvice> where TObject : class { }
 
-        public class AdviceBase<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
+        public class AdviceBase<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
-            private static readonly string StepCountKey = typeof(AdviceBase<TObject, TReturnType, TPipeline>).FullName + ".StepCount";
+            private static readonly string StepCountKey = typeof(AdviceBase<TObject, TMethod, TAdvice>).FullName + ".StepCount";
 
-            public async Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
+            public async Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 // increase the step count.
                 invocation.SetValue(StepCountKey, invocation.GetValue<int>(StepCountKey) + 1);
                 if (invocation.IsLastStep)
                 {
-                    return (TPipeline)(object)invocation.GetValue<int>(StepCountKey);
+                    return (TAdvice)(object)invocation.GetValue<int>(StepCountKey);
                 }
                 else
                 {

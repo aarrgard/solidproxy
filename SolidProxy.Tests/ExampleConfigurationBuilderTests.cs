@@ -16,14 +16,14 @@ namespace SolidProxy.Tests
             string GetInterfaceValue();
             string GetMethodValue();
         }
-        public class ConfiguartionHandler<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
+        public class ConfiguartionHandler<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
-            public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 var key = invocation.SolidProxyInvocationConfiguration.MethodInfo.Name;
                 key = key.Substring(3);
                 key = key.Substring(0, key.Length-5);
-                return Task.FromResult(invocation.SolidProxyInvocationConfiguration.GetValue<TPipeline>(key, true));
+                return Task.FromResult(invocation.SolidProxyInvocationConfiguration.GetValue<TAdvice>(key, true));
             }
         }
 

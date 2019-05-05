@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -8,6 +7,12 @@ namespace SolidProxy.Core.Configuration
     /// </summary>
     public interface ISolidProxyInvocationAdviceConfig
     {
+        /// <summary>
+        /// This is the method that this advice configuration applies to.
+        /// </summary>
+        MethodInfo MethodInfo { get; }
+
+
         /// <summary>
         /// Specifies if this advice is enabled.
         /// </summary>

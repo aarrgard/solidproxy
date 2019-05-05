@@ -39,30 +39,14 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// Configuration for a method invocation.
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
-    /// <typeparam name="TReturnType"></typeparam>
+    /// <typeparam name="TMethod"></typeparam>
     /// <typeparam name="TRet"></typeparam>
-    public interface ISolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> : ISolidConfigurationScope<TObject>, ISolidProxyInvocationConfiguration where TObject : class
+    public interface ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : ISolidConfigurationScope<TObject>, ISolidProxyInvocationConfiguration where TObject : class
     {
-        /// <summary>
-        /// Returns the implementation factory. Constructs the underlying implementation
-        /// or transport instance for the wrapped object.
-        /// </summary>
-        Func<IServiceProvider, TObject> ImplementationFactory { get; }
-
-        /// <summary>
-        /// Converts the return type from the method to a type that can be handled by the pipeline.
-        /// </summary>
-        Func<TReturnType, Task<TPipeline>> TReturnTypeToTPipelineConverter { get; }
-
-        /// <summary>
-        /// Converts the pipeline type to the type returned by the method.
-        /// </summary>
-        Func<Task<TPipeline>, TReturnType> TPipelineToTReturnTypeConverter { get; }
-
         /// <summary>
         /// Returns the invocation steps configured for this invocation.
         /// </summary>
         /// <returns></returns>
-        IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps();
+        IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationSteps();
     }
 }

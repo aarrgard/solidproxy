@@ -24,7 +24,7 @@ namespace SolidProxy.Tests
             int Retries { get; set; }
         }
 
-        public class InvocationStep<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
+        public class InvocationStep<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
             public void Configure(IInvocationStepConfig stepConfig)
             {
@@ -33,9 +33,9 @@ namespace SolidProxy.Tests
 
             public int Retries { get; private set; }
 
-            public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                return Task.FromResult((TPipeline)(object)(""+Retries));
+                return Task.FromResult((TAdvice)(object)(""+Retries));
             }
         }
 

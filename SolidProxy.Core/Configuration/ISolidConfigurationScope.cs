@@ -20,6 +20,11 @@ namespace SolidProxy.Core.Configuration
         ISolidConfigurationScope ParentScope { get; }
 
         /// <summary>
+        /// Specifies if this scope is enabled. ie 
+        /// </summary>
+        bool Enabled { get; set; }
+
+        /// <summary>
         /// Gets a configuration value in this scope.
         /// </summary>
         /// <param name="key"></param>

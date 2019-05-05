@@ -12,7 +12,7 @@ namespace SolidProxy.Tests
     {
         public class AopAttribute : Attribute {  }
 
-        public class Handler<TObject, TReturnType> : ISolidProxyInvocationAdvice<TObject, TReturnType, int> where TObject : class
+        public class Advice<TObject, TReturnType> : ISolidProxyInvocationAdvice<TObject, TReturnType, int> where TObject : class
         {
             public async Task<int> Handle(Func<Task<int>> next, ISolidProxyInvocation<TObject, TReturnType, int> invocation)
             {
@@ -26,11 +26,11 @@ namespace SolidProxy.Tests
                 }
             }
         }
-        public class Handler2<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> where TObject : class
+        public class Advice2<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
-            public Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation)
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                return Task.FromResult(default(TPipeline));
+                return Task.FromResult(default(TAdvice));
             }
         }
 
@@ -55,7 +55,7 @@ namespace SolidProxy.Tests
             services.AddTransient<ITestInterface>();
 
             services.AddSolidProxyInvocationAdvice(
-                typeof(Handler<,>),
+                typeof(Advice<,>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 
@@ -71,7 +71,7 @@ namespace SolidProxy.Tests
             services.AddTransient<ITestInterface, TestImplementation>();
 
             services.AddSolidProxyInvocationAdvice(
-                typeof(Handler<,>),
+                typeof(Advice<,>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 

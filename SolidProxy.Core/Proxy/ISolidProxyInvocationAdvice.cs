@@ -14,9 +14,9 @@ namespace SolidProxy.Core.Proxy
     /// Represents a step in the proxy invocation pipeline.
     /// </summary>
     /// <typeparam name="TObject">The type we are wrapping</typeparam>
-    /// <typeparam name="TReturnType">The type that the invoked method returns</typeparam>
-    /// <typeparam name="TPipeline">The type we are constructing</typeparam>
-    public interface ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline> : ISolidProxyInvocationAdvice where TObject : class
+    /// <typeparam name="TMethod">The type that the invoked method returns</typeparam>
+    /// <typeparam name="TAdvice">The type we are constructing</typeparam>
+    public interface ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice where TObject : class
     {
         /// <summary>
         /// Handler for the step.
@@ -24,6 +24,6 @@ namespace SolidProxy.Core.Proxy
         /// <param name="next"></param>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        Task<TPipeline> Handle(Func<Task<TPipeline>> next, ISolidProxyInvocation<TObject, TReturnType, TPipeline> invocation);
+        Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation);
     }
 }

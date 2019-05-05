@@ -65,7 +65,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                     if (pointcut(config))
                     {
-                        config.SetEnabled();
+                        config.Enabled = true;
                         action(config);
                     }
                 }
@@ -148,8 +148,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // create the proxies
             services.GetSolidConfigurationBuilder()
-                .AssemblyBuilders.Where(o => o.IsEnabled())
-                .SelectMany(o => o.Interfaces).Where(o => o.IsEnabled())
+                .AssemblyBuilders.Where(o => o.Enabled)
+                .SelectMany(o => o.Interfaces).Where(o => o.Enabled)
                 .ToList()
                 .ForEach(o => {
                     s_RegisterService.MakeGenericMethod(new[] { o.InterfaceType }).Invoke(null, new object[] { serviceTypes, services });
@@ -193,24 +193,24 @@ namespace Microsoft.Extensions.DependencyInjection
                 var rpcConfig = services.GetSolidConfigurationBuilder();
                 var interfaceConfig = rpcConfig.ConfigureInterface<T>();
 
-                bool hasImplementation = false;
+                //
+                // create implementation factory function.
+                //
+                Func<IServiceProvider,object> implementationFactory = null;
                 if (service.ImplementationFactory != null)
                 {
-                    hasImplementation = true;
-                    interfaceConfig.SetSolidImplementationFactory(sp => (T)service.ImplementationFactory.Invoke(sp));
+                    implementationFactory = sp => service.ImplementationFactory.Invoke(sp);
                 }
                 else if (service.ImplementationInstance != null)
                 {
-                    hasImplementation = true;
-                    interfaceConfig.SetSolidImplementationFactory(sp => (T)service.ImplementationInstance);
+                    implementationFactory = sp => service.ImplementationInstance;
                 }
                 else if (service.ImplementationType != null)
                 {
                     if(service.ImplementationType.IsClass)
                     {
-                        hasImplementation = true;
                         serviceTypes.DoIfMissing(service.ImplementationType, () => services.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
-                        interfaceConfig.SetSolidImplementationFactory(sp => (T)sp.GetRequiredService(service.ImplementationType));
+                        implementationFactory = sp => sp.GetRequiredService(service.ImplementationType);
                     }
                 }
                 else
@@ -218,8 +218,11 @@ namespace Microsoft.Extensions.DependencyInjection
                     throw new Exception("Cannot determine implementation type");
                 }
 
+                //
+                // add the configuration for the proxy and register 
+                // proxy and interface the same way as the removed service.
+                //
                 services.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
-
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
@@ -241,12 +244,18 @@ namespace Microsoft.Extensions.DependencyInjection
                 //
                 typeof(T).GetMethods().ToList().ForEach(o =>
                 {
-                    var methodConfigScope = interfaceConfig.ConfigureMethod(o);
-                    if(hasImplementation)
+                    var methodConfig = interfaceConfig.ConfigureMethod(o);
+
+                    //
+                    // configure implementation advice if implementation exists.
+                    //
+                    if (implementationFactory != null)
                     {
-                        methodConfigScope.AddSolidInvocationAdvice(typeof(SolidProxyInvocationAdvice<,,>));
+                        var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                        invocAdviceConfig.Enabled = true;
+                        invocAdviceConfig.ImplementationFactory = implementationFactory;
+                        methodConfig.AddSolidInvocationAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
                     }
-                       
                 });
             });
         }

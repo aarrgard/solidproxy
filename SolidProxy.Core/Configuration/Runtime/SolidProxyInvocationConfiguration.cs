@@ -3,23 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
-    public class SolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline> where TObject : class
+    public class SolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> where TObject : class
     {
-        static SolidProxyInvocationConfiguration()
-        {
-            s_TPipelineToTReturnTypeConverter = TypeConverter.CreateConverter<Task<TPipeline>, TReturnType>();
-            s_TReturnTypeToTPipelineConverter = TypeConverter.CreateConverter<TReturnType, Task<TPipeline>>();
-        }
-        private static readonly Func<Task<TPipeline>, TReturnType> s_TPipelineToTReturnTypeConverter;
-        private static readonly Func<TReturnType, Task<TPipeline>> s_TReturnTypeToTPipelineConverter;
-
-        private IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> _solidInvocationSteps;
+        private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _solidInvocationSteps;
 
         public SolidProxyInvocationConfiguration(ISolidMethodConfigurationBuilder methodConfiguration, ISolidProxyConfiguration<TObject> proxyConfiguration) 
             : base(SolidScopeType.Method, methodConfiguration)
@@ -28,40 +19,25 @@ namespace SolidProxy.Core.Configuration.Runtime
             ProxyConfiguration = proxyConfiguration;
         }
 
-        /// <summary>
-        /// The converter that maps between the method type and the wire type.
-        /// </summary>
-        public Func<Task<TPipeline>, TReturnType> TPipelineToTReturnTypeConverter => s_TPipelineToTReturnTypeConverter;
-        public Func<TReturnType, Task<TPipeline>> TReturnTypeToTPipelineConverter => s_TReturnTypeToTPipelineConverter;
-
-
         public ISolidProxyConfiguration ProxyConfiguration { get; }
         public ISolidMethodConfigurationBuilder MethodConfiguration { get; }
 
         public MethodInfo MethodInfo => MethodConfiguration.MethodInfo;
 
-        public Type PipelineType => typeof(TPipeline);
-
-        public Func<IServiceProvider, TObject> ImplementationFactory
-        {
-            get
-            {
-                return this.GetSolidImplementationFactory<SolidProxyInvocationConfiguration<TObject, TReturnType, TPipeline>, TObject>();
-            }
-        }
+        public Type PipelineType => typeof(TAdvice);
 
         public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args)
         {
-            return new SolidProxyInvocation<TObject, TReturnType, TPipeline>((ISolidProxy<TObject>)rpcProxy, this, args);
+            return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args);
         }
 
-        public IList<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>> GetSolidInvocationSteps()
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationSteps()
         {
             if(_solidInvocationSteps == null)
             {
                 var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
-                _solidInvocationSteps = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>>(stepTypes.Select(t =>
+                _solidInvocationSteps = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(stepTypes.Select(t =>
                 {
                     if (t.IsGenericTypeDefinition)
                     {
@@ -71,17 +47,17 @@ namespace SolidProxy.Core.Configuration.Runtime
                                 t = t.MakeGenericType(new[] { typeof(TObject) });
                                 break;
                             case 2:
-                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TReturnType) });
+                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod) });
                                 break;
                             case 3:
-                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TReturnType), typeof(TPipeline) });
+                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod), typeof(TAdvice) });
                                 break;
                             default:
                                 throw new Exception("Cannot create handler.");
                         }
                     }
 
-                    var step = (ISolidProxyInvocationAdvice<TObject, TReturnType, TPipeline>)sp.GetService(t);
+                    var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
                     if(step == null)
                     {
                         throw new Exception($"No step configured for type: {t.FullName}");
