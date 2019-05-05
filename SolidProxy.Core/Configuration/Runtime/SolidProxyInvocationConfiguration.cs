@@ -10,7 +10,7 @@ namespace SolidProxy.Core.Configuration.Runtime
 {
     public class SolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> where TObject : class
     {
-        private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _solidInvocationSteps;
+        private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _advices;
 
         public SolidProxyInvocationConfiguration(ISolidMethodConfigurationBuilder methodConfiguration, ISolidProxyConfiguration<TObject> proxyConfiguration) 
             : base(SolidScopeType.Method, methodConfiguration)
@@ -31,13 +31,13 @@ namespace SolidProxy.Core.Configuration.Runtime
             return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args);
         }
 
-        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationSteps()
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
-            if(_solidInvocationSteps == null)
+            if(_advices == null)
             {
                 var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
-                _solidInvocationSteps = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(stepTypes.Select(t =>
+                _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(stepTypes.Select(t =>
                 {
                     if (t.IsGenericTypeDefinition)
                     {
@@ -75,7 +75,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                 .ToList());
             }
 
-            return _solidInvocationSteps;
+            return _advices;
         }
     }
 }

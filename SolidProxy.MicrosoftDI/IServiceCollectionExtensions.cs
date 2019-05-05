@@ -5,13 +5,14 @@ using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
 using SolidProxy.MicrosoftDI;
 using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class ServiceCollectionExtensions
+    public static class IServiceCollectionExtensions
     {
         /// <summary>
         /// Builds a service provider from supplied collections.
@@ -107,7 +108,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return (mb) => mb.IsAdviceConfigured(settingsType);
         }
 
-        private static MethodInfo s_RegisterService = typeof(ServiceCollectionExtensions)
+        private static MethodInfo s_RegisterService = typeof(IServiceCollectionExtensions)
             .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
             .Where(o => o.Name == nameof(RegisterService))
             .Where(o => o.IsGenericMethod)

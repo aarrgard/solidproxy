@@ -24,7 +24,7 @@ namespace SolidProxy.Core.Proxy
         {
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
-            InvocationSteps = SolidProxyInvocationConfiguration.GetSolidInvocationSteps();
+            InvocationSteps = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
         }
 
