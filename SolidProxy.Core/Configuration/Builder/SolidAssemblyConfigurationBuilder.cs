@@ -8,8 +8,7 @@ namespace SolidProxy.Core.Configuration.Builder
 {
     public class SolidAssemblyConfigurationBuilder : SolidConfigurationScope, ISolidAssemblyConfigurationBuilder
     {
-
-        public SolidAssemblyConfigurationBuilder(SolidConfigurationBuilder parent, Assembly assembly)
+        public SolidAssemblyConfigurationBuilder(ISolidConfigurationBuilder parent, Assembly assembly)
             : base(SolidScopeType.Assembly, parent)
         {
             Assembly = assembly;
@@ -35,6 +34,11 @@ namespace SolidProxy.Core.Configuration.Builder
                 .Where(o => o.Name == nameof(ConfigureInterface))
                 .Where(o => o.IsGenericMethod)
                 .Single().MakeGenericMethod(new[] { t }).Invoke(this, null);
+        }
+
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            throw new NotImplementedException();
         }
     }
 }

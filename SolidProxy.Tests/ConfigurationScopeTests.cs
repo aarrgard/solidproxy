@@ -48,9 +48,12 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationAdvice(typeof(Advice1<,,>), mi => mi.MethodInfo.Name.Contains("1"));
-            services.AddSolidProxyInvocationAdvice(typeof(Advice2<,,>), mi => mi.MethodInfo.Name.Contains("2"));
-            services.AddSolidProxyInvocationAdvice(typeof(Advice3<,,>), mi => mi.MethodInfo.Name.Contains("3"));
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(Advice1<,,>), mi => mi.MethodInfo.Name.Contains("1"));
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(Advice2<,,>), mi => mi.MethodInfo.Name.Contains("2"));
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(Advice3<,,>), mi => mi.MethodInfo.Name.Contains("3"));
 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();

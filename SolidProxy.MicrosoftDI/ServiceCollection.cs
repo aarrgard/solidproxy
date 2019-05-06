@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.IoC;
@@ -9,73 +8,12 @@ namespace SolidProxy.MicrosoftDI
     /// <summary>
     /// Implements a service collection compatible with .net core di.
     /// </summary>
-    public class ServiceCollection : IServiceCollection
+    public class ServiceCollection : List<ServiceDescriptor>
     {
-        private IList<ServiceDescriptor> _serviceDescriptors;
-        public ServiceCollection()
-        {
-            _serviceDescriptors = new List<ServiceDescriptor>();
-        }
-        public ServiceDescriptor this[int index] { get => _serviceDescriptors[index]; set => _serviceDescriptors[index] = value; }
-
-        public int Count => _serviceDescriptors.Count;
-
-        public bool IsReadOnly => false;
-
-        public void Add(ServiceDescriptor item)
-        {
-            _serviceDescriptors.Add(item);
-        }
-
-        public void Clear()
-        {
-            _serviceDescriptors.Clear();
-        }
-
-        public bool Contains(ServiceDescriptor item)
-        {
-            return _serviceDescriptors.Contains(item);
-        }
-
-        public void CopyTo(ServiceDescriptor[] array, int arrayIndex)
-        {
-            _serviceDescriptors.CopyTo(array, arrayIndex);
-        }
-
-        public IEnumerator<ServiceDescriptor> GetEnumerator()
-        {
-            return _serviceDescriptors.GetEnumerator();
-        }
-
-        public int IndexOf(ServiceDescriptor item)
-        {
-            return _serviceDescriptors.IndexOf(item);
-        }
-
-        public void Insert(int index, ServiceDescriptor item)
-        {
-            _serviceDescriptors.Insert(index, item);
-        }
-
-        public bool Remove(ServiceDescriptor item)
-        {
-            return _serviceDescriptors.Remove(item);
-        }
-
-        public void RemoveAt(int index)
-        {
-            _serviceDescriptors.RemoveAt(index);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _serviceDescriptors.GetEnumerator();
-        }
-
         public IServiceProvider BuildServiceProvider()
         {
             var sp = new SolidProxyServiceProvider();
-            foreach(var sd in _serviceDescriptors)
+            foreach(var sd in this)
             {
                 switch(sd.Lifetime)
                 {

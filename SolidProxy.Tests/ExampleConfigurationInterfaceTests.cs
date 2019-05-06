@@ -53,7 +53,8 @@ namespace SolidProxy.Tests
             services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>()
                 .ConfigureAdvice<IInvocationStepConfig>().Enabled = false;
 
-            services.AddSolidProxyInvocationAdvice(typeof(InvocationStep<,,>));
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(InvocationStep<,,>));
 
             var sp = services.BuildServiceProvider();
 

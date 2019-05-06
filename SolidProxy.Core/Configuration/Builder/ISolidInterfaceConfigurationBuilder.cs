@@ -59,11 +59,5 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Returns the assebly configuration
         /// </summary>
         new ISolidAssemblyConfigurationBuilder ParentScope { get; }
-
-        /// <summary>
-        /// Adds the advice to all the methods on this interface.
-        /// </summary>
-        /// <param name="adviceType"></param>
-        void AddSolidInvocationAdvice(Type adviceType);
     }
 }

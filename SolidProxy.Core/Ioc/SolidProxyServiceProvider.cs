@@ -18,6 +18,15 @@ namespace SolidProxy.Core.IoC
         private static int s_registrationIdx = 0;
 
         /// <summary>
+        /// Returns all the registered services.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Type> GetRegistrations()
+        {
+            return _registrations.Select(o => o.Key);
+        }
+
+        /// <summary>
         /// These are the scopes that an implementation can belong to.
         /// </summary>
         private enum RegistrationScope { Singleton, Scoped, Transient, Nonexisting, Enumeration };
@@ -264,6 +273,12 @@ namespace SolidProxy.Core.IoC
                 typeof(IServiceProvider),
                 typeof(SolidProxyServiceProvider),
                 (sp) => this);
+            AddRegistration(
+                NewRegistrationIdx(),
+                RegistrationScope.Scoped,
+                typeof(SolidProxyServiceProvider),
+                typeof(SolidProxyServiceProvider),
+                (sp) => this);
         }
 
         public string ContainerId
@@ -488,6 +503,21 @@ namespace SolidProxy.Core.IoC
             var registration = _registrations.GetOrAdd(serviceType, ResolveRegistration);
             //Console.WriteLine($"Located {serviceType.FullName} as {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId}");
             return registration.Resolve(this);
+        }
+
+        /// <summary>
+        /// Returns the service of specified type. Throws if service does not exist.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetRequiredService<T>()
+        {
+            var t = (T)GetService(typeof(T));
+            if (t == null)
+            {
+                throw new Exception("Cannot find service " + typeof(T).FullName);
+            }
+            return t;
         }
 
         /// <summary>

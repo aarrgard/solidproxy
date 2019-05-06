@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -44,7 +45,8 @@ namespace SolidProxy.Tests
             await RunTests($"plain-{nameof(ResolveOnceAndGetInt)}", sc.BuildServiceProvider(), ResolveOnceAndGetInt);
             await RunTests($"plain-{nameof(ResolveOnceAndGetIntAsync)}", sc.BuildServiceProvider(), ResolveOnceAndGetIntAsync);
 
-            sc.AddSolidProxy(o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
+            sc.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>), o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
 
             await RunTests($"wrapped-{nameof(ResolveAndGetInt)}", sc.BuildServiceProvider(), ResolveAndGetInt);
             await RunTests($"wrapped-{nameof(ResolveOnceAndGetInt)}", sc.BuildServiceProvider(), ResolveOnceAndGetInt);

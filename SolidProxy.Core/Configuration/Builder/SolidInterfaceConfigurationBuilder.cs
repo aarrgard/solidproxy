@@ -71,15 +71,6 @@ namespace SolidProxy.Core.Configuration.Builder
             throw new Exception($"Cannot determine method from expression {expr}");
         }
 
-        public void AddSolidInvocationAdvice(Type adviceType)
-        {
-            var methods = GetMethods(InterfaceType).ToList();
-            methods.ForEach(m =>
-            {
-                ConfigureMethod(m).AddSolidInvocationAdvice(adviceType);
-            });
-        }
-
         private IEnumerable<MethodInfo> GetMethods(Type interfaceType)
         {
             var methods = (IEnumerable<MethodInfo>)interfaceType.GetMethods();
@@ -87,6 +78,11 @@ namespace SolidProxy.Core.Configuration.Builder
             methods = methods.Union(interfaceType.GetProperties().Select(o => o.GetSetMethod()));
             methods = methods.Union(interfaceType.GetInterfaces().SelectMany(o => GetMethods(o)));
             return methods.Where(o => o != null);
+        }
+
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            return GetMethods(typeof(T)).Select(o => ConfigureMethod(o));
         }
     }
 }

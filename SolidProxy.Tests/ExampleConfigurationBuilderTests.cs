@@ -33,7 +33,8 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddSingleton<IConfiguration>();
 
-            services.AddSolidProxyInvocationAdvice(typeof(ConfiguartionHandler<,,>), mi => mi.MethodInfo.DeclaringType == typeof(IConfiguration));
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(ConfiguartionHandler<,,>), mi => mi.MethodInfo.DeclaringType == typeof(IConfiguration));
             services.GetSolidConfigurationBuilder().SetValue("Global", "GlobalValue");
             services.GetSolidConfigurationBuilder().ConfigureInterface<IConfiguration>().ParentScope.SetValue("Assembly", "AssemblyValue");
             services.GetSolidConfigurationBuilder().ConfigureInterface<IConfiguration>().SetValue("Interface", "InterfaceValue");

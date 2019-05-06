@@ -54,7 +54,8 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationAdvice(
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(
                 typeof(Advice<,>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
@@ -70,11 +71,9 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface, TestImplementation>();
 
-            services.AddSolidProxyInvocationAdvice(
-                typeof(Advice<,>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
-            );
-
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(Advice<,>), mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any());
+ 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
             Assert.AreEqual(1001, test.GetValue());

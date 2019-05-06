@@ -1,9 +1,12 @@
 ﻿using Castle.DynamicProxy;
 using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.Ioc;
 using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -15,8 +18,8 @@ namespace SolidProxy.Core.Configuration.Builder
         private static SolidProxyServiceProvider SetupInternalServiceProvider()
         {
             var sp = new SolidProxyServiceProvider();
+            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
             sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
-            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilder>();
             sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
             sp.AddTransient(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
             return sp;
@@ -33,7 +36,6 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Returns the parent scope
         /// </summary>
         public ISolidConfigurationScope ParentScope { get; }
-
 
         /// <summary>
         /// Returns the scope type
@@ -73,11 +75,11 @@ namespace SolidProxy.Core.Configuration.Builder
                 var proxyConfStore = InternalServiceProvider.GetRequiredService<ISolidProxyConfigurationStore>();
                 var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<TConfig>();
                 SetAdviceConfigValues<TConfig>(proxyConf);
-                proxyConf.AddSolidInvocationAdvice(typeof(SolidConfigurationHandler<,,>));
+                proxyConf.AddAdvice(typeof(SolidConfigurationHandler<,,>));
 
-                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TConfig>());
+                InternalServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TConfig>());
                 InternalServiceProvider.AddScoped<ISolidProxy<TConfig>, SolidProxy<TConfig>>();
-                InternalServiceProvider.AddScoped(o => o.GetRequiredService<ISolidProxy<TConfig>>().Proxy);
+                InternalServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxy<TConfig>>().Proxy);
                 i = InternalServiceProvider.GetRequiredService<TConfig>();
             }
             return i;
@@ -104,6 +106,25 @@ namespace SolidProxy.Core.Configuration.Builder
                 }
             }
             return stepScopeType;
+        }
+
+        public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
+        {
+            if(pointcut == null) pointcut = (o) => true;
+            GetMethodConfigurationBuilders().Where(o => pointcut(o)).ToList().ForEach(o =>
+            {
+                o.AddAdvice(adviceType);
+            }); 
+        }
+
+        public virtual IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ConfigureProxy<TProxy>() where TProxy : class
+        {
+            ((SolidConfigurationScope)ParentScope).ConfigureProxy<TProxy>();
         }
 
         public bool Enabled

@@ -51,19 +51,23 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
             services.AddTransient<ITestInterface>();
 
-            services.AddSolidProxyInvocationAdvice(
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(
                 typeof(Handler1<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationAdvice(
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(
                 typeof(Handler2<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationAdvice(
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(
                 typeof(Handler3<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
-            services.AddSolidProxyInvocationAdvice(
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(
                 typeof(Handler4<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );

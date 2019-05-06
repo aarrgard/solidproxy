@@ -34,7 +34,8 @@ namespace SolidProxy.Tests
             services.AddSingleton<ISingletonInterface>();
             services.AddTransient<ITransientInterface>();
 
-            services.AddSolidProxyInvocationAdvice(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue");
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue");
 
             var sp = services.BuildServiceProvider();
 
