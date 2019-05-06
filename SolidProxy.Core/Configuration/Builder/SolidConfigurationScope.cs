@@ -122,9 +122,9 @@ namespace SolidProxy.Core.Configuration.Builder
             throw new NotImplementedException();
         }
 
-        public virtual void ConfigureProxy<TProxy>() where TProxy : class
+        public virtual void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig) where TProxy : class
         {
-            ((SolidConfigurationScope)ParentScope).ConfigureProxy<TProxy>();
+            ((SolidConfigurationScope)ParentScope).ConfigureProxy<TProxy>(interfaceConfig);
         }
 
         public bool Enabled

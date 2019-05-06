@@ -20,7 +20,7 @@ namespace SolidProxy.Core.Ioc
             return SolidProxyServiceProvider.GetRegistrations();
         }
 
-        public override void ConfigureProxy<TProxy>()
+        public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
         }
     }

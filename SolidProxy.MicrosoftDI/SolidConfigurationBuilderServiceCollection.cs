@@ -23,9 +23,78 @@ namespace SolidProxy.MicrosoftDI
             return ServiceCollection.Select(o => o.ServiceType);
         }
 
-        public override void ConfigureProxy<TProxy>()
+        public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            RegisterService<TProxy>();
+            AddSolidPipeline();
+            DoIfMissing<SolidProxy<TProxy>>(() =>
+            {
+                // get the service definition and remove it(added later)
+                var service = ServiceCollection.Single(o => o.ServiceType == typeof(TProxy));
+                ServiceCollection.Remove(service);
+
+                //
+                // create implementation factory function.
+                //
+                Func<IServiceProvider, object> implementationFactory = null;
+                if (service.ImplementationFactory != null)
+                {
+                    implementationFactory = sp => service.ImplementationFactory.Invoke(sp);
+                }
+                else if (service.ImplementationInstance != null)
+                {
+                    implementationFactory = sp => service.ImplementationInstance;
+                }
+                else if (service.ImplementationType != null)
+                {
+                    if (service.ImplementationType.IsClass)
+                    {
+                        DoIfMissing(service.ImplementationType, () => ServiceCollection.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
+                        implementationFactory = sp => sp.GetRequiredService(service.ImplementationType);
+                    }
+                }
+                else
+                {
+                    throw new Exception("Cannot determine implementation type");
+                }
+
+                //
+                // add the configuration for the proxy and register 
+                // proxy and interface the same way as the removed service.
+                //
+                ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>());
+                switch (service.Lifetime)
+                {
+                    case ServiceLifetime.Scoped:
+                        ServiceCollection.AddScoped<SolidProxy<TProxy>, SolidProxy<TProxy>>();
+                        ServiceCollection.AddScoped(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        break;
+                    case ServiceLifetime.Transient:
+                        ServiceCollection.AddTransient<SolidProxy<TProxy>, SolidProxy<TProxy>>();
+                        ServiceCollection.AddTransient(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        break;
+                    case ServiceLifetime.Singleton:
+                        ServiceCollection.AddSingleton<SolidProxy<TProxy>, SolidProxy<TProxy>>();
+                        ServiceCollection.AddSingleton(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        break;
+                }
+
+                //
+                // make sure that all the methods are configured
+                //
+                interfaceConfig.Methods.ToList().ForEach(methodConfig =>
+                {
+                    //
+                    // configure implementation advice if implementation exists.
+                    //
+                    if (implementationFactory != null)
+                    {
+                        var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                        invocAdviceConfig.Enabled = true;
+                        invocAdviceConfig.ImplementationFactory = implementationFactory;
+                        methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
+                    }
+                });
+            });
         }
 
         /// <summary>
@@ -63,86 +132,6 @@ namespace SolidProxy.MicrosoftDI
                 ServiceCollection.ToList().ForEach(o => serviceTypes.Add(o.ServiceType));
                 return serviceTypes;
             }
-        }
-
-        private void RegisterService<T>() where T : class
-        {
-            AddSolidPipeline();
-            DoIfMissing<SolidProxy<T>>(() =>
-            {
-                // get the service definition and remove it(added later)
-                var service = ServiceCollection.Single(o => o.ServiceType == typeof(T));
-                ServiceCollection.Remove(service);
-
-                // get configuration pipeline for the service and configure factory method.
-                var rpcConfig = ServiceCollection.GetSolidConfigurationBuilder();
-                var interfaceConfig = rpcConfig.ConfigureInterface<T>();
-
-                //
-                // create implementation factory function.
-                //
-                Func<IServiceProvider, object> implementationFactory = null;
-                if (service.ImplementationFactory != null)
-                {
-                    implementationFactory = sp => service.ImplementationFactory.Invoke(sp);
-                }
-                else if (service.ImplementationInstance != null)
-                {
-                    implementationFactory = sp => service.ImplementationInstance;
-                }
-                else if (service.ImplementationType != null)
-                {
-                    if (service.ImplementationType.IsClass)
-                    {
-                        DoIfMissing(service.ImplementationType, () => ServiceCollection.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
-                        implementationFactory = sp => sp.GetRequiredService(service.ImplementationType);
-                    }
-                }
-                else
-                {
-                    throw new Exception("Cannot determine implementation type");
-                }
-
-                //
-                // add the configuration for the proxy and register 
-                // proxy and interface the same way as the removed service.
-                //
-                ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<T>());
-                switch (service.Lifetime)
-                {
-                    case ServiceLifetime.Scoped:
-                        ServiceCollection.AddScoped<SolidProxy<T>, SolidProxy<T>>();
-                        ServiceCollection.AddScoped(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
-                        break;
-                    case ServiceLifetime.Transient:
-                        ServiceCollection.AddTransient<SolidProxy<T>, SolidProxy<T>>();
-                        ServiceCollection.AddTransient(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
-                        break;
-                    case ServiceLifetime.Singleton:
-                        ServiceCollection.AddSingleton<SolidProxy<T>, SolidProxy<T>>();
-                        ServiceCollection.AddSingleton(o => o.GetRequiredService<SolidProxy<T>>().Proxy);
-                        break;
-                }
-
-                //
-                // make sure that all the methods are configured
-                //
-                typeof(T).GetMethods().ToList().ForEach(o =>
-                {
-                    var methodConfig = interfaceConfig.ConfigureMethod(o);
-
-                    //
-                    // configure implementation advice if implementation exists.
-                    //
-                    if (implementationFactory != null)
-                    {
-                        var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                        invocAdviceConfig.Enabled = true;
-                        invocAdviceConfig.ImplementationFactory = implementationFactory;
-                        methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
-                    }
-                });
-            });
         }
 
         /// <summary>

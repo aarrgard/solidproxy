@@ -44,7 +44,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 {
                     advices.Add(adviceType);
                 }
-                ConfigureProxy<T>();
+                ConfigureProxy<T>(((ISolidMethodConfigurationBuilder<T>)this).ParentScope);
             }
         }
 
