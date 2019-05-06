@@ -77,9 +77,6 @@ namespace SolidProxy.Core.Configuration.Builder
                 SetAdviceConfigValues<TConfig>(proxyConf);
                 proxyConf.AddAdvice(typeof(SolidConfigurationHandler<,,>));
 
-                InternalServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TConfig>());
-                InternalServiceProvider.AddScoped<ISolidProxy<TConfig>, SolidProxy<TConfig>>();
-                InternalServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxy<TConfig>>().Proxy);
                 i = InternalServiceProvider.GetRequiredService<TConfig>();
             }
             return i;
