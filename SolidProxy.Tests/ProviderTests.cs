@@ -2,13 +2,13 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 
-namespace Tests
+namespace SolidProxy.Tests
 {
-    public class MicrosoftDITests
+    public class ProviderTests
     {
+
         public interface ITestInterface
         {
             int Int1 { get; }
@@ -21,17 +21,12 @@ namespace Tests
             public int Int2 => 2;
         }
 
-        public class ProxyMiddleware<TObject, MRet, TRet> : ISolidProxyInvocationAdvice<TObject, MRet, TRet> where TObject : class
+        public class ProxyMiddleware<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
-            public Task<TRet> Handle(Func<Task<TRet>> next, ISolidProxyInvocation<TObject, MRet, TRet> invocation)
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                return Task.FromResult((TRet)(object)11);
+                return Task.FromResult((TAdvice)(object)11);
             }
-        }
-
-        [SetUp]
-        public void Setup()
-        {
         }
 
         [Test]
@@ -40,14 +35,7 @@ namespace Tests
             var sc = new ServiceCollection();
             sc.AddScoped<ITestInterface, TestImplementation>();
 
-            sc.GetSolidConfigurationBuilder()
-                .AddAdvice(typeof(ProxyMiddleware<,,>), mi => {
-                    if(mi.MethodInfo.DeclaringType == typeof(ITestInterface))
-                    {
-                        return true;
-                    }
-                    return false;
-                });
+            sc.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyMiddleware<,,>));
 
             var sp = sc.BuildServiceProvider();
 
