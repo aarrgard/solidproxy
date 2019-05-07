@@ -1,12 +1,7 @@
-﻿using Castle.DynamicProxy;
-using SolidProxy.Core.Configuration.Builder;
-using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.Proxy;
+﻿using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.MicrosoftDI;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
