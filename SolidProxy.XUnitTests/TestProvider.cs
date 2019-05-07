@@ -1,9 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Specification.Fakes;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
 
 namespace SolidProxy.XUnitTests
 {

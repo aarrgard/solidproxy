@@ -1,8 +1,6 @@
-﻿using Castle.DynamicProxy;
-using SolidProxy.Core.Configuration.Runtime;
+﻿using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Ioc;
 using SolidProxy.Core.IoC;
-using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,9 +17,6 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             var sp = new SolidProxyServiceProvider();
             sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
-            sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
-            sp.AddSingleton<IProxyGenerator, ProxyGenerator>();
-            sp.AddTransient(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>));
             return sp;
         }
 
@@ -72,8 +67,8 @@ namespace SolidProxy.Core.Configuration.Builder
             var i = (TConfig)InternalServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
-                var proxyConfStore = InternalServiceProvider.GetRequiredService<ISolidProxyConfigurationStore>();
-                var proxyConf = proxyConfStore.SolidConfigurationBuilder.ConfigureInterface<TConfig>();
+                var configBuilder = InternalServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
+                var proxyConf = configBuilder.ConfigureInterface<TConfig>();
                 SetAdviceConfigValues<TConfig>(proxyConf);
                 proxyConf.AddAdvice(typeof(SolidConfigurationHandler<,,>));
 
@@ -107,7 +102,8 @@ namespace SolidProxy.Core.Configuration.Builder
 
         public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
-            if(pointcut == null) pointcut = (o) => true;
+            ConfigureAdvice(adviceType);
+            if (pointcut == null) pointcut = (o) => true;
             GetMethodConfigurationBuilders().Where(o => pointcut(o)).ToList().ForEach(o =>
             {
                 o.AddAdvice(adviceType);
@@ -119,9 +115,14 @@ namespace SolidProxy.Core.Configuration.Builder
             throw new NotImplementedException();
         }
 
+        public virtual void ConfigureAdvice(Type adviceType)
+        {
+            ((SolidConfigurationScope)ParentScope).ConfigureAdvice(adviceType);
+        }
+
         public virtual void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig) where TProxy : class
         {
-            ((SolidConfigurationScope)ParentScope).ConfigureProxy<TProxy>(interfaceConfig);
+            ((SolidConfigurationScope)ParentScope).ConfigureProxy(interfaceConfig);
         }
 
         public bool Enabled

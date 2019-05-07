@@ -24,7 +24,7 @@ namespace SolidProxy.Tests
             int Retries { get; set; }
         }
 
-        public class InvocationStep<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        public class InvocationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
             public void Configure(IInvocationStepConfig stepConfig)
             {
@@ -53,8 +53,7 @@ namespace SolidProxy.Tests
             services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>()
                 .ConfigureAdvice<IInvocationStepConfig>().Enabled = false;
 
-            services.GetSolidConfigurationBuilder()
-                .AddAdvice(typeof(InvocationStep<,,>));
+            services.GetSolidConfigurationBuilder().AddAdvice(typeof(InvocationAdvice<,,>));
 
             var sp = services.BuildServiceProvider();
 

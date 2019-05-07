@@ -14,6 +14,10 @@ namespace SolidProxy.MicrosoftDI
         public SolidConfigurationBuilderServiceCollection(IServiceCollection serviceCollection)
         {
             ServiceCollection = serviceCollection;
+            DoIfMissing<IProxyGenerator>(() => ServiceCollection.AddSingleton<IProxyGenerator, ProxyGenerator>());
+            DoIfMissing<ISolidProxyConfigurationStore>(() => ServiceCollection.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
+            DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(sp => sp.GetRequiredService<SolidConfigurationBuilderServiceCollection>()));
+            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
         public IServiceCollection ServiceCollection { get; }
@@ -22,14 +26,20 @@ namespace SolidProxy.MicrosoftDI
         {
             return ServiceCollection.Select(o => o.ServiceType);
         }
-
+        public override void ConfigureAdvice(Type adviceType)
+        {
+            DoIfMissing(adviceType, () => { ServiceCollection.AddSingleton(adviceType, adviceType); });
+        }
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            AddSolidPipeline();
             DoIfMissing<SolidProxy<TProxy>>(() =>
             {
                 // get the service definition and remove it(added later)
                 var service = ServiceCollection.Single(o => o.ServiceType == typeof(TProxy));
+                if(service.ImplementationType == typeof(SolidProxy<TProxy>))
+                {
+                    throw new Exception("Proxy already configured");
+                }
                 ServiceCollection.Remove(service);
 
                 //
@@ -98,43 +108,6 @@ namespace SolidProxy.MicrosoftDI
         }
 
         /// <summary>
-        /// Configures the Rpc pipeline in the service collection. This method must be
-        /// invoked after the services has been added.
-        /// </summary>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        private void AddSolidPipeline()
-        {
-            DoIfMissing<IProxyGenerator>(() => ServiceCollection.AddSingleton<IProxyGenerator, ProxyGenerator>());
-            DoIfMissing<ISolidProxyConfigurationStore>(() => ServiceCollection.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
-            DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(sp => sp.GetRequiredService<SolidConfigurationBuilderServiceCollection>()));
-
-            // register all the pipline step types in the container
-            // do this after registering the services since there might
-            // be steps registered in that call
-            AssemblyBuilders.Values
-                .SelectMany(o => o.Interfaces)
-                .SelectMany(o => o.Methods)
-                .SelectMany(o => o.GetSolidInvocationAdviceTypes())
-                .Distinct()
-                .ToList()
-                .ForEach(o =>
-                {
-                    DoIfMissing(o, () => ServiceCollection.AddTransient(o, o));
-                });
-        }
-
-        private HashSet<Type> ServiceTypes
-        {
-            get
-            {
-                var serviceTypes = new HashSet<Type>();
-                ServiceCollection.ToList().ForEach(o => serviceTypes.Add(o.ServiceType));
-                return serviceTypes;
-            }
-        }
-
-        /// <summary>
         /// Invokes the action if service is missing.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -153,12 +126,11 @@ namespace SolidProxy.MicrosoftDI
         /// <param name="action"></param>
         public void DoIfMissing(Type serviceType, Action action)
         {
-            if (ServiceTypes.Contains(serviceType))
+            if (ServiceCollection.Any(o => o.ServiceType == serviceType))
             {
                 return;
             }
             action();
-            ServiceTypes.Add(serviceType);
         }
     }
 }
