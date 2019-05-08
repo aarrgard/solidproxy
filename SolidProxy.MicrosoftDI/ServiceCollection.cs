@@ -8,7 +8,7 @@ namespace SolidProxy.MicrosoftDI
     /// <summary>
     /// Implements a service collection compatible with .net core di.
     /// </summary>
-    public class ServiceCollection : List<ServiceDescriptor>
+    public class ServiceCollection : List<ServiceDescriptor>, IServiceCollection
     {
         public IServiceProvider BuildServiceProvider()
         {

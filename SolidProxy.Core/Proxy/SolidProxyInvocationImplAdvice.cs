@@ -1,6 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -65,11 +64,11 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         public Func<TObject, object[], TMethod> Delegate { get; private set; }
 
-        public async Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+        public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
             var impl = (TObject)ImplementationFactory.Invoke(invocation.ServiceProvider);
             var res = Delegate(impl, invocation.Arguments);
-            return await s_converter.Invoke(res);
+            return s_converter.Invoke(res);
         }
     }
 }

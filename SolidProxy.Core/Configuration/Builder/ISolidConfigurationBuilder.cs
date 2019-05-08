@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using SolidProxy.Core.Proxy;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
@@ -8,6 +10,17 @@ namespace SolidProxy.Core.Configuration.Builder
     /// </summary>
     public interface ISolidConfigurationBuilder : ISolidConfigurationScope
     {
+        /// <summary>
+        /// Sets the generator to use when creating proxies
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        ISolidConfigurationBuilder SetGenerator<T>() where T : ISolidProxyGenerator;
+
+        /// <summary>
+        /// Returns the generator for solid proxies
+        /// </summary>
+        Type SolidProxyGeneratorType { get; set; }
+
         /// <summary>
         /// Returns all the interface assemblies
         /// </summary>

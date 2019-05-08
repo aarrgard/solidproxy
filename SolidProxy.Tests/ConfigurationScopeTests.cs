@@ -62,7 +62,7 @@ namespace SolidProxy.Tests
                 test.Get0Value();
                 Assert.Fail();
             }
-            catch (NotImplementedException e)
+            catch (NotImplementedException)
             {
             }
             Assert.AreEqual(1, test.Get1Value());

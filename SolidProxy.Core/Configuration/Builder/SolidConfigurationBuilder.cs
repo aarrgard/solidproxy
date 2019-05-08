@@ -1,5 +1,5 @@
-﻿using Castle.DynamicProxy;
-using SolidProxy.Core.Configuration.Runtime;
+﻿using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,6 +18,8 @@ namespace SolidProxy.Core.Configuration.Builder
         protected ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder> AssemblyBuilders { get; }
 
         IEnumerable<ISolidAssemblyConfigurationBuilder> ISolidConfigurationBuilder.AssemblyBuilders => AssemblyBuilders.Values;
+
+        public Type SolidProxyGeneratorType { get; set; }
 
         public ISolidInterfaceConfigurationBuilder<T> ConfigureInterface<T>() where T : class
         {
@@ -48,7 +50,7 @@ namespace SolidProxy.Core.Configuration.Builder
             {
                 return true;
             }
-            if (type == typeof(IProxyGenerator))
+            if (type == typeof(ISolidProxyGenerator))
             {
                 return true;
             }
@@ -56,5 +58,37 @@ namespace SolidProxy.Core.Configuration.Builder
         }
 
         protected abstract IEnumerable<Type> GetServices();
+
+        /// <summary>
+        /// Invokes the action if service is missing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="action"></param>
+        public void DoIfMissing<T>(Action action)
+        {
+            DoIfMissing(typeof(T), action);
+        }
+
+        /// <summary>
+        /// Invokes the action if service is missing.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="serviceType"></param>
+        /// <param name="action"></param>
+        public void DoIfMissing(Type serviceType, Action action)
+        {
+            if (GetServices().Any(o => o == serviceType))
+            {
+                return;
+            }
+            action();
+        }
+
+        public ISolidConfigurationBuilder SetGenerator<T>() where T : ISolidProxyGenerator
+        {
+            SolidProxyGeneratorType = typeof(T);
+            return this;
+        }
     }
 }

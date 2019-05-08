@@ -1,5 +1,4 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.Ioc;
 using SolidProxy.Core.IoC;
 using System;
 using System.Collections.Concurrent;
@@ -117,11 +116,19 @@ namespace SolidProxy.Core.Configuration.Builder
 
         public virtual void ConfigureAdvice(Type adviceType)
         {
+            if(ParentScope == null)
+            {
+                throw new Exception($"{GetType().FullName} does not implement ConfigureAdvice");
+            }
             ((SolidConfigurationScope)ParentScope).ConfigureAdvice(adviceType);
         }
 
         public virtual void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig) where TProxy : class
         {
+            if (ParentScope == null)
+            {
+                throw new Exception($"{GetType().FullName} does not implement ConfigureProxy");
+            }
             ((SolidConfigurationScope)ParentScope).ConfigureProxy(interfaceConfig);
         }
 

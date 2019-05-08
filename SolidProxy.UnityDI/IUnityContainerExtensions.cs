@@ -1,9 +1,9 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.UnityDI;
 using System;
-using System.Linq;
 using Unity;
 
-namespace SolidProxy.UnityDI
+namespace Unity
 {
     /// <summary>
     /// Add extensions methods to the unity container.

@@ -23,7 +23,9 @@ namespace SolidProxy.Core.IoC
         /// <returns></returns>
         public IEnumerable<Type> GetRegistrations()
         {
-            return _registrations.Select(o => o.Key);
+            return _registrations
+                .Where(o => o.Value.Implementations.Where(o2 => o2.RegistrationScope != RegistrationScope.Nonexisting).Any())
+                .Select(o => o.Key);
         }
 
         /// <summary>

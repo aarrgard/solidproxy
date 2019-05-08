@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
@@ -14,9 +13,8 @@ namespace SolidProxy.MicrosoftDI
         public SolidConfigurationBuilderServiceCollection(IServiceCollection serviceCollection)
         {
             ServiceCollection = serviceCollection;
-            DoIfMissing<IProxyGenerator>(() => ServiceCollection.AddSingleton<IProxyGenerator, ProxyGenerator>());
             DoIfMissing<ISolidProxyConfigurationStore>(() => ServiceCollection.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
-            DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(sp => sp.GetRequiredService<SolidConfigurationBuilderServiceCollection>()));
+            DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(this));
             DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
@@ -105,32 +103,6 @@ namespace SolidProxy.MicrosoftDI
                     }
                 });
             });
-        }
-
-        /// <summary>
-        /// Invokes the action if service is missing.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="services"></param>
-        /// <param name="action"></param>
-        public void DoIfMissing<T>(Action action)
-        {
-            DoIfMissing(typeof(T), action);
-        }
-
-        /// <summary>
-        /// Invokes the action if service is missing.
-        /// </summary>
-        /// <param name="services"></param>
-        /// <param name="serviceType"></param>
-        /// <param name="action"></param>
-        public void DoIfMissing(Type serviceType, Action action)
-        {
-            if (ServiceCollection.Any(o => o.ServiceType == serviceType))
-            {
-                return;
-            }
-            action();
         }
     }
 }

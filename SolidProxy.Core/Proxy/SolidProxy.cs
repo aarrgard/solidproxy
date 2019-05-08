@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Castle.DynamicProxy;
 using SolidProxy.Core.Configuration.Runtime;
 
 namespace SolidProxy.Core.Proxy
@@ -9,18 +8,18 @@ namespace SolidProxy.Core.Proxy
     /// Wrapps an interface and implements logic to delegate to the proxy middleware structures.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SolidProxy<T> : ISolidProxy<T>, IInterceptor where T : class
+    public class SolidProxy<T> : ISolidProxy<T> where T : class
     {
         /// <summary>
         /// Constructs a new proxy for an interface.
         /// </summary>
         /// <param name="proxyConfigurationStore"></param>
         /// <param name="proxyGenerator"></param>
-        public SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, IProxyGenerator proxyGenerator)
+        public SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, ISolidProxyGenerator proxyGenerator)
         {
             ServiceProvider = serviceProvider;
             ProxyConfiguration = proxyConfiguration;
-            Proxy = proxyGenerator.CreateInterfaceProxyWithoutTarget<T>(this);
+            Proxy = proxyGenerator.CreateInterfaceProxy(this);
         }
 
         /// <summary>
@@ -39,11 +38,6 @@ namespace SolidProxy.Core.Proxy
         object ISolidProxy.Proxy => Proxy;
 
         public IServiceProvider ServiceProvider { get; }
-
-        public void Intercept(IInvocation invocation)
-        {
-            invocation.ReturnValue = Invoke(invocation.Method, invocation.Arguments);
-        }
 
         public object Invoke(MethodInfo method, object[] args)
         {

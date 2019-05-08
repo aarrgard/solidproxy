@@ -1,63 +1,139 @@
 using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-using SolidProxy.Core.Proxy;
+using SolidProxy.Core.Configuration.Builder;
+using Unity;
 
 namespace SolidProxy.Tests
 {
     public class ProviderTests
     {
-
-        public interface ITestInterface
+        protected interface IProviderAdapter
         {
-            int Int1 { get; }
-            int Int2 { get; }
+            void AddSingleton<TService, TImpl>() where TService : class where TImpl : class, TService;
+            void AddScoped<TService, TImpl>() where TService : class where TImpl : class, TService;
+            void AddTransient<TService, TImpl>() where TService : class where TImpl : class, TService;
+            ISolidConfigurationBuilder GetSolidConfigurationBuilder();
+            T GetRequiredService<T>();
         }
 
-        public class TestImplementation : ITestInterface
+        protected class SolidProxyDIAdapter : IProviderAdapter
         {
-            public int Int1 => 1;
-            public int Int2 => 2;
-        }
-
-        public class ProxyMiddleware<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
-        {
-            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            public SolidProxyDIAdapter()
             {
-                return Task.FromResult((TAdvice)(object)11);
+                ServiceCollection = new SolidProxy.MicrosoftDI.ServiceCollection();
+            }
+
+            public IServiceCollection ServiceCollection { get; }
+
+            public Lazy<IServiceProvider> ServiceProvider => new Lazy<IServiceProvider>(() => ServiceCollection.BuildServiceProvider());
+
+            public void AddSingleton<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
+            public void AddScoped<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
+            public void AddTransient<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
+
+            public T GetRequiredService<T>()
+            {
+                return ServiceProvider.Value.GetRequiredService<T>();
+            }
+
+            public ISolidConfigurationBuilder GetSolidConfigurationBuilder()
+            {
+                return ServiceCollection.GetSolidConfigurationBuilder();
             }
         }
 
-        [Test]
-        public void TestAddInterfaceInvocationStep()
+        protected class MicrosoftDIAdapter : IProviderAdapter
         {
-            var sc = new ServiceCollection();
-            sc.AddScoped<ITestInterface, TestImplementation>();
+            public MicrosoftDIAdapter()
+            {
+                ServiceCollection = new ServiceCollection();
+            }
 
-            sc.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyMiddleware<,,>));
+            public IServiceCollection ServiceCollection { get; }
+            public Lazy<IServiceProvider> ServiceProvider => new Lazy<IServiceProvider>(() => ServiceCollection.BuildServiceProvider());
 
-            var sp = sc.BuildServiceProvider();
+            public void AddSingleton<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
+            public void AddScoped<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
+            public void AddTransient<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                ServiceCollection.AddTransient<TService, TImpl>();
+            }
 
-            var ti = sp.GetRequiredService<ITestInterface>();
-            Assert.AreEqual(11, ti.Int1);
-            Assert.AreEqual(11, ti.Int2);
+            public ISolidConfigurationBuilder GetSolidConfigurationBuilder()
+            {
+                return ServiceCollection.GetSolidConfigurationBuilder();
+            }
+            public T GetRequiredService<T>()
+            {
+                return ServiceProvider.Value.GetRequiredService<T>();
+            }
         }
 
-        [Test]
-        public void TestAddMethodInvocationStep()
+        protected class UnityDIAdapter : IProviderAdapter
         {
-            var sc = new ServiceCollection();
-            sc.AddScoped<ITestInterface, TestImplementation>();
+            public UnityDIAdapter()
+            {
+                UnityContainer = new UnityContainer();
+            }
 
-            sc.GetSolidConfigurationBuilder()
-                .AddAdvice(typeof(ProxyMiddleware<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
+            public IUnityContainer UnityContainer { get; }
 
-            var sp = sc.BuildServiceProvider();
+            public void AddSingleton<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                UnityContainer.RegisterType<TService, TImpl>(new Unity.Lifetime.SingletonLifetimeManager());
+            }
+            public void AddScoped<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                UnityContainer.RegisterType<TService, TImpl>(new Unity.Lifetime.ContainerControlledLifetimeManager());
+            }
+            public void AddTransient<TService, TImpl>() where TService : class where TImpl : class, TService
+            {
+                UnityContainer.RegisterType<TService, TImpl>(new Unity.Lifetime.TransientLifetimeManager());
+            }
 
-            var ti = sp.GetRequiredService<ITestInterface>();
-            Assert.AreEqual(11, ti.Int1);
-            Assert.AreEqual(2, ti.Int2);
+            public ISolidConfigurationBuilder GetSolidConfigurationBuilder()
+            {
+                return UnityContainer.GetSolidConfigurationBuilder();
+            }
+            public T GetRequiredService<T>()
+            {
+                return UnityContainer.Resolve<T>();
+            }
+        }
+
+        private IProviderAdapter[] Providers
+        {
+            get
+            {
+                return new IProviderAdapter[] {
+                    new SolidProxyDIAdapter(),
+                    new MicrosoftDIAdapter(),
+                    //new UnityDIAdapter()
+                };
+            }
+        }
+
+        protected void RunProviderTests(Action<IProviderAdapter> testRun)
+        {
+            foreach(var provider in Providers)
+            {
+                testRun(provider);
+            }
         }
     }
 }

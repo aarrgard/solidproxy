@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using SolidProxy.CastleGenerator;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
@@ -71,6 +72,7 @@ namespace SolidProxy.Tests
             services.AddTransient<ITestInterface, TestImplementation>();
 
             services.GetSolidConfigurationBuilder()
+                .SetGenerator<SolidProxyCastleGenerator>()
                 .AddAdvice(typeof(Advice<,>), mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any());
  
             var sp = services.BuildServiceProvider();
