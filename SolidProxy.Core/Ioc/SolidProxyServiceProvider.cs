@@ -234,7 +234,7 @@ namespace SolidProxy.Core.IoC
                     {
                         throw new Exception($"Cannot instantiate {implType.FullName}");
                     }
-                    var impl = ctr.Invoke(args);
+                    var impl = Activator.CreateInstance(implType, args);
 
                     return impl;
                 };

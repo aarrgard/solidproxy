@@ -13,7 +13,7 @@ namespace SolidProxy.Core.IoC
             SolidProxyServiceProvider = solidProxyServiceProvider;
 
             DoIfMissing<ISolidProxyConfigurationStore>(() => SolidProxyServiceProvider.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
-            DoIfMissing<ISolidConfigurationBuilder>(() => SolidProxyServiceProvider.AddSingleton<ISolidConfigurationBuilder>(sp => ((SolidProxyServiceProvider)sp).GetRequiredService<SolidConfigurationBuilderServiceProvider>()));
+            DoIfMissing<ISolidConfigurationBuilder>(() => SolidProxyServiceProvider.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>());
             DoIfMissing(typeof(SolidConfigurationHandler<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>)));
         }
 
@@ -32,7 +32,7 @@ namespace SolidProxy.Core.IoC
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
             DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
-            DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped<ISolidProxy<TProxy>, SolidProxy<TProxy>>());
+            DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>()));
             DoIfMissing<TProxy>(() =>
             {
                 SolidProxyServiceProvider.AddScoped(o =>

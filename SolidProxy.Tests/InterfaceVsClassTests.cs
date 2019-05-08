@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.CastleGenerator;
 using SolidProxy.Core.Proxy;
+using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {

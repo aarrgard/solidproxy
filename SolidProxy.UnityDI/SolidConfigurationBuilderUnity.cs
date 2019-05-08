@@ -33,7 +33,7 @@ namespace SolidProxy.UnityDI
         }
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            DoIfMissing<SolidProxy<TProxy>>(() =>
+            DoIfMissing<ISolidProxy<TProxy>>(() =>
             {
                 // get the service definition and remove it(added later)
                 var registrations = UnityContainer.Registrations.Where(o => o.RegisteredType == typeof(TProxy));

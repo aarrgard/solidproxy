@@ -22,6 +22,6 @@ namespace SolidProxy.Core.Proxy
         /// <typeparam name="T"></typeparam>
         /// <param name="solidProxy"></param>
         /// <returns></returns>
-        T CreateInterfaceProxy<T>(SolidProxy<T> solidProxy) where T : class;
+        T CreateInterfaceProxy<T>(ISolidProxy<T> solidProxy) where T : class;
     }
 }

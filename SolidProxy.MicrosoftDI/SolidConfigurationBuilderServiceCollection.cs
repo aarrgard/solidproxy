@@ -30,11 +30,11 @@ namespace SolidProxy.MicrosoftDI
         }
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            DoIfMissing<SolidProxy<TProxy>>(() =>
+            DoIfMissing<ISolidProxy<TProxy>>(() =>
             {
                 // get the service definition and remove it(added later)
                 var service = ServiceCollection.Single(o => o.ServiceType == typeof(TProxy));
-                if(service.ImplementationType == typeof(SolidProxy<TProxy>))
+                if(typeof(ISolidProxy<TProxy>).IsAssignableFrom(service.ImplementationType))
                 {
                     throw new Exception("Proxy already configured");
                 }
@@ -73,16 +73,16 @@ namespace SolidProxy.MicrosoftDI
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
-                        ServiceCollection.AddScoped<SolidProxy<TProxy>, SolidProxy<TProxy>>();
-                        ServiceCollection.AddScoped(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddScoped(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>());
+                        ServiceCollection.AddScoped(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
                         break;
                     case ServiceLifetime.Transient:
-                        ServiceCollection.AddTransient<SolidProxy<TProxy>, SolidProxy<TProxy>>();
-                        ServiceCollection.AddTransient(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddTransient(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>());
+                        ServiceCollection.AddTransient(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
                         break;
                     case ServiceLifetime.Singleton:
-                        ServiceCollection.AddSingleton<SolidProxy<TProxy>, SolidProxy<TProxy>>();
-                        ServiceCollection.AddSingleton(o => o.GetRequiredService<SolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddSingleton(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>());
+                        ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
                         break;
                 }
 

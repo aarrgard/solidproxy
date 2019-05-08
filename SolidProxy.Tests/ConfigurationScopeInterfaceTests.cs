@@ -1,9 +1,7 @@
-using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
-using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
@@ -104,6 +102,7 @@ namespace SolidProxy.Tests
             var services = new ServiceCollection();
 
             var methodConfig = services.GetSolidConfigurationBuilder()
+                .SetGenerator<SolidProxyCastleGenerator>()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
                 .ConfigureMethod(o => o.Enabled);

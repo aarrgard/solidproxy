@@ -18,7 +18,7 @@ namespace SolidProxy.Core.Configuration
         /// <summary>
         /// Returns the parent scope
         /// </summary>
-        ISolidConfigurationScope ParentScope { get; }
+        T GetScope<T>() where T : ISolidConfigurationScope;
 
         /// <summary>
         /// Specifies if this scope is enabled. ie 

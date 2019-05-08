@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.IoC;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,15 +10,8 @@ namespace SolidProxy.Core.Configuration.Builder
 {
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
-        private Lazy<SolidProxyServiceProvider> _internalServiceProvider = new Lazy<SolidProxyServiceProvider>(SetupInternalServiceProvider);
+        private SolidProxyServiceProvider _internalServiceProvider;
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
-
-        private static SolidProxyServiceProvider SetupInternalServiceProvider()
-        {
-            var sp = new SolidProxyServiceProvider();
-            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
-            return sp;
-        }
 
         protected SolidConfigurationScope(SolidScopeType solidScopeType, ISolidConfigurationScope parentScope)
         {
@@ -25,6 +19,18 @@ namespace SolidProxy.Core.Configuration.Builder
             ParentScope = parentScope;
         }
 
+        public T GetScope<T>() where T : ISolidConfigurationScope
+        {
+            if(this is T)
+            {
+                return (T)(object)this;
+            }
+            if(ParentScope != null)
+            {
+                return ParentScope.GetScope<T>();
+            }
+            return default(T);
+        }
 
         /// <summary>
         /// Returns the parent scope
@@ -36,7 +42,25 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         public SolidScopeType SolidScopeType { get; }
 
-        public SolidProxyServiceProvider InternalServiceProvider => _internalServiceProvider.Value;
+        public SolidProxyServiceProvider InternalServiceProvider {
+            get
+            {
+                if(_internalServiceProvider == null)
+                {
+                    lock(_items)
+                    {
+                        if(_internalServiceProvider == null)
+                        {
+                            var sp = new SolidProxyServiceProvider();
+                            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
+                            sp.AddSingleton(typeof(ISolidProxyGenerator), GetScope<SolidConfigurationBuilder>()?.SolidProxyGeneratorType);
+                            _internalServiceProvider = sp;
+                        }
+                    }
+                }
+                return _internalServiceProvider;
+            }
+        }
 
         public T GetValue<T>(string key, bool searchParentScope)
         {
