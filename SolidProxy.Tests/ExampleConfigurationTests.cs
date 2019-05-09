@@ -2,12 +2,11 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
-    public class ExampleConfigurationTests
+    public class ExampleConfigurationTests : TestBase
     {
         public interface ISingletonInterface
         {
@@ -30,7 +29,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestConfigurationExample()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddSingleton<ISingletonInterface>();
             services.AddTransient<ITransientInterface>();
 

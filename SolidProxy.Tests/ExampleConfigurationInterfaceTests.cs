@@ -7,7 +7,7 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
-    public class ExampleConfigurationInterfaceTests
+    public class ExampleConfigurationInterfaceTests : TestBase
     {
         public interface IEnabledInterface
         {
@@ -42,7 +42,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestConfigurationInterfaceExample()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddSingleton<IEnabledInterface>();
             services.AddSingleton<IDisabledInterface>();
 

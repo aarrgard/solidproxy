@@ -36,6 +36,9 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             if(!advices.Contains(adviceType))
             {
+                //
+                // place the invocation advice last.
+                //
                 if(advices.Contains(typeof(SolidProxyInvocationImplAdvice<,,>)))
                 {
                     advices.Insert(advices.Count - 1, adviceType);
@@ -44,7 +47,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 {
                     advices.Add(adviceType);
                 }
-                ConfigureProxy<T>(((ISolidMethodConfigurationBuilder<T>)this).ParentScope);
+                ConfigureProxy<T>(GetScope<ISolidInterfaceConfigurationBuilder<T>>());
             }
         }
 

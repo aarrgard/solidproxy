@@ -6,7 +6,7 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
-    public class ConfigurationScopeTests
+    public class ConfigurationScopeTests : TestBase
     {
         public class Advice1<TObject, TMethod, TAdvice> : AdviceBase<TObject, TMethod, TAdvice> where TObject : class { }
         public class Advice2<TObject, TMethod, TAdvice> : AdviceBase<TObject, TMethod, TAdvice> where TObject : class { }
@@ -45,7 +45,7 @@ namespace SolidProxy.Tests
         [Test]
         public void Test0Advices()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddTransient<ITestInterface>();
 
             services.GetSolidConfigurationBuilder()

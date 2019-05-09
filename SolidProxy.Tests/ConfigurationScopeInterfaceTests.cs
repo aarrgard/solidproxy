@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
@@ -5,7 +6,7 @@ using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
-    public class ConfigurationScopeInterfaceTests
+    public class ConfigurationScopeInterfaceTests : TestBase
     {
         public interface IConfig1 : ISolidProxyInvocationAdviceConfig
         {
@@ -23,7 +24,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestInterfaceValuesSeparated()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
 
             var config1 = services.GetSolidConfigurationBuilder().ConfigureAdvice<IConfig1>();
             var config2 = services.GetSolidConfigurationBuilder().ConfigureAdvice<IConfig2>();
@@ -42,7 +43,8 @@ namespace SolidProxy.Tests
         [Test]
         public void TestInterfaceScopesSeparated()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
+
 
             var globalConfig = services.GetSolidConfigurationBuilder()
                 .ConfigureAdvice<IConfig1>();
@@ -99,10 +101,9 @@ namespace SolidProxy.Tests
         [Test]
         public void TestInterfaceIsConfigured()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
 
             var methodConfig = services.GetSolidConfigurationBuilder()
-                .SetGenerator<SolidProxyCastleGenerator>()
                 .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
                 .ConfigureInterface<IConfig1>()
                 .ConfigureMethod(o => o.Enabled);

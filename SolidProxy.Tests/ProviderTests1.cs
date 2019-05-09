@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SolidProxy.Core.Proxy;
+using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
@@ -35,7 +36,9 @@ namespace SolidProxy.Tests
             {
                 adapter.AddScoped<ITestInterface, TestImplementation>();
 
-                adapter.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyAdvice<,,>));
+                adapter.GetSolidConfigurationBuilder()
+                    .SetGenerator<SolidProxyCastleGenerator>()
+                    .AddAdvice(typeof(ProxyAdvice<,,>));
 
                 var ti = adapter.GetRequiredService<ITestInterface>();
                 Assert.AreEqual(11, ti.Int1);
@@ -50,7 +53,9 @@ namespace SolidProxy.Tests
             {
                 adapter.AddScoped<ITestInterface, TestImplementation>();
 
-                adapter.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyAdvice<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
+                adapter.GetSolidConfigurationBuilder()
+                    .SetGenerator<SolidProxyCastleGenerator>()
+                    .AddAdvice(typeof(ProxyAdvice<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
 
                 var ti = adapter.GetRequiredService<ITestInterface>();
                 Assert.AreEqual(11, ti.Int1);

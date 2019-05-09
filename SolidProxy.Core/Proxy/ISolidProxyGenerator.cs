@@ -10,11 +10,18 @@ namespace SolidProxy.Core.Proxy
     public interface ISolidProxyGenerator
     {
         /// <summary>
+        /// Creates an interface that implements the supplied type and the ISolidProxyMarker interface.
+        /// </summary>
+        /// <typeparam name="TProxy"></typeparam>
+        /// <returns></returns>
+        Type CreateImplementationInterface<TProxy>() where TProxy : class;
+
+        /// <summary>
         /// Constructs a new proxy
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        ISolidProxy<T> CreateSolidProxy<T>() where T:class;
+        ISolidProxy<T> CreateSolidProxy<T>(IServiceProvider serviceProvider) where T:class;
 
         /// <summary>
         /// Constructs a new interfaces proxy that delegates invocations to supplied proxy.

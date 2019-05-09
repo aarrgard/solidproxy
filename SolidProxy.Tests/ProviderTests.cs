@@ -5,7 +5,7 @@ using Unity;
 
 namespace SolidProxy.Tests
 {
-    public class ProviderTests
+    public class ProviderTests : TestBase
     {
         protected interface IProviderAdapter
         {

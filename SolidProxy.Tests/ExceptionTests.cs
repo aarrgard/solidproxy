@@ -5,7 +5,7 @@ using System;
 
 namespace SolidProxy.Tests
 {
-    public class ExceptionTests
+    public class ExceptionTests : TestBase
     {
         public class MyException : Exception
         {
@@ -25,7 +25,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestExceptionThrownFromImplementation()
         {
-            var sc = new ServiceCollection();
+            var sc = SetupServiceCollection();
             sc.AddSingleton<ITestInterface, TestImplementation>();
             sc.GetSolidConfigurationBuilder().AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
             var sp = sc.BuildServiceProvider();

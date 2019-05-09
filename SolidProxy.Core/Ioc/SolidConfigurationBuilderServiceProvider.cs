@@ -19,6 +19,8 @@ namespace SolidProxy.Core.IoC
 
         public SolidProxyServiceProvider SolidProxyServiceProvider { get; }
 
+        public override ISolidProxyGenerator SolidProxyGenerator => SolidProxyServiceProvider.GetRequiredService<ISolidProxyGenerator>();
+
         protected override IEnumerable<Type> GetServices()
         {
             return SolidProxyServiceProvider.GetRegistrations();
@@ -32,7 +34,7 @@ namespace SolidProxy.Core.IoC
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
             DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
-            DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>()));
+            DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(o)));
             DoIfMissing<TProxy>(() =>
             {
                 SolidProxyServiceProvider.AddScoped(o =>
@@ -40,6 +42,12 @@ namespace SolidProxy.Core.IoC
                     return ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxy<TProxy>>().Proxy;
                 });
             });
+        }
+
+        public override ISolidConfigurationBuilder SetGenerator<T>()
+        {
+            SolidProxyServiceProvider.AddSingleton<ISolidProxyGenerator, T>();
+            return this;
         }
     }
 }

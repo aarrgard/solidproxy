@@ -23,6 +23,8 @@ namespace SolidProxy.UnityDI
 
         public IUnityContainer UnityContainer { get; }
 
+        public override ISolidProxyGenerator SolidProxyGenerator => throw new NotImplementedException();
+
         protected override IEnumerable<Type> GetServices()
         {
             return UnityContainer.Registrations.Select(o => o.RegisteredType).Distinct();
@@ -112,6 +114,11 @@ namespace SolidProxy.UnityDI
                     }
                 });
             });
+        }
+
+        public override ISolidConfigurationBuilder SetGenerator<T>()
+        {
+            throw new NotImplementedException();
         }
     }
 }

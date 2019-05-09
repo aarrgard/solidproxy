@@ -8,7 +8,7 @@ using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
-    public class InterfaceVsClassTests
+    public class InterfaceVsClassTests : TestBase
     {
         public class AopAttribute : Attribute {  }
 
@@ -51,7 +51,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestInterfaceInvocation()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddTransient<ITestInterface>();
 
             services.GetSolidConfigurationBuilder()
@@ -68,11 +68,10 @@ namespace SolidProxy.Tests
         [Test]
         public void TestClassInvocation()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddTransient<ITestInterface, TestImplementation>();
 
             services.GetSolidConfigurationBuilder()
-                .SetGenerator<SolidProxyCastleGenerator>()
                 .AddAdvice(typeof(Advice<,>), mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any());
  
             var sp = services.BuildServiceProvider();

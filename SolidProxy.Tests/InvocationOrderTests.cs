@@ -4,12 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
-    public class InvocationOrderTests
+    public class InvocationOrderTests : TestBase
     {
         public class AopAttribute : Attribute {  }
 
@@ -48,7 +47,7 @@ namespace SolidProxy.Tests
         [Test]
         public void TestInvocationOrderAllMethods()
         {
-            var services = new ServiceCollection();
+            var services = SetupServiceCollection();
             services.AddTransient<ITestInterface>();
 
             services.GetSolidConfigurationBuilder()

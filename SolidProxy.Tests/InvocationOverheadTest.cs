@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using SolidProxy.Core.Configuration;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Diagnostics;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SolidProxy.Tests
 {
-    public class InvocationOverheadTest
+    public class InvocationOverheadTest : TestBase
     {
         public interface ITestInterface
         {
@@ -33,7 +32,7 @@ namespace SolidProxy.Tests
         [Test]
         public async Task TestInvocationOverhead()
         {
-            var sc = new ServiceCollection();
+            var sc = SetupServiceCollection();
             sc.AddLogging(o =>
             {
                 o.SetMinimumLevel(LogLevel.Trace);

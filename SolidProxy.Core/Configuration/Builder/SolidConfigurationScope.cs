@@ -51,9 +51,14 @@ namespace SolidProxy.Core.Configuration.Builder
                     {
                         if(_internalServiceProvider == null)
                         {
+                            var proxyGeneratorType = GetScope<SolidConfigurationBuilder>()?.SolidProxyGenerator?.GetType();
+                            if(proxyGeneratorType == null)
+                            {
+                                throw new Exception("No proxy generator type set.");
+                            }
                             var sp = new SolidProxyServiceProvider();
                             sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
-                            sp.AddSingleton(typeof(ISolidProxyGenerator), GetScope<SolidConfigurationBuilder>()?.SolidProxyGeneratorType);
+                            sp.AddSingleton(typeof(ISolidProxyGenerator), proxyGeneratorType);
                             _internalServiceProvider = sp;
                         }
                     }

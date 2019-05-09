@@ -19,8 +19,6 @@ namespace SolidProxy.Core.Configuration.Builder
 
         IEnumerable<ISolidAssemblyConfigurationBuilder> ISolidConfigurationBuilder.AssemblyBuilders => AssemblyBuilders.Values;
 
-        public Type SolidProxyGeneratorType { get; set; }
-
         public ISolidInterfaceConfigurationBuilder<T> ConfigureInterface<T>() where T : class
         {
             return ConfigureInterfaceAssembly(typeof(T).Assembly).ConfigureInterface<T>();
@@ -85,10 +83,8 @@ namespace SolidProxy.Core.Configuration.Builder
             action();
         }
 
-        public ISolidConfigurationBuilder SetGenerator<T>() where T : ISolidProxyGenerator
-        {
-            SolidProxyGeneratorType = typeof(T);
-            return this;
-        }
+        public abstract ISolidProxyGenerator SolidProxyGenerator { get; }
+
+        public abstract ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
     }
 }
