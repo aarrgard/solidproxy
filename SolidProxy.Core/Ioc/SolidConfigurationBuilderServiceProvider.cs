@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
@@ -33,15 +34,26 @@ namespace SolidProxy.Core.IoC
 
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
-            DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(o)));
-            DoIfMissing<TProxy>(() =>
+            var registrationImpls = SolidProxyServiceProvider.Registrations
+                .Where(o => o.ServiceType == typeof(TProxy))
+                .SelectMany(o => o.Implementations).ToList();
+
+            foreach (var registration in registrationImpls)
             {
-                SolidProxyServiceProvider.AddScoped(o =>
+                // check if this registration is mapped to the solid proxy.
+                var resolverType = registration.Resolver.GetType();
+
+                Func<IServiceProvider, TProxy> implementationFactory = (sp) => default(TProxy);
+                DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
+                DoIfMissing<ISolidProxy<TProxy>>(() => SolidProxyServiceProvider.AddScoped(o => ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(o, implementationFactory)));
+                DoIfMissing<TProxy>(() =>
                 {
-                    return ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxy<TProxy>>().Proxy;
+                    SolidProxyServiceProvider.AddScoped(o =>
+                    {
+                        return ((SolidProxyServiceProvider)o).GetRequiredService<ISolidProxy<TProxy>>().Proxy;
+                    });
                 });
-            });
+            }
         }
 
         public override ISolidConfigurationBuilder SetGenerator<T>()

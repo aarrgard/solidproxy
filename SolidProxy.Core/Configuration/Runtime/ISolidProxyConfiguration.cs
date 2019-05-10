@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
@@ -12,6 +13,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// The configuration store that this configuration belongs to.
         /// </summary>
         ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
+
+        /// <summary>
+        /// The factory that creates implementations for the proxy.
+        /// </summary>
+        Func<IServiceProvider, object> ImplementationFactory { get; }
     }
 
     /// <summary>

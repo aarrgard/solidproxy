@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.GeneratorCastle;
 using Unity;
 
 namespace SolidProxy.Tests
@@ -132,6 +133,7 @@ namespace SolidProxy.Tests
         {
             foreach(var provider in Providers)
             {
+                provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
                 testRun(provider);
             }
         }

@@ -95,7 +95,14 @@ namespace SolidProxy.Core.Configuration.Runtime
             configScopeMethod = configScopeMethod.MakeGenericMethod(new[] { configType });
             return (step, configScope) => {
                 var config = (ISolidProxyInvocationAdviceConfig)configScopeMethod.Invoke(configScope, null);
-                configMethod.Invoke(step, new object[] { config });
+                var res = configMethod.Invoke(step, new object[] { config });
+                if(res is bool enabled)
+                {
+                    if(!enabled)
+                    {
+                        return false;
+                    }
+                }
                 return config.Enabled;
             };
         }

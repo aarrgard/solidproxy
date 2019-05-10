@@ -2,7 +2,7 @@
 
 namespace SolidProxy.RoslynGenerator
 {
-    public class Class1
+    public class SolidProxyRoslynGenerator
     {
     }
 }

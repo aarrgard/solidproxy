@@ -1,4 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
@@ -6,12 +7,12 @@ using System.Reflection;
 namespace SolidProxy.Core.Configuration.Runtime
 {
     /// <summary>
-    /// Represents the configuration for a proxy.
+    /// Represents the configuration for a proxy at runtime.
     /// </summary>
     /// <typeparam name="TInterface"></typeparam>
     public class SolidProxyConfiguration<TInterface> : SolidConfigurationScope, ISolidProxyConfiguration<TInterface> where TInterface : class
     {
-        public SolidProxyConfiguration(ISolidConfigurationScope parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
+        public SolidProxyConfiguration(ISolidInterfaceConfigurationBuilder parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
             : base(SolidScopeType.Interface, parentScope)
         {
             SolidProxyConfigurationStore = solidProxyConfigurationStore;
@@ -20,6 +21,8 @@ namespace SolidProxy.Core.Configuration.Runtime
 
         public ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
         public ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration> InvocationConfigurations { get; }
+
+        public Func<IServiceProvider, object> ImplementationFactory => null;
 
         public ISolidProxyInvocationConfiguration GetProxyInvocationConfiguration(MethodInfo methodInfo)
         {

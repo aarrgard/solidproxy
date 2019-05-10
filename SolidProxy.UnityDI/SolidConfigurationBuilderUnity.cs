@@ -43,6 +43,7 @@ namespace SolidProxy.UnityDI
                 {
 
                 }
+
                 //if (registration.MappedToType == typeof(SolidProxy<TProxy>))
                 //{
                 //    throw new Exception("Proxy already configured");

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SolidProxy.Core.Proxy
 {
@@ -10,18 +8,13 @@ namespace SolidProxy.Core.Proxy
     public interface ISolidProxyGenerator
     {
         /// <summary>
-        /// Creates an interface that implements the supplied type and the ISolidProxyMarker interface.
-        /// </summary>
-        /// <typeparam name="TProxy"></typeparam>
-        /// <returns></returns>
-        Type CreateImplementationInterface<TProxy>() where TProxy : class;
-
-        /// <summary>
         /// Constructs a new proxy
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="serviceProvider">the service provider that the proxy belongs to</param>
+        /// <param name="implementationFactory"></param>
         /// <returns></returns>
-        ISolidProxy<T> CreateSolidProxy<T>(IServiceProvider serviceProvider) where T:class;
+        ISolidProxy<T> CreateSolidProxy<T>(IServiceProvider serviceProvider, Func<IServiceProvider, T> implementationFactory) where T:class;
 
         /// <summary>
         /// Constructs a new interfaces proxy that delegates invocations to supplied proxy.

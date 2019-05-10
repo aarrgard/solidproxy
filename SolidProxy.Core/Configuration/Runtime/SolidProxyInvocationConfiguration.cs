@@ -31,6 +31,11 @@ namespace SolidProxy.Core.Configuration.Runtime
             return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args);
         }
 
+        protected override void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope)
+        {
+            base.SetAdviceConfigValues<TConfig>(scope);
+            SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}", this, false);
+        }
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
             if(_advices == null)

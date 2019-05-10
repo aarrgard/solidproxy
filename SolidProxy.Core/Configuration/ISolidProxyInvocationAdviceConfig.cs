@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using SolidProxy.Core.Configuration.Runtime;
+using System.Reflection;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -8,10 +9,9 @@ namespace SolidProxy.Core.Configuration
     public interface ISolidProxyInvocationAdviceConfig
     {
         /// <summary>
-        /// This is the method that this advice configuration applies to.
+        /// 
         /// </summary>
-        MethodInfo MethodInfo { get; }
-
+        ISolidProxyInvocationConfiguration InvocationConfiguration { get; }
 
         /// <summary>
         /// Specifies if this advice is enabled.

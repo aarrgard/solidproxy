@@ -24,18 +24,19 @@ namespace SolidProxy.Core.Proxy
         {
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
-            InvocationSteps = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
+            InvocationAdvices = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
         }
 
         public ISolidProxy<TObject> Proxy { get; }
         public ISolidProxy SolidProxy => Proxy;
+        ISolidProxy<TObject> ISolidProxyInvocation<TObject, TMethod, TAdvice>.SolidProxy => Proxy;
         public IServiceProvider ServiceProvider => Proxy.ServiceProvider;
         public ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> SolidProxyInvocationConfiguration { get; }
         ISolidProxyInvocationConfiguration ISolidProxyInvocation.SolidProxyInvocationConfiguration => SolidProxyInvocationConfiguration;
         public object[] Arguments { get; }
-        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationSteps { get; }
-        public int InvocationStepIdx { get; private set; }
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
+        public int InvocationAdviceIdx { get; private set; }
         public IDictionary<string, object> InvocationValues {
             get
             {
@@ -53,7 +54,7 @@ namespace SolidProxy.Core.Proxy
             }
         }
 
-        public bool IsLastStep =>InvocationStepIdx == InvocationSteps.Count-1;
+        public bool IsLastStep =>InvocationAdviceIdx == InvocationAdvices.Count-1;
 
         private async Task<TAdvice> InvokeProxyPipeline()
         {
@@ -64,13 +65,13 @@ namespace SolidProxy.Core.Proxy
         {
             return () =>
             {
-                if (stepIdx >= InvocationSteps.Count)
+                if (stepIdx >= InvocationAdvices.Count)
                 {
                     var mi = SolidProxyInvocationConfiguration.MethodInfo;
                     throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}");
                 }
-                InvocationStepIdx = stepIdx;
-                return InvocationSteps[stepIdx].Handle(CreateStepIterator(stepIdx+1), this);
+                InvocationAdviceIdx = stepIdx;
+                return InvocationAdvices[stepIdx].Handle(CreateStepIterator(stepIdx+1), this);
             };
         }
 

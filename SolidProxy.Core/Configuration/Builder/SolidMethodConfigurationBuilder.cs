@@ -22,11 +22,6 @@ namespace SolidProxy.Core.Configuration.Builder
 
         ISolidInterfaceConfigurationBuilder ISolidMethodConfigurationBuilder.ParentScope => (ISolidInterfaceConfigurationBuilder) ParentScope;
 
-        protected override void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope)
-        {
-            base.SetAdviceConfigValues<TConfig>(scope);
-            SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.MethodInfo)}", MethodInfo, false);
-        }
         public override void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
             var advices = GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false);

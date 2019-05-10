@@ -16,11 +16,20 @@ namespace SolidProxy.Core.Proxy
     {
         private static Func<TMethod, Task<TAdvice>> s_converter = TypeConverter.CreateConverter<TMethod, Task<TAdvice>>();
 
-        public void Configure(ISolidProxyInvocationImplAdviceConfig config)
+        public bool Configure(ISolidProxyInvocationImplAdviceConfig config)
         {
-            MethodInfo = config.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
-            ImplementationFactory = config.ImplementationFactory ?? throw new Exception("ImplementationFactory cannot be null");
+            MethodInfo = config.InvocationConfiguration.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
+            ImplementationFactory = config.ImplementationFactory;
             Delegate = CreateDelegate();
+            if (ImplementationFactory != null)
+            {
+                GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
+            }
+            else
+            {
+                GetTarget = (invocation) => invocation.SolidProxy.Implementation;
+            }
+            return ImplementationFactory != null || config.InvocationConfiguration.ProxyConfiguration.ImplementationFactory != null;
         }
 
         private Func<TObject, object[], TMethod> CreateDelegate()
@@ -59,15 +68,17 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         public Func<IServiceProvider, object> ImplementationFactory { get; private set; }
 
+        public Func<ISolidProxyInvocation<TObject, TMethod, TAdvice>, TObject> GetTarget { get; private set; }
+
         /// <summary>
         /// The MethodInfo converted to a delegate.
         /// </summary>
         public Func<TObject, object[], TMethod> Delegate { get; private set; }
 
+
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
-            var impl = (TObject)ImplementationFactory.Invoke(invocation.ServiceProvider);
-            var res = Delegate(impl, invocation.Arguments);
+            var res = Delegate(GetTarget(invocation), invocation.Arguments);
             return s_converter.Invoke(res);
         }
     }

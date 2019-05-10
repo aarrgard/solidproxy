@@ -19,6 +19,11 @@ namespace SolidProxy.Core.Proxy
         object Proxy { get; }
 
         /// <summary>
+        /// Returns the implementation. Note that the methods may use their own implementation.
+        /// </summary>
+        object Implementation { get; }
+
+        /// <summary>
         /// Invokes the method with supplied args
         /// </summary>
         /// <param name="method"></param>
@@ -36,5 +41,10 @@ namespace SolidProxy.Core.Proxy
         /// Returns the proxy implementing the interface.
         /// </summary>
         new T Proxy { get; }
+
+        /// <summary>
+        /// Returns the implementation.
+        /// </summary>
+        new T Implementation { get; }
     }
 }

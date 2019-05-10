@@ -32,43 +32,43 @@ namespace SolidProxy.MicrosoftDI
         }
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
-            foreach(var service in ServiceCollection.Where(o => o.ServiceType == typeof(TProxy)))
+            var services = ServiceCollection.Where(o => o.ServiceType == typeof(TProxy)).ToList();
+            foreach (var service in services)
             {
-                if (typeof(ISolidProxyMarker).IsAssignableFrom(service.ImplementationType))
+                //
+                // check if this service has been configured already.
+                //
+                var implementationFactoryTarget = service.ImplementationFactory?.Target?.GetType()?.DeclaringType;
+                if(implementationFactoryTarget == GetType())
                 {
                     continue;
                 }
-                //var newInterface = SolidProxyGenerator.CreateImplementationInterface<TProxy>();
 
-            }
-            DoIfMissing<ISolidProxy<TProxy>>(() =>
-            {
-                // get the service definition and remove it(added later)
-                var service = ServiceCollection.Single(o => o.ServiceType == typeof(TProxy));
-                if(typeof(ISolidProxy<TProxy>).IsAssignableFrom(service.ImplementationType))
-                {
-                    throw new Exception("Proxy already configured");
-                }
+                // remove the service difinition - added again later
                 ServiceCollection.Remove(service);
 
                 //
                 // create implementation factory function.
                 //
-                Func<IServiceProvider, object> implementationFactory = null;
+                Func<IServiceProvider, TProxy> implementationFactory = null;
                 if (service.ImplementationFactory != null)
                 {
-                    implementationFactory = sp => service.ImplementationFactory.Invoke(sp);
+                    implementationFactory = sp => (TProxy)service.ImplementationFactory.Invoke(sp);
                 }
                 else if (service.ImplementationInstance != null)
                 {
-                    implementationFactory = sp => service.ImplementationInstance;
+                    implementationFactory = sp => (TProxy)service.ImplementationInstance;
                 }
                 else if (service.ImplementationType != null)
                 {
                     if (service.ImplementationType.IsClass)
                     {
                         DoIfMissing(service.ImplementationType, () => ServiceCollection.Add(new ServiceDescriptor(service.ImplementationType, service.ImplementationType, service.Lifetime)));
-                        implementationFactory = sp => sp.GetRequiredService(service.ImplementationType);
+                        implementationFactory = sp => (TProxy)sp.GetRequiredService(service.ImplementationType);
+                    }
+                    else
+                    {
+                        implementationFactory = (SP) => throw new NotImplementedException("Interface does not have an implementation.");
                     }
                 }
                 else
@@ -80,40 +80,42 @@ namespace SolidProxy.MicrosoftDI
                 // add the configuration for the proxy and register 
                 // proxy and interface the same way as the removed service.
                 //
-                ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>());
+                DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
-                        ServiceCollection.AddScoped(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(sp));
-                        ServiceCollection.AddScoped(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddScoped(CreateProxyFactory(implementationFactory));
                         break;
                     case ServiceLifetime.Transient:
-                        ServiceCollection.AddTransient(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(sp));
-                        ServiceCollection.AddTransient(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddTransient(CreateProxyFactory(implementationFactory));
                         break;
                     case ServiceLifetime.Singleton:
-                        ServiceCollection.AddSingleton(sp => sp.GetRequiredService<ISolidProxyGenerator>().CreateSolidProxy<TProxy>(sp));
-                        ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxy<TProxy>>().Proxy);
+                        ServiceCollection.AddSingleton(CreateProxyFactory(implementationFactory));
                         break;
                 }
+            };
 
-                //
-                // make sure that all the methods are configured
-                //
-                interfaceConfig.Methods.ToList().ForEach(methodConfig =>
-                {
-                    //
-                    // configure implementation advice if implementation exists.
-                    //
-                    if (implementationFactory != null)
-                    {
-                        var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                        invocAdviceConfig.Enabled = true;
-                        invocAdviceConfig.ImplementationFactory = implementationFactory;
-                        methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
-                    }
-                });
+            //
+            // make sure that all the methods are configured
+            //
+            interfaceConfig.Methods.ToList().ForEach(methodConfig =>
+            {
+                var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                invocAdviceConfig.Enabled = true;
+                methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
             });
+        }
+
+        private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class
+        {
+            if (implementationFactory == null) throw new ArgumentNullException(nameof(implementationFactory));
+            var proxyGenerator = SolidProxyGenerator;
+            return (sp) => proxyGenerator.CreateSolidProxy(sp, implementationFactory).Proxy;
+        }
+
+        private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
+        {
+            return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
         }
 
         public override ISolidConfigurationBuilder SetGenerator<T>()

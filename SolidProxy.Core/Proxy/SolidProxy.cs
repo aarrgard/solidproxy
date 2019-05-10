@@ -15,12 +15,18 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         /// <param name="proxyConfigurationStore"></param>
         /// <param name="proxyGenerator"></param>
-        protected SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, ISolidProxyGenerator proxyGenerator)
+        protected SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, Func<IServiceProvider, T> implementationFactory, ISolidProxyGenerator proxyGenerator)
         {
-            ServiceProvider = serviceProvider;
-            ProxyConfiguration = proxyConfiguration;
+            if(implementationFactory == null) throw new ArgumentNullException(nameof(implementationFactory));
+            ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            ProxyConfiguration = proxyConfiguration ?? throw new ArgumentNullException(nameof(proxyConfiguration));
             Proxy = proxyGenerator.CreateInterfaceProxy(this);
+            Value = new Lazy<T>(() => implementationFactory(ServiceProvider));
         }
+
+        public IServiceProvider ServiceProvider { get; }
+
+        private Lazy<T> Value { get; }
 
         /// <summary>
         /// The proxy configuration.
@@ -37,7 +43,15 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         object ISolidProxy.Proxy => Proxy;
 
-        public IServiceProvider ServiceProvider { get; }
+        public T Implementation
+        {
+            get
+            {
+                return Value.Value;
+            }
+        }
+
+        object ISolidProxy.Implementation => Implementation;
 
         public object Invoke(MethodInfo method, object[] args)
         {
