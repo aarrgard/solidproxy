@@ -15,7 +15,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         {
             ServiceProvider = serviceProvider;
             SolidConfigurationBuilder = solidConfigurationBuilder;
-            ProxyConfigurations = new ConcurrentDictionary<Type, ISolidProxyConfiguration>();
+            ProxyConfigurations = new ConcurrentDictionary<Guid, ISolidProxyConfiguration>();
         }
 
         /// <summary>
@@ -31,16 +31,16 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <summary>
         /// All the proxy configurations
         /// </summary>
-        public ConcurrentDictionary<Type, ISolidProxyConfiguration> ProxyConfigurations { get; }
+        public ConcurrentDictionary<Guid, ISolidProxyConfiguration> ProxyConfigurations { get; }
 
         /// <summary>
         /// Returns the configuration for speficied type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public ISolidProxyConfiguration<T> GetProxyConfiguration<T>() where T : class
+        public ISolidProxyConfiguration<T> GetProxyConfiguration<T>(Guid configurationGuid) where T : class
         {
-            return (ISolidProxyConfiguration<T>)ProxyConfigurations.GetOrAdd(typeof(T), _ => new SolidProxyConfiguration<T>(SolidConfigurationBuilder.ConfigureInterface<T>(), this));
+            return (ISolidProxyConfiguration<T>)ProxyConfigurations.GetOrAdd(configurationGuid, _ => new SolidProxyConfiguration<T>(SolidConfigurationBuilder.ConfigureInterface<T>(), this));
         }
     }
 }

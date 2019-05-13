@@ -43,7 +43,7 @@ namespace SolidProxy.Core.IoC
 
         private ConcurrentDictionary<Type, SolidProxyServiceRegistration> _registrations;
         private SolidProxyServiceProvider _parentServiceProvider;
-        private IList<IDisposable> _disposeChain;
+        internal IList<IDisposable> _disposeChain;
 
         /// <summary>
         /// Constructs a new IoC container. The parent provider may be null.
@@ -254,6 +254,15 @@ namespace SolidProxy.Core.IoC
                 serviceType,
                 implementationType,
                 null);
+        }
+
+        /// <summary>
+        /// Adds a transient service
+        /// </summary>
+        /// <param name="implementationType"></param>
+        public void AddTransient<T>(Func<IServiceProvider, T> factory)
+        {
+            AddTransient(typeof(T), _ => factory(_));
         }
 
         /// <summary>

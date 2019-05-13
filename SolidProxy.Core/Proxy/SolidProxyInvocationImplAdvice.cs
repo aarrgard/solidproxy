@@ -20,16 +20,17 @@ namespace SolidProxy.Core.Proxy
         {
             MethodInfo = config.InvocationConfiguration.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
             ImplementationFactory = config.ImplementationFactory;
+            if(ImplementationFactory == null)
+            {
+                ImplementationFactory = config.InvocationConfiguration.ProxyConfiguration.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>().ImplementationFactory;
+            }
+            if(ImplementationFactory == null)
+            {
+                return false;
+            }
             Delegate = CreateDelegate();
-            if (ImplementationFactory != null)
-            {
-                GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
-            }
-            else
-            {
-                GetTarget = (invocation) => invocation.SolidProxy.Implementation;
-            }
-            return ImplementationFactory != null || config.InvocationConfiguration.ProxyConfiguration.ImplementationFactory != null;
+            GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
+            return true;
         }
 
         private Func<TObject, object[], TMethod> CreateDelegate()

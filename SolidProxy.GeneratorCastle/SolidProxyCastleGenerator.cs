@@ -20,10 +20,9 @@ namespace SolidProxy.GeneratorCastle
             return (T)ProxyGenerator.CreateInterfaceProxyWithoutTarget(typeof(T), proxy);
         }
 
-        public ISolidProxy<T> CreateSolidProxy<T>(IServiceProvider serviceProvider, Func<IServiceProvider, T> implementationFactory) where T : class
+        public ISolidProxy<T> CreateSolidProxy<T>(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> config) where T : class
         {
-            var config = (ISolidProxyConfiguration<T>) serviceProvider.GetService(typeof(ISolidProxyConfiguration<T>));
-            return new SolidProxyCastle<T>(serviceProvider, config, implementationFactory, this);
+            return new SolidProxyCastle<T>(serviceProvider, config, this);
         }
     }
 }

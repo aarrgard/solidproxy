@@ -24,7 +24,8 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// Returns the proxy configuration for specified interface.
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="configurationId">The configuration id</param>
         /// <returns></returns>
-        ISolidProxyConfiguration<T> GetProxyConfiguration<T>() where T : class;
+        ISolidProxyConfiguration<T> GetProxyConfiguration<T>(Guid configurationId) where T : class;
     }
 }

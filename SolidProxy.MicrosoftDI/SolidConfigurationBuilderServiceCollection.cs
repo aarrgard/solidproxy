@@ -10,6 +10,35 @@ namespace SolidProxy.MicrosoftDI
 {
     public class SolidConfigurationBuilderServiceCollection : SolidConfigurationBuilder
     {
+        private class SolidProxyConfig<T> where T : class
+        {
+            public SolidProxyConfig(Func<IServiceProvider, object> implementationFactory)
+            {
+                ConfigurationId = Guid.NewGuid();
+                ImplementationFactory = implementationFactory;
+            }
+
+            public Guid ConfigurationId { get; }
+            public Func<IServiceProvider, object> ImplementationFactory { get; }
+            private ISolidProxyConfiguration<T> ProxyConfig { get; set; }
+
+            public ISolidProxyConfiguration<T> GetProxyConfiguration(IServiceProvider serviceProvider)
+            {
+                var proxyConfig = ProxyConfig;
+                if (proxyConfig == null || proxyConfig.SolidProxyConfigurationStore.ServiceProvider != serviceProvider)
+                {
+                    var store = (ISolidProxyConfigurationStore)serviceProvider.GetService(typeof(ISolidProxyConfigurationStore));
+                    proxyConfig = store.GetProxyConfiguration<T>(ConfigurationId);
+                    if (ImplementationFactory != null)
+                    {
+                        proxyConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>().ImplementationFactory = ImplementationFactory;
+                    }
+                    ProxyConfig = proxyConfig;
+                }
+                return proxyConfig;
+            }
+        }
+
         public SolidConfigurationBuilderServiceCollection(IServiceCollection serviceCollection)
         {
             ServiceCollection = serviceCollection;
@@ -68,7 +97,7 @@ namespace SolidProxy.MicrosoftDI
                     }
                     else
                     {
-                        implementationFactory = (SP) => throw new NotImplementedException("Interface does not have an implementation.");
+                        implementationFactory = null;
                     }
                 }
                 else
@@ -80,7 +109,6 @@ namespace SolidProxy.MicrosoftDI
                 // add the configuration for the proxy and register 
                 // proxy and interface the same way as the removed service.
                 //
-                DoIfMissing<ISolidProxyConfiguration<TProxy>>(() => ServiceCollection.AddSingleton(o => o.GetRequiredService<ISolidProxyConfigurationStore>().GetProxyConfiguration<TProxy>()));
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
@@ -108,9 +136,11 @@ namespace SolidProxy.MicrosoftDI
 
         private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class
         {
-            if (implementationFactory == null) throw new ArgumentNullException(nameof(implementationFactory));
             var proxyGenerator = SolidProxyGenerator;
-            return (sp) => proxyGenerator.CreateSolidProxy(sp, implementationFactory).Proxy;
+            var config = new SolidProxyConfig<TProxy>(implementationFactory);
+            return (sp) => {
+                return proxyGenerator.CreateSolidProxy(sp, config.GetProxyConfiguration(sp)).Proxy;
+            };
         }
 
         private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
