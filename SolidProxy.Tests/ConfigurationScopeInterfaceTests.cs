@@ -29,9 +29,11 @@ namespace SolidProxy.Tests
             var config1 = services.GetSolidConfigurationBuilder().ConfigureAdvice<IConfig1>();
             var config2 = services.GetSolidConfigurationBuilder().ConfigureAdvice<IConfig2>();
 
+            // enabling on the parent scope should result in same value 
+            // on child scopes it not explicitly specified there
             config1.Enabled = true;
             Assert.IsTrue(config1.Enabled);
-            Assert.IsFalse(config2.Enabled);
+            Assert.IsTrue(config2.Enabled);
 
             config1.Enabled = false;
             config2.Enabled = true;
@@ -150,6 +152,19 @@ namespace SolidProxy.Tests
             Assert.IsTrue(methodConfig.IsAdviceConfigured<IConfig2>());
             Assert.IsTrue(methodConfig.IsAdviceConfigured<IConfig3>());
             Assert.IsTrue(methodConfig.IsAdviceConfigured<IConfig4>());
+        }
+
+        [Test]
+        public void TestAdviceConfigurationEnablesAdvice()
+        {
+            var services = SetupServiceCollection();
+
+            var config = services.GetSolidConfigurationBuilder()
+                .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
+                .ConfigureInterface<IConfig1>()
+                .ConfigureAdvice<IConfig1>();
+
+            Assert.IsTrue(config.Enabled);
         }
     }
 }

@@ -95,12 +95,20 @@ namespace SolidProxy.Core.Configuration.Builder
             var i = (TConfig)InternalServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
+                bool enable = !IsAdviceConfigured<TConfig>();
                 var configBuilder = InternalServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
                 var proxyConf = configBuilder.ConfigureInterface<TConfig>();
                 SetAdviceConfigValues<TConfig>(proxyConf);
                 proxyConf.AddAdvice(typeof(SolidConfigurationHandler<,,>));
 
                 i = InternalServiceProvider.GetRequiredService<TConfig>();
+                
+                // we only set set value if we want to change it
+                // otherwise the interceptor won´t look in the parent scope.
+                if (enable)
+                {
+                    i.Enabled = enable;
+                }
             }
             return i;
         }
@@ -117,6 +125,9 @@ namespace SolidProxy.Core.Configuration.Builder
 
         public bool IsAdviceConfigured(Type settingsType)
         {
+            //
+            // The advice is configured if we can find the configuration "service".
+            //
             var stepScopeType = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
             if(!stepScopeType)
             {
