@@ -81,7 +81,7 @@ namespace SolidProxy.Tests
         }
 
         [Test]
-        public void TestInterfaceInvocation()
+        public void TestLoggingAdvice()
         {
             var loggerProvider = new LoggerProvider();
 
@@ -101,7 +101,7 @@ namespace SolidProxy.Tests
                 sp.GetRequiredService<ITestInterface>().DoSomething();
             } catch(NotImplementedException) { }
 
-            Assert.AreEqual("Entering - DoSomething\r\nExiting - DoSomething\r\n", loggerProvider.Logger.Logger.ToString());
+            Assert.AreEqual($"Entering - DoSomething{Environment.NewLine}Exiting - DoSomething{Environment.NewLine}", loggerProvider.Logger.Logger.ToString());
         }
     }
 }
