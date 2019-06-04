@@ -10,7 +10,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
     /// <typeparam name="TAdvice"></typeparam>
-    public class SolidConfigurationHandler<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+    public class SolidConfigurationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {

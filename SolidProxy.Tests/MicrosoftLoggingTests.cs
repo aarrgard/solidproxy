@@ -100,6 +100,7 @@ namespace SolidProxy.Tests
             {
                 sp.GetRequiredService<ITestInterface>().DoSomething();
             } catch(NotImplementedException) { }
+
             Assert.AreEqual("Entering - DoSomething\r\nExiting - DoSomething\r\n", loggerProvider.Logger.Logger.ToString());
         }
     }

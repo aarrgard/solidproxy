@@ -99,7 +99,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 var configBuilder = InternalServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
                 var proxyConf = configBuilder.ConfigureInterface<TConfig>();
                 SetAdviceConfigValues<TConfig>(proxyConf);
-                proxyConf.AddAdvice(typeof(SolidConfigurationHandler<,,>));
+                proxyConf.AddAdvice(typeof(SolidConfigurationAdvice<,,>));
 
                 i = InternalServiceProvider.GetRequiredService<TConfig>();
                 

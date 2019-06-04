@@ -44,7 +44,7 @@ namespace SolidProxy.Core.IoC
 
             DoIfMissing<ISolidProxyConfigurationStore>(() => SolidProxyServiceProvider.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
             DoIfMissing<ISolidConfigurationBuilder>(() => SolidProxyServiceProvider.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>());
-            DoIfMissing(typeof(SolidConfigurationHandler<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidConfigurationHandler<,,>), typeof(SolidConfigurationHandler<,,>)));
+            DoIfMissing(typeof(SolidConfigurationAdvice<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidConfigurationAdvice<,,>), typeof(SolidConfigurationAdvice<,,>)));
         }
 
         public SolidProxyServiceProvider SolidProxyServiceProvider { get; }

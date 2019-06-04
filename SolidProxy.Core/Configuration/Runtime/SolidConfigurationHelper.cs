@@ -82,28 +82,55 @@ namespace SolidProxy.Core.Configuration.Runtime
 
         private static Func<ISolidProxyInvocationAdvice, ISolidConfigurationScope, bool> GetConfigFunction(Type type)
         {
+            //
+            // get the configuration method in advice class. If no such method exists we 
+            // return a function that enables the advice on all the instances
+            // 
             var configMethod = GetConfigMethod(type);
             if(configMethod == null)
             {
                 return (config, step) => { return true; };
             }
+
             var configType = GetAdviceConfigType(type);
-            var configScopeMethod = typeof(ISolidConfigurationScope)
+            var isAdviceConfiguredMethod = typeof(ISolidConfigurationScope)
+                .GetMethods()
+                .Where(o => o.Name == nameof(ISolidConfigurationScope.IsAdviceConfigured))
+                .Where(o => o.IsGenericMethod)
+                .Single();
+            var configureAdviceMethod = typeof(ISolidConfigurationScope)
                 .GetMethods()
                 .Where(o => o.Name == nameof(ISolidConfigurationScope.ConfigureAdvice))
                 .Single();
-            configScopeMethod = configScopeMethod.MakeGenericMethod(new[] { configType });
+
+            isAdviceConfiguredMethod = isAdviceConfiguredMethod.MakeGenericMethod(new[] { configType });
+            configureAdviceMethod = configureAdviceMethod.MakeGenericMethod(new[] { configType });
             return (step, configScope) => {
-                var config = (ISolidProxyInvocationAdviceConfig)configScopeMethod.Invoke(configScope, null);
-                var res = configMethod.Invoke(step, new object[] { config });
-                if(res is bool enabled)
+                //
+                // we need to use the "isAdviceConfiguredMethod" to check if advice
+                // is configured. Invoking "configureAdvice" will enable it.
+                //
+                var configured = (bool)isAdviceConfiguredMethod.Invoke(configScope, null);
+                if(!configured)
                 {
-                    if(!enabled)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
-                return config.Enabled;
+
+                //
+                // the configuration is enabled - determine if the advice should be added
+                // by calling the "configure" method on the advice.
+                //
+                var config = (ISolidProxyInvocationAdviceConfig)configureAdviceMethod.Invoke(configScope, null);
+                if(!config.Enabled)
+                {
+                    return false;
+                }
+                var res = configMethod.Invoke(step, new object[] { config });
+                if((res is bool) == false)
+                {
+                    return true;
+                }
+                return (bool)res;
             };
         }
     }

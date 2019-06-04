@@ -164,7 +164,15 @@ namespace SolidProxy.Tests
                 .ConfigureInterface<IConfig1>()
                 .ConfigureAdvice<IConfig1>();
 
-            Assert.IsTrue(config.Enabled);
+            Assert.IsFalse(services.GetSolidConfigurationBuilder()
+                .IsAdviceConfigured<IConfig1>());
+            Assert.IsFalse(services.GetSolidConfigurationBuilder()
+                .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
+                .IsAdviceConfigured<IConfig1>());
+            Assert.IsTrue(services.GetSolidConfigurationBuilder()
+                .ConfigureInterfaceAssembly(typeof(IConfig1).Assembly)
+                .ConfigureInterface<IConfig1>()
+                .IsAdviceConfigured<IConfig1>());
         }
     }
 }

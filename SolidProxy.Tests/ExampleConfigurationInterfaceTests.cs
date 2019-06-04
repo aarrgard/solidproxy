@@ -61,6 +61,7 @@ namespace SolidProxy.Tests
             Assert.AreEqual("456", sp.GetRequiredService<IEnabledInterface>().GetValue2());
             try
             {
+                Assert.IsFalse(services.GetSolidConfigurationBuilder().ConfigureInterface<IDisabledInterface>().ConfigureAdvice<IInvocationStepConfig>().Enabled);
                 var res = sp.GetRequiredService<IDisabledInterface>().GetValue();
                 Assert.Fail();
             }
