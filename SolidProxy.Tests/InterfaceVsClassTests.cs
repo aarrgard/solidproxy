@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Proxy;
-using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
