@@ -31,6 +31,16 @@ namespace SolidProxy.Tests
             }
         }
 
+        public interface IAdviceConfig : ISolidProxyInvocationImplAdviceConfig { }
+
+        public class AdviceWithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public interface ITestInterface
         {
             int Get0Value();
@@ -42,8 +52,11 @@ namespace SolidProxy.Tests
             int Get123Value();
         }
 
+        public interface IAnotherTestInterface { }
+        public class AnotherImplementation : IAnotherTestInterface { }
+
         [Test]
-        public void Test0Advices()
+        public void TestPointCuts()
         {
             var services = SetupServiceCollection();
             services.AddTransient<ITestInterface>();
@@ -68,6 +81,25 @@ namespace SolidProxy.Tests
             Assert.AreEqual(1, test.Get1Value());
             Assert.AreEqual(2, test.Get12Value());
             Assert.AreEqual(3, test.Get123Value());
+        }
+        [Test]
+        public void TestAdviceConfigAddsAdvice()
+        {
+            var services = SetupServiceCollection();
+
+            services.AddSingleton<ITestInterface>();
+            services.AddSingleton<IAnotherTestInterface, AnotherImplementation>();
+
+            // this should enable the advice on the test interface
+            services.GetSolidConfigurationBuilder()
+                .ConfigureInterface<ITestInterface>()
+                .ConfigureAdvice<IAdviceConfig>();
+
+            services.GetSolidConfigurationBuilder().AddAdvice(typeof(AdviceWithConfiguration<,,>));
+
+            var sp = services.BuildServiceProvider();
+            Assert.AreEqual(typeof(AnotherImplementation), sp.GetRequiredService<IAnotherTestInterface>().GetType());
+            var solidProxy = ((ISolidProxy)sp.GetRequiredService<ITestInterface>());
         }
     }
 }

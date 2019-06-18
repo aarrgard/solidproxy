@@ -197,7 +197,20 @@ namespace SolidProxy.Core.Configuration.Builder
         public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
             ConfigureAdvice(adviceType);
-            if (pointcut == null) pointcut = (o) => true;
+            if (pointcut == null)
+            {
+                // if no pointcut supplied - check if advice has a configuration.
+                // the method has to be configured in order for the advice to be added
+                var configType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+                if(configType == null)
+                {
+                    pointcut = (o) => true;
+                }
+                else
+                {
+                    pointcut = (o) => o.IsAdviceConfigured(configType);
+                }
+            }
             GetMethodConfigurationBuilders().Where(o => pointcut(o)).ToList().ForEach(o =>
             {
                 o.AddAdvice(adviceType);
