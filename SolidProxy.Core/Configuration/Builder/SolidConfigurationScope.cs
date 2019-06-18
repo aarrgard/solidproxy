@@ -8,17 +8,30 @@ using System.Linq;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
+    /// <summary>
+    /// Base class for the configuration scopes
+    /// </summary>
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
         private SolidProxyServiceProvider _internalServiceProvider;
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
 
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="solidScopeType"></param>
+        /// <param name="parentScope"></param>
         protected SolidConfigurationScope(SolidScopeType solidScopeType, ISolidConfigurationScope parentScope)
         {
             SolidScopeType = solidScopeType;
             ParentScope = parentScope;
         }
 
+        /// <summary>
+        /// Returns the scope
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public T GetScope<T>() where T : ISolidConfigurationScope
         {
             if(this is T)
@@ -42,6 +55,9 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         public SolidScopeType SolidScopeType { get; }
 
+        /// <summary>
+        /// Returns the internal service provider
+        /// </summary>
         public SolidProxyServiceProvider InternalServiceProvider {
             get
             {
@@ -67,6 +83,13 @@ namespace SolidProxy.Core.Configuration.Builder
             }
         }
 
+        /// <summary>
+        /// Gets the value in this scope
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="searchParentScope"></param>
+        /// <returns></returns>
         public T GetValue<T>(string key, bool searchParentScope)
         {
             object val;
@@ -81,6 +104,13 @@ namespace SolidProxy.Core.Configuration.Builder
             return default(T);
         }
 
+        /// <summary>
+        /// Sets the value in this scope
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="writeInParentScopes"></param>
         public void SetValue<T>(string key, T value, bool writeInParentScopes = false)
         {
             _items[key] = value;
@@ -90,6 +120,11 @@ namespace SolidProxy.Core.Configuration.Builder
             }
         }
 
+        /// <summary>
+        /// Configures specified advice. Enables it on first invocation.
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        /// <returns></returns>
         public TConfig ConfigureAdvice<TConfig>() where TConfig: class,ISolidProxyInvocationAdviceConfig
         {
             var i = (TConfig)InternalServiceProvider.GetService(typeof(TConfig));
@@ -113,16 +148,31 @@ namespace SolidProxy.Core.Configuration.Builder
             return i;
         }
 
+        /// <summary>
+        /// Sets the advice configuration values
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        /// <param name="scope"></param>
         protected virtual void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope) where TConfig : class, ISolidProxyInvocationAdviceConfig
         {
             scope.SetValue(nameof(ISolidConfigurationScope), this);
         }
 
+        /// <summary>
+        /// Determines if the advice has been configures
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
         {
             return IsAdviceConfigured(typeof(T));
         }
 
+        /// <summary>
+        /// Determines if the advice has been configured.
+        /// </summary>
+        /// <param name="settingsType"></param>
+        /// <returns></returns>
         public bool IsAdviceConfigured(Type settingsType)
         {
             //
@@ -139,6 +189,11 @@ namespace SolidProxy.Core.Configuration.Builder
             return stepScopeType;
         }
 
+        /// <summary>
+        /// Adds an advice
+        /// </summary>
+        /// <param name="adviceType"></param>
+        /// <param name="pointcut"></param>
         public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
             ConfigureAdvice(adviceType);
@@ -149,11 +204,19 @@ namespace SolidProxy.Core.Configuration.Builder
             }); 
         }
 
+        /// <summary>
+        /// Returns the configuration builders
+        /// </summary>
+        /// <returns></returns>
         public virtual IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Configures the advice
+        /// </summary>
+        /// <param name="adviceType"></param>
         public virtual void ConfigureAdvice(Type adviceType)
         {
             if(ParentScope == null)
@@ -163,6 +226,11 @@ namespace SolidProxy.Core.Configuration.Builder
             ((SolidConfigurationScope)ParentScope).ConfigureAdvice(adviceType);
         }
 
+        /// <summary>
+        /// Configures the proxy
+        /// </summary>
+        /// <typeparam name="TProxy"></typeparam>
+        /// <param name="interfaceConfig"></param>
         public virtual void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig) where TProxy : class
         {
             if (ParentScope == null)
@@ -172,6 +240,9 @@ namespace SolidProxy.Core.Configuration.Builder
             ((SolidConfigurationScope)ParentScope).ConfigureProxy(interfaceConfig);
         }
 
+        /// <summary>
+        /// Determines if the scope is enables
+        /// </summary>
         public bool Enabled
         {
             get
@@ -192,8 +263,17 @@ namespace SolidProxy.Core.Configuration.Builder
         }
     }
 
+    /// <summary>
+    /// The typed scope
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public abstract class SolidConfigurationScope<T> : SolidConfigurationScope, ISolidConfigurationScope<T> where T : class
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="solidScopeType"></param>
+        /// <param name="parentScope"></param>
         protected SolidConfigurationScope(SolidScopeType solidScopeType, SolidConfigurationScope parentScope)
             : base(solidScopeType, parentScope)
         {

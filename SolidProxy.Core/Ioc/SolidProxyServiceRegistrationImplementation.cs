@@ -8,6 +8,14 @@ namespace SolidProxy.Core.IoC
     /// </summary>
     public class SolidProxyServiceRegistrationImplementation
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="serviceRegistration"></param>
+        /// <param name="registrationIdx"></param>
+        /// <param name="registrationScope"></param>
+        /// <param name="implementationType"></param>
+        /// <param name="resolver"></param>
         public SolidProxyServiceRegistrationImplementation(SolidProxyServiceRegistration serviceRegistration, int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, object> resolver)
         {
             ServiceRegistration = serviceRegistration;
@@ -16,6 +24,15 @@ namespace SolidProxy.Core.IoC
             ImplementationType = implementationType;
             _resolver = resolver;
         }
+
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="serviceRegistration"></param>
+        /// <param name="registrationIdx"></param>
+        /// <param name="registrationScope"></param>
+        /// <param name="implementationType"></param>
+        /// <param name="resolved"></param>
         public SolidProxyServiceRegistrationImplementation(SolidProxyServiceRegistration serviceRegistration, int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, object resolved)
         {
             RegistrationIdx = registrationIdx;

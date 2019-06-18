@@ -17,6 +17,12 @@ namespace SolidProxy.Core.Proxy
 
         private IDictionary<string, object> _invocationValues;
 
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="proxy"></param>
+        /// <param name="invocationConfiguration"></param>
+        /// <param name="args"></param>
         public SolidProxyInvocation(
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
@@ -27,16 +33,39 @@ namespace SolidProxy.Core.Proxy
             InvocationAdvices = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
         }
-
+        /// <summary>
+        /// The proxy
+        /// </summary>
         public ISolidProxy<TObject> Proxy { get; }
+        /// <summary>
+        /// The proxy
+        /// </summary>
         public ISolidProxy SolidProxy => Proxy;
         ISolidProxy<TObject> ISolidProxyInvocation<TObject, TMethod, TAdvice>.SolidProxy => Proxy;
+        /// <summary>
+        /// The service provider
+        /// </summary>
         public IServiceProvider ServiceProvider => Proxy.ServiceProvider;
+        /// <summary>
+        /// The invocation configuration
+        /// </summary>
         public ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> SolidProxyInvocationConfiguration { get; }
         ISolidProxyInvocationConfiguration ISolidProxyInvocation.SolidProxyInvocationConfiguration => SolidProxyInvocationConfiguration;
+        /// <summary>
+        /// The arguments
+        /// </summary>
         public object[] Arguments { get; }
+        /// <summary>
+        /// The advices
+        /// </summary>
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
+        /// <summary>
+        /// The current advice index
+        /// </summary>
         public int InvocationAdviceIdx { get; private set; }
+        /// <summary>
+        /// The invocation values
+        /// </summary>
         public IDictionary<string, object> InvocationValues {
             get
             {
@@ -54,6 +83,9 @@ namespace SolidProxy.Core.Proxy
             }
         }
 
+        /// <summary>
+        /// Returns true if this is the last step.
+        /// </summary>
         public bool IsLastStep =>InvocationAdviceIdx == InvocationAdvices.Count-1;
 
         private async Task<TAdvice> InvokeProxyPipeline()
@@ -75,11 +107,21 @@ namespace SolidProxy.Core.Proxy
             };
         }
 
+        /// <summary>
+        /// Returns the return value
+        /// </summary>
+        /// <returns></returns>
         public object GetReturnValue()
         {
             return s_TAdviceToTMethodConverter(InvokeProxyPipeline());
         }
 
+        /// <summary>
+        /// Returns the value for supplied key.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public T GetValue<T>(string key)
         {
             object res;
@@ -89,7 +131,12 @@ namespace SolidProxy.Core.Proxy
             }
             return default(T);
         }
-
+        /// <summary>
+        /// Sets the value for supplied key.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public void SetValue<T>(string key, T value)
         {
             InvocationValues[key] = value;

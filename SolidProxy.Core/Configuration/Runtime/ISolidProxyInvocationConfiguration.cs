@@ -21,14 +21,14 @@ namespace SolidProxy.Core.Configuration.Runtime
         MethodInfo MethodInfo { get; }
 
         /// <summary>
-        /// The pipeline type. The converters uses the Task<T> type where typeof(T) is this type.
+        /// The pipeline type. The converters uses the Task&lt;T&gt; type where typeof(T) is this type.
         /// </summary>
-        Type PipelineType { get; }
+        Type AdviceType { get; }
 
         /// <summary>
         /// Creates a new proxy invocation.
         /// </summary>
-        /// <param name="rpcProxy"></param>
+        /// <param name="solidProxy"></param>
         /// <param name="args"></param>
         /// <returns></returns>
         ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args);
@@ -39,7 +39,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
-    /// <typeparam name="TRet"></typeparam>
+    /// <typeparam name="TAdvice"></typeparam>
     public interface ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : ISolidConfigurationScope<TObject>, ISolidProxyInvocationConfiguration where TObject : class
     {
         /// <summary>

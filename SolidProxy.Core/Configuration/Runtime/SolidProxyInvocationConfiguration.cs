@@ -8,10 +8,21 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
+    /// <summary>
+    /// Represents an invocation config
+    /// </summary>
+    /// <typeparam name="TObject"></typeparam>
+    /// <typeparam name="TMethod"></typeparam>
+    /// <typeparam name="TAdvice"></typeparam>
     public class SolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> where TObject : class
     {
         private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _advices;
 
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="methodConfiguration"></param>
+        /// <param name="proxyConfiguration"></param>
         public SolidProxyInvocationConfiguration(ISolidMethodConfigurationBuilder methodConfiguration, ISolidProxyConfiguration<TObject> proxyConfiguration) 
             : base(SolidScopeType.Method, methodConfiguration)
         {
@@ -19,23 +30,51 @@ namespace SolidProxy.Core.Configuration.Runtime
             ProxyConfiguration = proxyConfiguration;
         }
 
+        /// <summary>
+        /// The proxy configuration
+        /// </summary>
         public ISolidProxyConfiguration ProxyConfiguration { get; }
+        /// <summary>
+        /// The method configuration
+        /// </summary>
         public ISolidMethodConfigurationBuilder MethodConfiguration { get; }
 
+        /// <summary>
+        /// The method info
+        /// </summary>
         public MethodInfo MethodInfo => MethodConfiguration.MethodInfo;
 
-        public Type PipelineType => typeof(TAdvice);
+        /// <summary>
+        /// The advice type
+        /// </summary>
+        public Type AdviceType => typeof(TAdvice);
 
+        /// <summary>
+        /// Creates a new invocation
+        /// </summary>
+        /// <param name="rpcProxy"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args)
         {
             return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args);
         }
 
+        /// <summary>
+        /// Sets the avice config value
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        /// <param name="scope"></param>
         protected override void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope)
         {
             base.SetAdviceConfigValues<TConfig>(scope);
             SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}", this, false);
         }
+
+        /// <summary>
+        /// Returns the advices for this invocation
+        /// </summary>
+        /// <returns></returns>
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
             if(_advices == null)

@@ -13,6 +13,10 @@ namespace SolidProxy.UnityDI
     /// </summary>
     public class SolidConfigurationBuilderUnity : SolidConfigurationBuilder
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="unityContainer"></param>
         public SolidConfigurationBuilderUnity(IUnityContainer unityContainer)
         {
             UnityContainer = unityContainer;
@@ -21,18 +25,39 @@ namespace SolidProxy.UnityDI
             DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => UnityContainer.RegisterSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
+        /// <summary>
+        /// The unity container
+        /// </summary>
         public IUnityContainer UnityContainer { get; }
 
+        /// <summary>
+        /// The generator
+        /// </summary>
         public override ISolidProxyGenerator SolidProxyGenerator => throw new NotImplementedException();
 
+        /// <summary>
+        /// The services
+        /// </summary>
+        /// <returns></returns>
         protected override IEnumerable<Type> GetServices()
         {
             return UnityContainer.Registrations.Select(o => o.RegisteredType).Distinct();
         }
+
+        /// <summary>
+        /// Configures the advice
+        /// </summary>
+        /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
             DoIfMissing(adviceType, () => { UnityContainer.RegisterSingleton(adviceType, adviceType); });
         }
+
+        /// <summary>
+        /// Configures the proxy
+        /// </summary>
+        /// <typeparam name="TProxy"></typeparam>
+        /// <param name="interfaceConfig"></param>
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
             DoIfMissing<ISolidProxy<TProxy>>(() =>
@@ -117,6 +142,11 @@ namespace SolidProxy.UnityDI
             });
         }
 
+        /// <summary>
+        /// Sets the generator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public override ISolidConfigurationBuilder SetGenerator<T>()
         {
             throw new NotImplementedException();

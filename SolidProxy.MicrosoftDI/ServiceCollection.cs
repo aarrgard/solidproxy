@@ -10,6 +10,10 @@ namespace SolidProxy.MicrosoftDI
     /// </summary>
     public class ServiceCollection : List<ServiceDescriptor>, IServiceCollection
     {
+        /// <summary>
+        /// Builds a  service provider
+        /// </summary>
+        /// <returns></returns>
         public IServiceProvider BuildServiceProvider()
         {
             var sp = new SolidProxyServiceProvider();

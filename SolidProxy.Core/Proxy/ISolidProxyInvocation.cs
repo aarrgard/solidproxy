@@ -13,7 +13,7 @@ namespace SolidProxy.Core.Proxy
         /// Returns the scoped value associated with this invocation
         /// </summary>
         /// <typeparam name="T">The type of value</typeparam>
-        /// <param name="v">the name of the value</param>
+        /// <param name="key">the name of the value</param>
         /// <returns></returns>
         T GetValue<T>(string key);
 
@@ -52,6 +52,9 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         object GetReturnValue();
 
+        /// <summary>
+        /// Returns true if this is the last step.
+        /// </summary>
         bool IsLastStep { get; }
     }
 

@@ -1,0 +1,922 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SolidProxy.Core</name>
+    </assembly>
+    <members>
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidAssemblyConfigurationBuilder">
+            <summary>
+            Represents the configuration for an assembly.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidAssemblyConfigurationBuilder.Interfaces">
+            <summary>
+            Returns all the configured interfaces.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidAssemblyConfigurationBuilder.ConfigureInterface(System.Type)">
+            <summary>
+            Configures the specified interface.
+            </summary>
+            <param name="t"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidAssemblyConfigurationBuilder.ConfigureInterface``1">
+            <summary>
+            Configures the specified interface.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidAssemblyConfigurationBuilder.ParentScope">
+            <summary>
+            Returns the global configuration
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder">
+            <summary>
+            Defines methods to configure the solid proxy pipeline.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder.SetGenerator``1">
+            <summary>
+            Sets the generator to use when creating proxies
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder.SolidProxyGenerator">
+            <summary>
+            Returns the generator for solid proxies
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder.AssemblyBuilders">
+            <summary>
+            Returns all the interface assemblies
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder.ConfigureInterfaceAssembly(System.Reflection.Assembly)">
+            <summary>
+            Configures the specified assembly.
+            </summary>
+            <param name="assembly"></param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:SolidProxy.Core.Configuration.Builder.ISolidConfigurationBuilder.ConfigureInterface``1" -->
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder">
+            <summary>
+            Interface to use when configuring an interface.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder.InterfaceType">
+            <summary>
+            Returns the interface type.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder.Methods">
+            <summary>
+            Returns all the configured methods.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder.ConfigureMethod(System.Reflection.MethodInfo)">
+            <summary>
+            Configures supplied method
+            </summary>
+            <param name="methodInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder`1">
+            <summary>
+            Interface to use when configuring a method.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder`1.ConfigureMethod(System.Reflection.MethodInfo)">
+            <summary>
+            Configures supplied method.
+            </summary>
+            <param name="methodInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder`1.ConfigureMethod(System.Linq.Expressions.Expression{System.Action{`0}})">
+            <summary>
+            Configures the method that matches supplied exression.
+            </summary>
+            <param name="methodInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder`1.ConfigureMethod``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})">
+            <summary>
+            Configures the method that matches supplied exression.
+            </summary>
+            <param name="methodInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidInterfaceConfigurationBuilder`1.ParentScope">
+            <summary>
+            Returns the assebly configuration
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder">
+            <summary>
+            Represents the configuration of a method.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder.ParentScope">
+            <summary>
+            Returns the parent scope
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder.MethodInfo">
+            <summary>
+            The method that this configuration applies to
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder.GetSolidInvocationAdviceTypes">
+            <summary>
+            Returns all the advices configured on this method
+            </summary>
+            <param name="services"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder`1">
+            <summary>
+            Represents the configuration of a method.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder`1.ParentScope">
+            <summary>
+            Returns the parent scope
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.SolidConfigurationBuilder.DoIfMissing``1(System.Action)">
+            <summary>
+            Invokes the action if service is missing.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="services"></param>
+            <param name="action"></param>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Builder.SolidConfigurationBuilder.DoIfMissing(System.Type,System.Action)">
+            <summary>
+            Invokes the action if service is missing.
+            </summary>
+            <param name="services"></param>
+            <param name="serviceType"></param>
+            <param name="action"></param>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.SolidConfigurationScope.ParentScope">
+            <summary>
+            Returns the parent scope
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Builder.SolidConfigurationScope.SolidScopeType">
+            <summary>
+            Returns the scope type
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.ISolidConfigurationScope">
+            <summary>
+            Represents a configuration scope sucha as global, assembly, type or method.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.ISolidConfigurationScope.SolidScopeType">
+            <summary>
+            Returns the scope type that this scope represents.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.GetScope``1">
+            <summary>
+            Returns the parent scope
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.ISolidConfigurationScope.Enabled">
+            <summary>
+            Specifies if this scope is enabled. ie 
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.GetValue``1(System.String,System.Boolean)">
+            <summary>
+            Gets a configuration value in this scope.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.SetValue``1(System.String,``0,System.Boolean)">
+            <summary>
+            Sets the value
+            </summary>
+            <typeparam name="T">The value type to write</typeparam>
+            <param name="key">the key</param>
+            <param name="value">the value</param>
+            <param name="writeInParentScopes">Should the value be written in all the parent scopes.</param>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.AddAdvice(System.Type,System.Func{SolidProxy.Core.Configuration.Builder.ISolidMethodConfigurationBuilder,System.Boolean})">
+            <summary>
+            Adds the supplied advice to all the registered interfaces.
+            
+            If no pointcut is supplied the advice will be added if the configuration is enabled.
+            </summary>
+            <param name="adviceType">the advice to add</param>
+            <param name="pointcut">where to register the advice</param>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.ConfigureAdvice``1">
+            <summary>
+            Exposes this configuration scope through supplied interface.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.IsAdviceConfigured``1">
+            <summary>
+            Returns true if the advice is configured on this scope or a parent scope.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.ISolidConfigurationScope.IsAdviceConfigured(System.Type)">
+            <summary>
+            Returns true if the advice is configured on this scope or a parent scope.
+            </summary>
+            <param name="setting"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.ISolidConfigurationScope`1">
+            <summary>
+            Represents a configuration scope for a typed object.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.ISolidProxyInvocationAdviceConfig">
+            <summary>
+            Represents the congfiguration of an advice.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.ISolidProxyInvocationAdviceConfig.InvocationConfiguration">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.ISolidProxyInvocationAdviceConfig.Enabled">
+            <summary>
+            Specifies if this advice is enabled.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration">
+            <summary>
+            The proxy configuration is used by the SolidProxy to take appropriate 
+            actions based on type of invocation.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration.SolidProxyConfigurationStore">
+            <summary>
+            The configuration store that this configuration belongs to.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration`1">
+            <summary>
+            The proxy configuration is used by the SolidProxy to take appropriate 
+            actions based on type of invocation.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration`1.GetProxyInvocationConfiguration(System.Reflection.MethodInfo)">
+            <summary>
+            Returns the configuration for supplied method.
+            </summary>
+            <param name="method"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfigurationStore">
+            <summary>
+            The proxy configuration is used by the SolidProxy to take appropriate 
+            actions based on type of invocation.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfigurationStore.ServiceProvider">
+            <summary>
+            This is the service provider that we use to create the invocation steps. This
+            service provider is the one that the store belongs to and is not scoped.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfigurationStore.SolidConfigurationBuilder">
+            <summary>
+            The configuration builder - may be shared across IoC containers.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.ISolidProxyConfigurationStore.GetProxyConfiguration``1(System.Guid)">
+            <summary>
+            Returns the proxy configuration for specified interface.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="configurationId">The configuration id</param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration">
+            <summary>
+            Configuration for a proxy invocation.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration.ProxyConfiguration">
+            <summary>
+            The proxy configuration
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration.MethodInfo">
+            <summary>
+            The method info that this configuration belongs to
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration.PipelineType" -->
+        <member name="M:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration.CreateProxyInvocation(SolidProxy.Core.Proxy.ISolidProxy,System.Object[])">
+            <summary>
+            Creates a new proxy invocation.
+            </summary>
+            <param name="rpcProxy"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration`3">
+            <summary>
+            Configuration for a method invocation.
+            </summary>
+            <typeparam name="TObject"></typeparam>
+            <typeparam name="TMethod"></typeparam>
+            <typeparam name="TRet"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.ISolidProxyInvocationConfiguration`3.GetSolidInvocationAdvices">
+            <summary>
+            Returns the invocation steps configured for this invocation.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.SolidConfigurationAdvice`3">
+            <summary>
+            A handler that accesses the configuration values through an interface.
+            </summary>
+            <typeparam name="TObject"></typeparam>
+            <typeparam name="TMethod"></typeparam>
+            <typeparam name="TAdvice"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.SolidConfigurationHelper.GetConfigMethod(System.Type)">
+            <summary>
+            Returns the configuration method for supplied step type
+            </summary>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.SolidConfigurationHelper.GetAdviceConfigType(System.Type)">
+            <summary>
+            Retunrs the step config type.
+            </summary>
+            <param name="stepType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.SolidConfigurationHelper.ConfigureStep(SolidProxy.Core.Proxy.ISolidProxyInvocationAdvice,SolidProxy.Core.Configuration.ISolidConfigurationScope)">
+            <summary>
+            Configures the supplied step. Returns true if the step is enabled. false otherwise.
+            </summary>
+            <param name="step"></param>
+            <param name="config"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.SolidProxyConfiguration`1">
+            <summary>
+            Represents the configuration for a proxy at runtime.
+            </summary>
+            <typeparam name="TInterface"></typeparam>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.SolidProxyConfigurationStore">
+            <summary>
+            The proxy configuration store is registered as a singleton in 
+            the IoC container. The configuaration builder may be shared across
+            IoC containers.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.SolidProxyConfigurationStore.ServiceProvider">
+            <summary>
+            The service provider.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.SolidProxyConfigurationStore.SolidConfigurationBuilder">
+            <summary>
+            The configuration builder
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Configuration.Runtime.SolidProxyConfigurationStore.ProxyConfigurations">
+            <summary>
+            All the proxy configurations
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Configuration.Runtime.SolidProxyConfigurationStore.GetProxyConfiguration``1(System.Guid)">
+            <summary>
+            Returns the configuration for speficied type.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.Runtime.TypeConverter">
+            <summary>
+            Helper class that constructs lambda expressions to convert from
+            one type to another.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:SolidProxy.Core.Configuration.Runtime.TypeConverter.GetRootType(System.Type)" -->
+        <member name="M:SolidProxy.Core.Configuration.Runtime.TypeConverter.CreateConverter``2">
+            <summary>
+            Creates a converter function from one type to another
+            </summary>
+            <typeparam name="TFrom"></typeparam>
+            <typeparam name="TTo"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Configuration.SolidScopeType">
+            <summary>
+            Represents a scope where the configuration resides.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.IoC.SolidProxyServiceProvider">
+            <summary>
+            Implements a simple IoC container that we use when setting up configuration.
+            </summary>
+        </member>
+        <member name="F:SolidProxy.Core.IoC.SolidProxyServiceProvider.s_registrationIdx">
+            <summary>
+            This counter keeps track of the order that we add services.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.GetRegistrations">
+            <summary>
+            Returns all the registered services.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.#ctor(SolidProxy.Core.IoC.SolidProxyServiceProvider)">
+            <summary>
+            Constructs a new IoC container. The parent provider may be null.
+            </summary>
+            <param name="parentServiceProvider"></param>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceProvider.Registrations">
+            <summary>
+            REturns all the registrations
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddSingleton``2">
+            <summary>
+            Adds a singleton implementation.
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <typeparam name="TImpl"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddSingleton(System.Type,System.Type)">
+            <summary>
+            Adds a singleton implementation.
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddSingleton``1(System.Func{System.IServiceProvider,``0})">
+            <summary>
+            Adds a singleton implementation. 
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <param name="factory"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddSingleton(System.Type,System.Object)">
+            <summary>
+            Adds a singleton implementation. 
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddSingleton``1(``0)">
+            <summary>
+            Adds a singleton implementation. Navigates to the root container and
+            registers the singleton there
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <param name="impl"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddScoped``2">
+            <summary>
+            Adds a scoped service
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <typeparam name="TImpl"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddScoped(System.Type,System.Type)">
+            <summary>
+            Adds a scoped service
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddScoped``1(System.Func{System.IServiceProvider,``0})">
+            <summary>
+            Adds a scoped service
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <param name="impl"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddScoped(System.Type,System.Func{System.IServiceProvider,System.Object})">
+            <summary>
+            Adds a scoped service
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <param name="impl"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddScoped(System.Type,System.Object)">
+            <summary>
+            Adds a scoped service
+            </summary>
+            <param name="serviceType"></param>
+            <param name="factory"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddTransient``2">
+            <summary>
+            Adds a transient service
+            </summary>
+            <typeparam name="TService"></typeparam>
+            <typeparam name="TImpl"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddTransient(System.Type,System.Type)">
+            <summary>
+            Adds a transient service
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddTransient``1(System.Func{System.IServiceProvider,``0})">
+            <summary>
+            Adds a transient service
+            </summary>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddTransient(System.Type,System.Func{System.IServiceProvider,System.Object})">
+            <summary>
+            Adds a transient service
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementationType"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.AddTransient(System.Type,System.Object)">
+            <summary>
+            Adds a transient service
+            </summary>
+            <param name="serviceType"></param>
+            <param name="implementation"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.GetService(System.Type)">
+            <summary>
+            Resolves the service
+            </summary>
+            <param name="serviceType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.GetRequiredService``1">
+            <summary>
+            Returns the service of specified type. Throws if service does not exist.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceProvider.CanResolve(System.Type)">
+            <summary>
+            Returns true if supplied type can be resolved.
+            </summary>
+            <param name="serviceType"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.IoC.SolidProxyServiceRegistration">
+            <summary>
+            Represents a service registration. One registration may have several implementations.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistration.#ctor(SolidProxy.Core.IoC.SolidProxyServiceProvider,System.Type)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="serviceProvider"></param>
+            <param name="serviceType"></param>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistration.ServiceProvider">
+            <summary>
+            The service provder where the registration belong.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistration.ServiceType">
+            <summary>
+            The service type
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistration.Implementations">
+            <summary>
+            All the implementations for this service.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistration.Resolve(SolidProxy.Core.IoC.SolidProxyServiceProvider)">
+            <summary>
+            Resolves the actual instance of the service.
+            </summary>
+            <param name="solidProxyServiceProvider"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistration.AddImplementation(System.Int32,SolidProxy.Core.IoC.SolidProxyServiceRegistrationScope,System.Type,System.Func{SolidProxy.Core.IoC.SolidProxyServiceProvider,System.Object})">
+            <summary>
+            Adds an implementation to this registration
+            </summary>
+            <param name="registrationIdx"></param>
+            <param name="registrationScope"></param>
+            <param name="implementationType"></param>
+            <param name="resolver"></param>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistration.AddImplementation(SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation)">
+            <summary>
+            Adds an implementation.
+            </summary>
+            <param name="impl"></param>
+        </member>
+        <member name="T:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation">
+            <summary>
+            Represents an implementation for a service.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.RegistrationIdx">
+            <summary>
+            The registration index. 
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.ServiceRegistration">
+            <summary>
+            The service registration.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.RegistrationScope">
+            <summary>
+            The scope of this implementation
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.ImplementationType">
+            <summary>
+            The implementation type.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.Resolver">
+            <summary>
+            The resolver.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.IsResolved">
+            <summary>
+            Set to true if resolved. Transient services are never resolved.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.Resolved">
+            <summary>
+            The resolved objects. Always null for transient services.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.Resolve(SolidProxy.Core.IoC.SolidProxyServiceProvider)">
+            <summary>
+            Resolves the object
+            </summary>
+            <param name="topServiceProvider"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.IoC.SolidProxyServiceRegistrationImplementation.CreateResolver(SolidProxy.Core.IoC.SolidProxyServiceProvider,System.Type)">
+            <summary>
+            Creates a resolver based on the implementation type.
+            </summary>
+            <param name="serviceProvider"></param>
+            <param name="implType"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.IoC.SolidProxyServiceRegistrationScope">
+            <summary>
+            These are the scopes that an implementation can belong to.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxy">
+            <summary>
+            Represents a proxy.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxy.ServiceProvider">
+            <summary>
+            The service provider that this proxy belongs to.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxy.Proxy">
+            <summary>
+            Returns the proxy implementing the interface.
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxy.Invoke(System.Reflection.MethodInfo,System.Object[])">
+            <summary>
+            Invokes the method with supplied args
+            </summary>
+            <param name="method"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxy`1">
+            <summary>
+            Represents a proxy.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxy`1.Proxy">
+            <summary>
+            Returns the proxy implementing the interface.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyGenerator">
+            <summary>
+            A proxy generator
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyGenerator.CreateSolidProxy``1(System.IServiceProvider,SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration{``0})">
+            <summary>
+            Constructs a new proxy
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="serviceProvider">the service provider that the proxy belongs to</param>
+            <param name="proxyConfig">The proxy configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyGenerator.CreateInterfaceProxy``1(SolidProxy.Core.Proxy.ISolidProxy{``0})">
+            <summary>
+            Constructs a new interfaces proxy that delegates invocations to supplied proxy.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="solidProxy"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyInvocation">
+            <summary>
+            Represents a proxy invocation
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyInvocation.GetValue``1(System.String)">
+            <summary>
+            Returns the scoped value associated with this invocation
+            </summary>
+            <typeparam name="T">The type of value</typeparam>
+            <param name="v">the name of the value</param>
+            <returns></returns>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyInvocation.SetValue``1(System.String,``0)">
+            <summary>
+            Sets the value for supplied key.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="key">The key to associated the value with</param>
+            <param name="value">The value</param>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation.ServiceProvider">
+            <summary>
+            This is the service provider that the proxy belongs to
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation.SolidProxy">
+            <summary>
+            The proxy that the invocation orignates from
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation.SolidProxyInvocationConfiguration">
+            <summary>
+            The invocation configuration
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation.Arguments">
+            <summary>
+            The method arguments
+            </summary>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyInvocation.GetReturnValue">
+            <summary>
+            Returns the return value from the response. If the response is a Task
+            the value is returned immedialy. Otherwise we wait from the response.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyInvocation`3">
+            <summary>
+            Represents a proxy invocation.
+            </summary>
+            <typeparam name="TObject">The interface type</typeparam>
+            <typeparam name="TMethod">The return type</typeparam>
+            <typeparam name="TAdvice">The return type</typeparam>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation`3.SolidProxy">
+            <summary>
+            The proxy that this invocation belongs to
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation`3.SolidProxyInvocationConfiguration">
+            <summary>
+            The invocation configuration.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocation`3.InvocationAdvices">
+            <summary>
+            Returns the invocation steps.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyInvocationAdvice">
+            <summary>
+            Represents a step in the proxy invocation pipeline.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyInvocationAdvice`3">
+            <summary>
+            Represents a step in the proxy invocation pipeline.
+            </summary>
+            <typeparam name="TObject">The type we are wrapping</typeparam>
+            <typeparam name="TMethod">The type that the invoked method returns</typeparam>
+            <typeparam name="TAdvice">The type we are constructing</typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.ISolidProxyInvocationAdvice`3.Handle(System.Func{System.Threading.Tasks.Task{`2}},SolidProxy.Core.Proxy.ISolidProxyInvocation{`0,`1,`2})">
+            <summary>
+            Handler for the step.
+            </summary>
+            <param name="next"></param>
+            <param name="invocation"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyMarker">
+            <summary>
+            This inteface is added to all the interfaces that replaces the original interface
+            in the service collection.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.SolidProxy`1">
+            <summary>
+            Wrapps an interface and implements logic to delegate to the proxy middleware structures.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:SolidProxy.Core.Proxy.SolidProxy`1.#ctor(System.IServiceProvider,SolidProxy.Core.Configuration.Runtime.ISolidProxyConfiguration{`0},SolidProxy.Core.Proxy.ISolidProxyGenerator)">
+            <summary>
+            Constructs a new proxy for an interface.
+            </summary>
+            <param name="proxyConfigurationStore"></param>
+            <param name="proxyGenerator"></param>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxy`1.ProxyConfiguration">
+            <summary>
+            The proxy configuration.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxy`1.Proxy">
+            <summary>
+            The proxy
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxy`1.SolidProxy#Core#Proxy#ISolidProxy#Proxy">
+            <summary>
+            The proxy
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.SolidProxyInvocation`3">
+            <summary>
+            Represents a proxy invocation.
+            </summary>
+            <typeparam name="TObject"></typeparam>
+            <typeparam name="TMethod"></typeparam>
+            <typeparam name="TAdvice"></typeparam>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.SolidProxyInvocationImplAdvice`3">
+            <summary>
+            The advice that performs the actual invocation on the underlying implementation
+            </summary>
+            <typeparam name="TObject"></typeparam>
+            <typeparam name="TMethod"></typeparam>
+            <typeparam name="TAdvice"></typeparam>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxyInvocationImplAdvice`3.MethodInfo">
+            <summary>
+            The method that this advice invokes
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxyInvocationImplAdvice`3.ImplementationFactory">
+            <summary>
+            The delegate to use to create the implementation.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.SolidProxyInvocationImplAdvice`3.Delegate">
+            <summary>
+            The MethodInfo converted to a delegate.
+            </summary>
+        </member>
+        <member name="T:SolidProxy.Core.Proxy.ISolidProxyInvocationImplAdviceConfig">
+            <summary>
+            The configuration for the invocation advice.
+            </summary>
+        </member>
+        <member name="P:SolidProxy.Core.Proxy.ISolidProxyInvocationImplAdviceConfig.ImplementationFactory">
+            <summary>
+            The factory that creates the underlying logic.
+            </summary>
+        </member>
+    </members>
+</doc>

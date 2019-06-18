@@ -32,6 +32,9 @@ namespace SolidProxy.Core.IoC
             return s_registrationIdx++;
         }
 
+        /// <summary>
+        /// Disposes the provider
+        /// </summary>
         public void Dispose()
         {
             var disposeChain = _disposeChain;
@@ -69,6 +72,9 @@ namespace SolidProxy.Core.IoC
                 (sp) => this);
         }
 
+        /// <summary>
+        /// The container id
+        /// </summary>
         public string ContainerId
         {
             get
@@ -134,7 +140,7 @@ namespace SolidProxy.Core.IoC
         /// Adds a singleton implementation. 
         /// </summary>
         /// <param name="serviceType"></param>
-        /// <param name="implementationType"></param>
+        /// <param name="implementation"></param>
         public void AddSingleton(Type serviceType, object implementation)
         {
             AddRegistration(
@@ -190,7 +196,7 @@ namespace SolidProxy.Core.IoC
         /// Adds a scoped service
         /// </summary>
         /// <typeparam name="TService"></typeparam>
-        /// <param name="impl"></param>
+        /// <param name="factory"></param>
         public void AddScoped<TService>(Func<IServiceProvider, TService> factory)
         {
             AddRegistration(
@@ -204,8 +210,8 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// Adds a scoped service
         /// </summary>
-        /// <typeparam name="TService"></typeparam>
-        /// <param name="impl"></param>
+        /// <param name="serviceType"></param>
+        /// <param name="factory"></param>
         public void AddScoped(Type serviceType, Func<IServiceProvider, object> factory)
         {
             AddRegistration(
@@ -220,7 +226,7 @@ namespace SolidProxy.Core.IoC
         /// Adds a scoped service
         /// </summary>
         /// <param name="serviceType"></param>
-        /// <param name="factory"></param>
+        /// <param name="implementation"></param>
         public void AddScoped(Type serviceType, object implementation)
         {
             AddRegistration(
@@ -259,7 +265,7 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// Adds a transient service
         /// </summary>
-        /// <param name="implementationType"></param>
+        /// <param name="factory"></param>
         public void AddTransient<T>(Func<IServiceProvider, T> factory)
         {
             AddTransient(typeof(T), _ => factory(_));
@@ -269,7 +275,7 @@ namespace SolidProxy.Core.IoC
         /// Adds a transient service
         /// </summary>
         /// <param name="serviceType"></param>
-        /// <param name="implementationType"></param>
+        /// <param name="factory"></param>
         public void AddTransient(Type serviceType, Func<IServiceProvider, object> factory)
         {
             AddRegistration(

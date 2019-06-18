@@ -13,7 +13,8 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Constructs a new proxy for an interface.
         /// </summary>
-        /// <param name="proxyConfigurationStore"></param>
+        /// <param name="serviceProvider"></param>
+        /// <param name="proxyConfiguration"></param>
         /// <param name="proxyGenerator"></param>
         protected SolidProxy(IServiceProvider serviceProvider, ISolidProxyConfiguration<T> proxyConfiguration, ISolidProxyGenerator proxyGenerator)
         {
@@ -22,6 +23,9 @@ namespace SolidProxy.Core.Proxy
             Proxy = proxyGenerator.CreateInterfaceProxy(this);
         }
 
+        /// <summary>
+        /// The service provider
+        /// </summary>
         public IServiceProvider ServiceProvider { get; }
 
         /// <summary>
@@ -39,6 +43,12 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         object ISolidProxy.Proxy => Proxy;
 
+        /// <summary>
+        /// Invokes the method
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public object Invoke(MethodInfo method, object[] args)
         {
             //

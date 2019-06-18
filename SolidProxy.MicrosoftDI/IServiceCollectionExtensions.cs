@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
+    /// <summary>
+    /// Extension methods for the service collection
+    /// </summary>
     public static class IServiceCollectionExtensions
     {
         /// <summary>

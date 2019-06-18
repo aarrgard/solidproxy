@@ -7,6 +7,9 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.IoC
 {
+    /// <summary>
+    /// A configuration builder for the service provider
+    /// </summary>
     public class SolidConfigurationBuilderServiceProvider : SolidConfigurationBuilder
     {
         private class SolidProxyConfig<T> where T:class
@@ -38,6 +41,10 @@ namespace SolidProxy.Core.IoC
             } 
         }
 
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
         public SolidConfigurationBuilderServiceProvider(SolidProxyServiceProvider solidProxyServiceProvider)
         {
             SolidProxyServiceProvider = solidProxyServiceProvider;
@@ -47,20 +54,39 @@ namespace SolidProxy.Core.IoC
             DoIfMissing(typeof(SolidConfigurationAdvice<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidConfigurationAdvice<,,>), typeof(SolidConfigurationAdvice<,,>)));
         }
 
+        /// <summary>
+        /// The service provider
+        /// </summary>
         public SolidProxyServiceProvider SolidProxyServiceProvider { get; }
 
+        /// <summary>
+        /// The generator
+        /// </summary>
         public override ISolidProxyGenerator SolidProxyGenerator => SolidProxyServiceProvider.GetRequiredService<ISolidProxyGenerator>();
 
+        /// <summary>
+        /// Returns the registered services
+        /// </summary>
+        /// <returns></returns>
         protected override IEnumerable<Type> GetServices()
         {
             return SolidProxyServiceProvider.GetRegistrations();
         }
 
+        /// <summary>
+        /// Configures supplied advice.
+        /// </summary>
+        /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
             DoIfMissing(adviceType, () => SolidProxyServiceProvider.AddSingleton(adviceType, adviceType));
         }
 
+        /// <summary>
+        /// Configures a proxy
+        /// </summary>
+        /// <typeparam name="TProxy"></typeparam>
+        /// <param name="interfaceConfig"></param>
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
             DoIfMissing<TProxy>(() => SolidProxyServiceProvider.AddScoped<TProxy, TProxy>());
@@ -109,6 +135,11 @@ namespace SolidProxy.Core.IoC
             };
         }
 
+        /// <summary>
+        /// Sets the generator.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public override ISolidConfigurationBuilder SetGenerator<T>()
         {
             SolidProxyServiceProvider.AddSingleton<ISolidProxyGenerator, T>();

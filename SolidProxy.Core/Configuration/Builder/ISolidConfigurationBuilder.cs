@@ -35,7 +35,7 @@ namespace SolidProxy.Core.Configuration.Builder
 
         /// <summary>
         /// Configures the specified interface.
-        /// Short hand for ConfigureInterfaceAssembly(typeof(T).Assembly).ConfigureInterface<T>().
+        /// Short hand for ConfigureInterfaceAssembly(typeof(T).Assembly).ConfigureInterface&lt;T&gt;().
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>

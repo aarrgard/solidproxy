@@ -47,6 +47,11 @@ namespace SolidProxy.Core.IoC
             return Implementations.Last().Resolve(solidProxyServiceProvider);
         }
 
+        /// <summary>
+        /// Resolves all the registrations
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
+        /// <returns></returns>
         public IEnumerable ResolveAll(SolidProxyServiceProvider solidProxyServiceProvider)
         {
             var objArr = Implementations

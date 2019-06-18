@@ -30,6 +30,6 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Returns the global configuration
         /// </summary>
-        new ISolidConfigurationBuilder ParentScope { get; }
+        ISolidConfigurationBuilder ParentScope { get; }
     }
 }

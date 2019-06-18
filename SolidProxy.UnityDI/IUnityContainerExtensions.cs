@@ -13,7 +13,7 @@ namespace Unity
         /// <summary>
         /// Returns the rpc configuration builder.
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="unityContainer"></param>
         /// <returns></returns>
         public static ISolidConfigurationBuilder GetSolidConfigurationBuilder(this IUnityContainer unityContainer)
         {

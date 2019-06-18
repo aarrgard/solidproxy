@@ -12,9 +12,9 @@ namespace SolidProxy.Core.Configuration.Runtime
     public class TypeConverter
     {
         /// <summary>
-        /// Returns the type "root" type. Strips off Task<>
+        /// Returns the type "root" type. Strips off Task&gt;&lt;
         /// </summary>
-        /// <param name="methodReturnType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
         public static Type GetRootType(Type type)
         {

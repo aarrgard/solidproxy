@@ -16,6 +16,11 @@ namespace SolidProxy.Core.Proxy
     {
         private static Func<TMethod, Task<TAdvice>> s_converter = TypeConverter.CreateConverter<TMethod, Task<TAdvice>>();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public bool Configure(ISolidProxyInvocationImplAdviceConfig config)
         {
             MethodInfo = config.InvocationConfiguration.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
@@ -69,6 +74,9 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         public Func<IServiceProvider, object> ImplementationFactory { get; private set; }
 
+        /// <summary>
+        /// Returns the target method
+        /// </summary>
         public Func<ISolidProxyInvocation<TObject, TMethod, TAdvice>, TObject> GetTarget { get; private set; }
 
         /// <summary>
@@ -76,7 +84,12 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         public Func<TObject, object[], TMethod> Delegate { get; private set; }
 
-
+        /// <summary>
+        /// Handles the invocation
+        /// </summary>
+        /// <param name="next"></param>
+        /// <param name="invocation"></param>
+        /// <returns></returns>
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
             var res = Delegate(GetTarget(invocation), invocation.Arguments);

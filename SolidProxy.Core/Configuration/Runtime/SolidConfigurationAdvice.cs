@@ -12,6 +12,12 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidConfigurationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
+        /// <summary>
+        /// Handles the invocation
+        /// </summary>
+        /// <param name="next"></param>
+        /// <param name="invocation"></param>
+        /// <returns></returns>
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
             var conf = invocation.SolidProxyInvocationConfiguration;

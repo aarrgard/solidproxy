@@ -44,20 +44,20 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Configures the method that matches supplied exression.
         /// </summary>
-        /// <param name="methodInfo"></param>
+        /// <param name="expr"></param>
         /// <returns></returns>
         ISolidMethodConfigurationBuilder<T> ConfigureMethod(Expression<Action<T>> expr);
-        
+
         /// <summary>
         /// Configures the method that matches supplied exression.
         /// </summary>
-        /// <param name="methodInfo"></param>
+        /// <param name="expr"></param>
         /// <returns></returns>
         ISolidMethodConfigurationBuilder<T> ConfigureMethod<T2>(Expression<Func<T, T2>> expr);
 
         /// <summary>
         /// Returns the assebly configuration
         /// </summary>
-        new ISolidAssemblyConfigurationBuilder ParentScope { get; }
+        ISolidAssemblyConfigurationBuilder ParentScope { get; }
     }
 }

@@ -6,6 +6,9 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
+    /// <summary>
+    /// Helper class for configuring types
+    /// </summary>
     public class SolidConfigurationHelper
     {
         private static ConcurrentDictionary<Type, MethodInfo> ConfigMethods = new ConcurrentDictionary<Type, MethodInfo>();
@@ -14,7 +17,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <summary>
         /// Returns the configuration method for supplied step type
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="stepType"></param>
         /// <returns></returns>
         public static MethodInfo GetConfigMethod(Type stepType)
         {

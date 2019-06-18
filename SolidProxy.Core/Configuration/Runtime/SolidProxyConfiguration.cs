@@ -12,6 +12,11 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TInterface"></typeparam>
     public class SolidProxyConfiguration<TInterface> : SolidConfigurationScope, ISolidProxyConfiguration<TInterface> where TInterface : class
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="parentScope"></param>
+        /// <param name="solidProxyConfigurationStore"></param>
         public SolidProxyConfiguration(ISolidInterfaceConfigurationBuilder parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
             : base(SolidScopeType.Interface, parentScope)
         {
@@ -19,11 +24,21 @@ namespace SolidProxy.Core.Configuration.Runtime
             InvocationConfigurations = new ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration>();
         }
 
+        /// <summary>
+        /// The configuration store
+        /// </summary>
         public ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
+
+        /// <summary>
+        /// The invocation configurations
+        /// </summary>
         public ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration> InvocationConfigurations { get; }
 
-        public Func<IServiceProvider, object> ImplementationFactory => null;
-
+        /// <summary>
+        /// Return the invocation configuration.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
         public ISolidProxyInvocationConfiguration GetProxyInvocationConfiguration(MethodInfo methodInfo)
         {
             return InvocationConfigurations.GetOrAdd(methodInfo, _ =>

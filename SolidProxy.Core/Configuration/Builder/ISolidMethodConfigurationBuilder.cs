@@ -12,7 +12,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Returns the parent scope
         /// </summary>
-        new ISolidInterfaceConfigurationBuilder ParentScope { get; }
+        ISolidInterfaceConfigurationBuilder ParentScope { get; }
 
         /// <summary>
         /// The method that this configuration applies to
@@ -22,7 +22,6 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Returns all the advices configured on this method
         /// </summary>
-        /// <param name="services"></param>
         /// <returns></returns>
         IEnumerable<Type> GetSolidInvocationAdviceTypes();
     }

@@ -8,26 +8,50 @@ using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
+    /// <summary>
+    /// The solid configuration builder
+    /// </summary>
     public abstract class SolidConfigurationBuilder : SolidConfigurationScope, ISolidConfigurationBuilder
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
         public SolidConfigurationBuilder() : base(SolidScopeType.Global, null)
         {
             AssemblyBuilders = new ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder>();
         }
 
+        /// <summary>
+        /// The assembly builders
+        /// </summary>
         protected ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder> AssemblyBuilders { get; }
 
         IEnumerable<ISolidAssemblyConfigurationBuilder> ISolidConfigurationBuilder.AssemblyBuilders => AssemblyBuilders.Values;
 
+        /// <summary>
+        /// Configures specified interface
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public ISolidInterfaceConfigurationBuilder<T> ConfigureInterface<T>() where T : class
         {
             return ConfigureInterfaceAssembly(typeof(T).Assembly).ConfigureInterface<T>();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
         public ISolidAssemblyConfigurationBuilder ConfigureInterfaceAssembly(Assembly assembly)
         {
             return AssemblyBuilders.GetOrAdd(assembly, _ => new SolidAssemblyConfigurationBuilder(this, _));
         }
+
+        /// <summary>
+        /// Returns the configuration builders.
+        /// </summary>
+        /// <returns></returns>
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
             return GetServices()
@@ -55,13 +79,16 @@ namespace SolidProxy.Core.Configuration.Builder
             return false;
         }
 
+        /// <summary>
+        /// Returns the services
+        /// </summary>
+        /// <returns></returns>
         protected abstract IEnumerable<Type> GetServices();
 
         /// <summary>
         /// Invokes the action if service is missing.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="services"></param>
         /// <param name="action"></param>
         public void DoIfMissing<T>(Action action)
         {
@@ -71,7 +98,6 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Invokes the action if service is missing.
         /// </summary>
-        /// <param name="services"></param>
         /// <param name="serviceType"></param>
         /// <param name="action"></param>
         public void DoIfMissing(Type serviceType, Action action)
@@ -83,8 +109,16 @@ namespace SolidProxy.Core.Configuration.Builder
             action();
         }
 
+        /// <summary>
+        /// The proxy generation
+        /// </summary>
         public abstract ISolidProxyGenerator SolidProxyGenerator { get; }
 
+        /// <summary>
+        /// Sets the generator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public abstract ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
     }
 }

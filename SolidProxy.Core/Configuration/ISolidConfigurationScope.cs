@@ -29,6 +29,7 @@ namespace SolidProxy.Core.Configuration
         /// Gets a configuration value in this scope.
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="searchParentScopes"></param>
         /// <returns></returns>
         T GetValue<T>(string key, bool searchParentScopes);
 

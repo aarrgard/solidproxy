@@ -11,6 +11,11 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// </summary>
     public class SolidProxyConfigurationStore : ISolidProxyConfigurationStore
     {
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <param name="solidConfigurationBuilder"></param>
         public SolidProxyConfigurationStore(IServiceProvider serviceProvider, ISolidConfigurationBuilder solidConfigurationBuilder)
         {
             ServiceProvider = serviceProvider;

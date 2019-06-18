@@ -8,6 +8,9 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.MicrosoftDI
 {
+    /// <summary>
+    /// Represents a service collection
+    /// </summary>
     public class SolidConfigurationBuilderServiceCollection : SolidConfigurationBuilder
     {
         private class SolidProxyConfig<T> where T : class
@@ -39,6 +42,10 @@ namespace SolidProxy.MicrosoftDI
             }
         }
 
+        /// <summary>
+        /// Constructs a new instance
+        /// </summary>
+        /// <param name="serviceCollection"></param>
         public SolidConfigurationBuilderServiceCollection(IServiceCollection serviceCollection)
         {
             ServiceCollection = serviceCollection;
@@ -47,18 +54,37 @@ namespace SolidProxy.MicrosoftDI
             DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
+        /// <summary>
+        /// Returns the service collection
+        /// </summary>
         public IServiceCollection ServiceCollection { get; }
 
+        /// <summary>
+        /// The proxy generator
+        /// </summary>
         public override ISolidProxyGenerator SolidProxyGenerator => (ISolidProxyGenerator)ServiceCollection.Single(o => o.ServiceType == typeof(ISolidProxyGenerator)).ImplementationInstance;
 
+        /// <summary>
+        ///  REturns the services
+        /// </summary>
+        /// <returns></returns>
         protected override IEnumerable<Type> GetServices()
         {
             return ServiceCollection.Select(o => o.ServiceType);
         }
+        /// <summary>
+        /// Configures the advice
+        /// </summary>
+        /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
             DoIfMissing(adviceType, () => { ServiceCollection.AddSingleton(adviceType, adviceType); });
         }
+        /// <summary>
+        /// Configures the proxy
+        /// </summary>
+        /// <typeparam name="TProxy"></typeparam>
+        /// <param name="interfaceConfig"></param>
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
             var services = ServiceCollection.Where(o => o.ServiceType == typeof(TProxy)).ToList();
@@ -148,6 +174,11 @@ namespace SolidProxy.MicrosoftDI
             return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
         }
 
+        /// <summary>
+        /// Sets the generator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public override ISolidConfigurationBuilder SetGenerator<T>()
         {
             ISolidProxyGenerator generator = Activator.CreateInstance<T>();
