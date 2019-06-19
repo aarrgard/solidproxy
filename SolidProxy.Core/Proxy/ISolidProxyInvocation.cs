@@ -1,6 +1,7 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
 {
@@ -46,16 +47,23 @@ namespace SolidProxy.Core.Proxy
         object[] Arguments { get; }
 
         /// <summary>
-        /// Returns the return value from the response. If the response is a Task
-        /// the value is returned immedialy. Otherwise we wait from the response.
+        /// Returns the return value from the invocation. If the response is a Task
+        /// the value(Task) is returned immedialy. Otherwise we wait from the response.
         /// </summary>
         /// <returns></returns>
         object GetReturnValue();
 
         /// <summary>
+        /// Returns the value from the invocation
+        /// </summary>
+        /// <returns></returns>
+        Task<object> GetReturnValueAsync();
+
+        /// <summary>
         /// Returns true if this is the last step.
         /// </summary>
         bool IsLastStep { get; }
+
     }
 
     /// <summary>
@@ -80,5 +88,11 @@ namespace SolidProxy.Core.Proxy
         /// Returns the invocation steps.
         /// </summary>
         IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
+
+        /// <summary>
+        /// Returns the return value from the invocation.
+        /// </summary>
+        /// <returns></returns>
+        new Task<TMethod> GetReturnValueAsync();
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using SolidProxy.Core.Configuration.Runtime;
 
 namespace SolidProxy.Core.Proxy
@@ -25,11 +26,11 @@ namespace SolidProxy.Core.Proxy
             {
                 throw new ArgumentException("Cannot assign generic type to method type");
             }
-            if (methodInfo.ReturnType != typeof(TRes))
+            if (!typeof(TRes).IsAssignableFrom(methodInfo.ReturnType))
             {
                 if (methodInfo.ReturnType != typeof(void))
                 {
-                    throw new ArgumentException("Return type of method is not same as generic type");
+                    throw new ArgumentException("Return type of method cannot be assigned to variable.");
                 }
             }
             ParameterExpression objExpr = Expression.Parameter(methodInfo.DeclaringType, "obj");
@@ -97,21 +98,46 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public object Invoke(MethodInfo method, object[] args)
         {
-            //
-            // if the method is intended for the proxy - invoke it...
-            //
-            if(method.DeclaringType == typeof(ISolidProxy))
+            object solidProxyResult;
+            if(InvokeSolidProxy(method, args, out solidProxyResult))
             {
-                var del = s_SolidProxyDelegates.GetOrAdd(method, CreateDelegate<ISolidProxy, object>);
-                return del(this, args);
+                return solidProxyResult;
             }
 
+            return CreateProxyInvocation(method, args).GetReturnValue();
+        }
+
+        private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
+        {
+            if (method.DeclaringType != typeof(ISolidProxy))
+            {
+                solidProxyResult = null;
+                return false;
+            }
+            var del = s_SolidProxyDelegates.GetOrAdd(method, CreateDelegate<ISolidProxy, object>);
+            solidProxyResult = del(this, args);
+            return true;
+        }
+
+        public Task<object> InvokeAsync(MethodInfo method, object[] args)
+        {
+            object solidProxyResult;
+            if (InvokeSolidProxy(method, args, out solidProxyResult))
+            {
+                return Task.FromResult(solidProxyResult);
+            }
+
+            return CreateProxyInvocation(method, args).GetReturnValueAsync();
+        }
+
+        private ISolidProxyInvocation CreateProxyInvocation(MethodInfo method, object[] args)
+        {
             //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
             var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(this, args);
-            return proxyInvocation.GetReturnValue();
+            return proxyInvocation;
         }
     }
 }

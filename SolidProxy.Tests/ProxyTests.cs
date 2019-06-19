@@ -40,7 +40,7 @@ namespace SolidProxy.Tests
                 .AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>), o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
 
             var sp = sc.BuildServiceProvider();
-            var proxy = (ISolidProxy) sp.GetRequiredService<ITestInterface>();
+            var proxy = (ISolidProxy)sp.GetRequiredService<ITestInterface>();
             var res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), new object[] { 2 });
             Assert.AreEqual(2, res);
 
@@ -48,7 +48,32 @@ namespace SolidProxy.Tests
             {
                 proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
             }
-            catch(MyException)
+            catch (MyException)
+            {
+
+            }
+        }
+
+        [Test]
+
+        public async Task TestAsyncDynamicInvoke()
+        {
+            var sc = SetupServiceCollection();
+            sc.AddTransient<ITestInterface, TestImplementation>();
+
+            sc.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>), o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
+
+            var sp = sc.BuildServiceProvider();
+            var proxy = (ISolidProxy)sp.GetRequiredService<ITestInterface>();
+            var res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), new object[] { 2 });
+            Assert.AreEqual(2, res);
+
+            try
+            {
+                await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
+            }
+            catch (MyException)
             {
 
             }

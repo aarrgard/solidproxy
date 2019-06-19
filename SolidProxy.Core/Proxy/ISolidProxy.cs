@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
 {
@@ -25,6 +26,14 @@ namespace SolidProxy.Core.Proxy
         /// <param name="args"></param>
         /// <returns></returns>
         object Invoke(MethodInfo method, object[] args);
+
+        /// <summary>
+        /// Invokes the method with supplied args
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        Task<object> InvokeAsync(MethodInfo method, object[] args);
     }
 
     /// <summary>
