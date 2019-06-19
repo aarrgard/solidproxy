@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -8,15 +9,23 @@ namespace SolidProxy.Tests
 {
     public class ProxyTests : TestBase
     {
+        public class MyException : Exception { }
+
         public interface ITestInterface
         {
             int DoX(int x);
+            void ThrowException();
         }
         public class TestImplementation : ITestInterface
         {
             public int DoX(int x)
             {
                 return x;
+            }
+
+            public void ThrowException()
+            {
+                throw new MyException();
             }
         }
 
@@ -34,6 +43,15 @@ namespace SolidProxy.Tests
             var proxy = (ISolidProxy) sp.GetRequiredService<ITestInterface>();
             var res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), new object[] { 2 });
             Assert.AreEqual(2, res);
+
+            try
+            {
+                proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
+            }
+            catch(MyException)
+            {
+
+            }
         }
     }
 }

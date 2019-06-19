@@ -33,35 +33,9 @@ namespace SolidProxy.Core.Proxy
             {
                 return false;
             }
-            Delegate = CreateDelegate();
+            Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
             GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
             return true;
-        }
-
-        private Func<TObject, object[], TMethod> CreateDelegate()
-        {
-            ParameterExpression objExpr = Expression.Parameter(typeof(TObject), "obj");
-            ParameterExpression arrExpr = Expression.Parameter(typeof(object[]), "args");
-            var methodParameters = MethodInfo.GetParameters();
-            var argExprs = new Expression[methodParameters.Length];
-            for(int i = 0; i < methodParameters.Length; i++)
-            {
-                argExprs[i] = Expression.Convert(Expression.ArrayIndex(arrExpr, Expression.Constant(i)), methodParameters[i].ParameterType);
-            }
-            var expr = Expression.Lambda(
-                Expression.Call(objExpr, MethodInfo, argExprs),
-                objExpr,
-                arrExpr
-            );
-            if(MethodInfo.ReturnType == typeof(void))
-            {
-                var action = (Action<TObject, object[]>)expr.Compile();
-                return (o, args) => { action(o, args); return default(TMethod); };
-            }
-            else
-            {
-                return (Func<TObject, object[], TMethod>)expr.Compile();
-            }
         }
 
         /// <summary>

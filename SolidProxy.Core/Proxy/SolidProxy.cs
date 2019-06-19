@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using SolidProxy.Core.Configuration.Runtime;
 
@@ -10,6 +12,50 @@ namespace SolidProxy.Core.Proxy
     /// <typeparam name="T"></typeparam>
     public abstract class SolidProxy<T> : ISolidProxy<T> where T : class
     {
+        private static ConcurrentDictionary<MethodInfo, Func<ISolidProxy, object[], object>> s_SolidProxyDelegates = new ConcurrentDictionary<MethodInfo, Func<ISolidProxy, object[], object>>();
+
+        /// <summary>
+        /// Constructs a delegate to invoke supplied method.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static Func<TTarget, object[], TRes> CreateDelegate<TTarget, TRes>(MethodInfo methodInfo)
+        {
+            if (!methodInfo.DeclaringType.IsAssignableFrom(typeof(TTarget)))
+            {
+                throw new ArgumentException("Cannot assign generic type to method type");
+            }
+            if (methodInfo.ReturnType != typeof(TRes))
+            {
+                if (methodInfo.ReturnType != typeof(void))
+                {
+                    throw new ArgumentException("Return type of method is not same as generic type");
+                }
+            }
+            ParameterExpression objExpr = Expression.Parameter(methodInfo.DeclaringType, "obj");
+            ParameterExpression arrExpr = Expression.Parameter(typeof(object[]), "args");
+            var methodParameters = methodInfo.GetParameters();
+            var argExprs = new Expression[methodParameters.Length];
+            for (int i = 0; i < methodParameters.Length; i++)
+            {
+                argExprs[i] = Expression.Convert(Expression.ArrayIndex(arrExpr, Expression.Constant(i)), methodParameters[i].ParameterType);
+            }
+            var expr = Expression.Lambda(
+                Expression.Call(objExpr, methodInfo, argExprs),
+                objExpr,
+                arrExpr
+            );
+            if (methodInfo.ReturnType == typeof(void))
+            {
+                var action = (Action<TTarget, object[]>)expr.Compile();
+                return (o, args) => { action(o, args); return default(TRes); };
+            }
+            else
+            {
+                return (Func<TTarget, object[], TRes>)expr.Compile();
+            }
+        }
+
         /// <summary>
         /// Constructs a new proxy for an interface.
         /// </summary>
@@ -56,7 +102,8 @@ namespace SolidProxy.Core.Proxy
             //
             if(method.DeclaringType == typeof(ISolidProxy))
             {
-                return method.Invoke(this, args);
+                var del = s_SolidProxyDelegates.GetOrAdd(method, CreateDelegate<ISolidProxy, object>);
+                return del(this, args);
             }
 
             //
