@@ -52,6 +52,14 @@ namespace SolidProxy.Core.Proxy
         public object Invoke(MethodInfo method, object[] args)
         {
             //
+            // if the method is intended for the proxy - invoke it...
+            //
+            if(method.DeclaringType == typeof(ISolidProxy))
+            {
+                return method.Invoke(this, args);
+            }
+
+            //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
