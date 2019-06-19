@@ -21,6 +21,7 @@ namespace SolidProxy.Tests
         }
 
         [Test]
+
         public void TestDynamicInvoke()
         {
             var sc = SetupServiceCollection();
