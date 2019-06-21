@@ -14,7 +14,7 @@ namespace SolidProxy.Core.Proxy
     public class SolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation<TObject, TMethod, TAdvice> where TObject : class
     {
         private static Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
-        private static Func<Task<TAdvice>, Task<TMethod>> s_TAdviceToTTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<TMethod>>();
+        private static Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
         private IDictionary<string, object> _invocationValues;
 
@@ -114,21 +114,19 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public object GetReturnValue()
         {
-            return s_TAdviceToTMethodConverter(InvokeProxyPipeline());
+            var adviceRes = InvokeProxyPipeline();
+            var methodRes = s_TAdviceToTMethodConverter(adviceRes);
+            return methodRes;
         }
-
-        async Task<object> ISolidProxyInvocation.GetReturnValueAsync()
-        {
-            return await GetReturnValueAsync();
-        }
-
         /// <summary>
-        /// Returns the value from the invocation
+        /// returns the value from the method.
         /// </summary>
         /// <returns></returns>
-        public Task<TMethod> GetReturnValueAsync()
+        public Task<object> GetReturnValueAsync()
         {
-            return s_TAdviceToTTMethodConverter(InvokeProxyPipeline());
+            var adviceRes = InvokeProxyPipeline();
+            var methodRes = s_TAdviceToTObjectConverter(adviceRes);
+            return methodRes;
         }
 
         /// <summary>

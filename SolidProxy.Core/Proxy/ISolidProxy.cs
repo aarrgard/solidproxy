@@ -20,7 +20,8 @@ namespace SolidProxy.Core.Proxy
         object Proxy { get; }
 
         /// <summary>
-        /// Invokes the method with supplied args
+        /// Invokes the method with supplied args. If the return type of the method 
+        /// is a Task this method does not wait for the task.
         /// </summary>
         /// <param name="method"></param>
         /// <param name="args"></param>
@@ -28,7 +29,9 @@ namespace SolidProxy.Core.Proxy
         object Invoke(MethodInfo method, object[] args);
 
         /// <summary>
-        /// Invokes the method with supplied args
+        /// Invokes the method with supplied args. If the return type
+        /// of the method is void or Task then the wrapped return value 
+        /// will be null.
         /// </summary>
         /// <param name="method"></param>
         /// <param name="args"></param>

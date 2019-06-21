@@ -88,11 +88,5 @@ namespace SolidProxy.Core.Proxy
         /// Returns the invocation steps.
         /// </summary>
         IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
-
-        /// <summary>
-        /// Returns the return value from the invocation.
-        /// </summary>
-        /// <returns></returns>
-        new Task<TMethod> GetReturnValueAsync();
     }
 }

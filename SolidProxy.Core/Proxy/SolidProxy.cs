@@ -119,6 +119,12 @@ namespace SolidProxy.Core.Proxy
             return true;
         }
 
+        /// <summary>
+        /// Invokes the method async.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public Task<object> InvokeAsync(MethodInfo method, object[] args)
         {
             object solidProxyResult;
