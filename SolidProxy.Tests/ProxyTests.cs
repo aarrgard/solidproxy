@@ -16,6 +16,8 @@ namespace SolidProxy.Tests
             Task DoXAsync();
             int DoY(int x);
             Task<int> DoYAsync(int x);
+            ITestInterface DoZ(ITestInterface x);
+            Task<ITestInterface> DoZAsync(ITestInterface x);
             void ThrowException();
             Task ThrowExceptionAsync();
         }
@@ -37,6 +39,17 @@ namespace SolidProxy.Tests
             }
 
             public Task<int> DoYAsync(int x)
+            {
+                return Task.FromResult(x);
+            }
+
+
+            public ITestInterface DoZ(ITestInterface x)
+            {
+                return x;
+            }
+
+            public Task<ITestInterface> DoZAsync(ITestInterface x)
             {
                 return Task.FromResult(x);
             }
@@ -94,6 +107,19 @@ namespace SolidProxy.Tests
             Assert.AreEqual(2, await ((Task<int>)res));
             res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoYAsync)), new object[] { 2 });
             Assert.AreEqual(2, res);
+
+            //
+            // DoZ[Async]
+            //
+            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
+            Assert.AreEqual(proxy, res);
+            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
+            Assert.AreEqual(proxy, res);
+
+            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
+            Assert.AreEqual(proxy, await ((Task<ITestInterface>)res));
+            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
+            Assert.AreEqual(proxy, res);
 
             //
             // Exceptions

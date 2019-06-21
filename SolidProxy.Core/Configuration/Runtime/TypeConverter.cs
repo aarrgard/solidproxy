@@ -84,6 +84,10 @@ namespace SolidProxy.Core.Configuration.Runtime
                     return default(TTo);
                 };
             }
+            else if(typeof(object) == typeof(TTo))
+            {
+                return (tfrom) => (TTo)(object)tfrom;
+            }
             return (tfrom) => (TTo)Convert.ChangeType(tfrom, typeof(TTo));
         }
 
