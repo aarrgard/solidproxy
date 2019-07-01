@@ -18,7 +18,7 @@ namespace SolidProxy.Tests
             int GetNotImplementedValue();
         }
 
-        public class InvocationStep<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        public class InvocationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
@@ -34,7 +34,7 @@ namespace SolidProxy.Tests
             services.AddTransient<ITransientInterface>();
 
             services.GetSolidConfigurationBuilder()
-                .AddAdvice(typeof(InvocationStep<,,>), mi => mi.MethodInfo.Name == "GetValue");
+                .AddAdvice(typeof(InvocationAdvice<,,>), mi => mi.MethodInfo.Name == "GetValue");
 
             var sp = services.BuildServiceProvider();
 
