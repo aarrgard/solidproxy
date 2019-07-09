@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SolidProxy.Core.Proxy;
+using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
@@ -41,6 +42,16 @@ namespace SolidProxy.Tests
             {
                 return Task.FromResult((TAdvice)(object)11);
             }
+        }
+
+        [Test]
+        public void TestAddGeneratorTwice()
+        {
+            RunProviderTests(adapter =>
+            {
+                adapter.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                Assert.IsNotNull(adapter.GetSolidConfigurationBuilder().SolidProxyGenerator);
+            });
         }
 
         [Test]

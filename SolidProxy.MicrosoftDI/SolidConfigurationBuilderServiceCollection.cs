@@ -182,6 +182,7 @@ namespace SolidProxy.MicrosoftDI
         public override ISolidConfigurationBuilder SetGenerator<T>()
         {
             ISolidProxyGenerator generator = Activator.CreateInstance<T>();
+            ServiceCollection.Where(o => o.ServiceType == typeof(ISolidProxyGenerator)).ToList().ForEach(o => ServiceCollection.Remove(o));
             ServiceCollection.AddSingleton(generator);
             return this;
         }
