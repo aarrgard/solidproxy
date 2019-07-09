@@ -73,7 +73,7 @@ namespace SolidProxy.Tests
 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
-            Assert.AreEqual("Handler1`1,Handler2`1,Handler3`1,Handler4`1", String.Join(",", test.GetHandlers()));
+            Assert.AreEqual("Advice1`1,Advice2`1,Advice3`1,Advice4`1", String.Join(",", test.GetHandlers()));
         }
     }
 }
