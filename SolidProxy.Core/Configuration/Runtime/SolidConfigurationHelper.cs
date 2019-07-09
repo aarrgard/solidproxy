@@ -27,15 +27,18 @@ namespace SolidProxy.Core.Configuration.Runtime
         private static MethodInfo GetConfigMethodFactory(Type stepType)
         {
             var methods = stepType.GetMethods()
-                .Where(o => o.Name == "Configure")
-                .ToList();
-            if (methods.Count == 0)
+                .Where(o => o.Name == "Configure");
+            if (methods.Count() == 0)
             {
                 return null;
             }
-            if (methods.Count != 1)
+            if (methods.Count() != 1)
             {
-                throw new Exception($"The type {stepType.FullName} does not contain _one_({methods.Count}) Configure method.");
+                methods = methods.Where(o => o.DeclaringType == stepType);
+            }
+            if (methods.Count() != 1)
+            {
+                throw new Exception($"The type {stepType.FullName} does not contain _one_({methods.Count()}) Configure method.");
             }
             return methods.First();
         }

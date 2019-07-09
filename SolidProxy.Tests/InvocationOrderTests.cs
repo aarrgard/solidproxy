@@ -12,7 +12,7 @@ namespace SolidProxy.Tests
     {
         public class AopAttribute : Attribute {  }
 
-        public class HandlerBase<TObject> : ISolidProxyInvocationAdvice<TObject, IList<string>, IList<string>> where TObject : class
+        public class AdviceBase<TObject> : ISolidProxyInvocationAdvice<TObject, IList<string>, IList<string>> where TObject : class
         {
             public Task<IList<string>> Handle(Func<Task<IList<string>>> next, ISolidProxyInvocation<TObject, IList<string>, IList<string>> invocation)
             {
@@ -33,10 +33,10 @@ namespace SolidProxy.Tests
             }
         }
 
-        public class Handler1<TObject> : HandlerBase<TObject> where TObject : class { };
-        public class Handler2<TObject> : HandlerBase<TObject> where TObject : class { };
-        public class Handler3<TObject> : HandlerBase<TObject> where TObject : class { };
-        public class Handler4<TObject> : HandlerBase<TObject> where TObject : class { };
+        public class Advice1<TObject> : AdviceBase<TObject> where TObject : class { };
+        public class Advice2<TObject> : AdviceBase<TObject> where TObject : class { };
+        public class Advice3<TObject> : AdviceBase<TObject> where TObject : class { };
+        public class Advice4<TObject> : AdviceBase<TObject> where TObject : class { };
 
         public interface ITestInterface
         {
@@ -52,22 +52,22 @@ namespace SolidProxy.Tests
 
             services.GetSolidConfigurationBuilder()
                 .AddAdvice(
-                typeof(Handler1<>),
+                typeof(Advice1<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
             services.GetSolidConfigurationBuilder()
                 .AddAdvice(
-                typeof(Handler2<>),
+                typeof(Advice2<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
             services.GetSolidConfigurationBuilder()
                 .AddAdvice(
-                typeof(Handler3<>),
+                typeof(Advice3<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
             services.GetSolidConfigurationBuilder()
                 .AddAdvice(
-                typeof(Handler4<>),
+                typeof(Advice4<>),
                 mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
             );
 

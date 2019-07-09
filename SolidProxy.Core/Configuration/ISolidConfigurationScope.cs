@@ -1,7 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SolidProxy.Core.Configuration
 {
