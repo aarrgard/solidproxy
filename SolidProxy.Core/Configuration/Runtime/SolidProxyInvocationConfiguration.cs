@@ -26,8 +26,8 @@ namespace SolidProxy.Core.Configuration.Runtime
         public SolidProxyInvocationConfiguration(ISolidMethodConfigurationBuilder methodConfiguration, ISolidProxyConfiguration<TObject> proxyConfiguration) 
             : base(SolidScopeType.Method, methodConfiguration)
         {
-            MethodConfiguration = methodConfiguration;
-            ProxyConfiguration = proxyConfiguration;
+            MethodConfiguration = methodConfiguration ?? throw new ArgumentNullException(nameof(methodConfiguration));
+            ProxyConfiguration = proxyConfiguration ?? throw new ArgumentNullException(nameof(proxyConfiguration));
         }
 
         /// <summary>
