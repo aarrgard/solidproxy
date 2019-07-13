@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using System;
+using System.Collections.Generic;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
@@ -19,6 +20,12 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// The configuration builder - may be shared across IoC containers.
         /// </summary>
         ISolidConfigurationBuilder SolidConfigurationBuilder { get; }
+
+
+        /// <summary>
+        /// Returns all the configurations.
+        /// </summary>
+        IEnumerable<ISolidProxyConfiguration> ProxyConfigurations { get; }
 
         /// <summary>
         /// Returns the proxy configuration for specified interface.

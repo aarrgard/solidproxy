@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Runtime
@@ -13,6 +14,18 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// The configuration store that this configuration belongs to.
         /// </summary>
         ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
+
+        /// <summary>
+        /// Returns the invocation configurations.
+        /// </summary>
+        IEnumerable<ISolidProxyInvocationConfiguration> InvocationConfigurations { get; }
+
+        /// <summary>
+        /// Returns the configuration for supplied method.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        ISolidProxyInvocationConfiguration GetProxyInvocationConfiguration(MethodInfo method);
     }
 
     /// <summary>
@@ -21,11 +34,5 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// </summary>
     public interface ISolidProxyConfiguration<T> : ISolidConfigurationScope<T>, ISolidProxyConfiguration where T : class
     {
-        /// <summary>
-        /// Returns the configuration for supplied method.
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns></returns>
-        ISolidProxyInvocationConfiguration GetProxyInvocationConfiguration(MethodInfo method);
     }
 }

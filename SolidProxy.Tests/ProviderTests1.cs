@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
 using SolidProxy.GeneratorCastle;
 
@@ -99,12 +100,17 @@ namespace SolidProxy.Tests
                 adapter.GetSolidConfigurationBuilder()
                     .AddAdvice(typeof(ProxyAdvice2<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
 
+                var cs = adapter.GetRequiredService<ISolidProxyConfigurationStore>();
+                Assert.AreEqual(1, cs.ProxyConfigurations.Count());
+                Assert.AreEqual(2, cs.ProxyConfigurations.SelectMany(o => o.InvocationConfigurations).Count());
+
                 var ti = adapter.GetRequiredService<ITestInterface>();
                 Assert.AreEqual(11, ti.Int1);
                 Assert.AreEqual(4, ti.Int2);
 
                 var impls = adapter.GetRequiredService<IEnumerable<ITestInterface>>().ToList();
                 Assert.AreEqual(2, impls.Count);
+
             });
         }
     }

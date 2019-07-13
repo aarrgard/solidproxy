@@ -135,16 +135,24 @@ namespace SolidProxy.MicrosoftDI
                 // add the configuration for the proxy and register 
                 // proxy and interface the same way as the removed service.
                 //
+                var proxyGenerator = SolidProxyGenerator;
+                var config = new SolidProxyConfig<TProxy>(implementationFactory);
+                ServiceCollection.AddSingleton(config.GetProxyConfiguration);
+
+                Func<IServiceProvider, TProxy> proxyFactory = (sp) =>
+                {
+                    return proxyGenerator.CreateSolidProxy(sp, config.GetProxyConfiguration(sp)).Proxy;
+                };
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
-                        ServiceCollection.AddScoped(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddScoped(proxyFactory);
                         break;
                     case ServiceLifetime.Transient:
-                        ServiceCollection.AddTransient(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddTransient(proxyFactory);
                         break;
                     case ServiceLifetime.Singleton:
-                        ServiceCollection.AddSingleton(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddSingleton(proxyFactory);
                         break;
                 }
             };
@@ -158,15 +166,6 @@ namespace SolidProxy.MicrosoftDI
                 invocAdviceConfig.Enabled = true;
                 methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
             });
-        }
-
-        private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class
-        {
-            var proxyGenerator = SolidProxyGenerator;
-            var config = new SolidProxyConfig<TProxy>(implementationFactory);
-            return (sp) => {
-                return proxyGenerator.CreateSolidProxy(sp, config.GetProxyConfiguration(sp)).Proxy;
-            };
         }
 
         private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
