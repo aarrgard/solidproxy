@@ -62,7 +62,18 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// The generator
         /// </summary>
-        public override ISolidProxyGenerator SolidProxyGenerator => SolidProxyServiceProvider.GetRequiredService<ISolidProxyGenerator>();
+        public override ISolidProxyGenerator SolidProxyGenerator
+        {
+            get
+            {
+                var generator = (ISolidProxyGenerator)SolidProxyServiceProvider.GetService(typeof(ISolidProxyGenerator));
+                if(generator == null)
+                {
+                    throw new Exception($"No {typeof(ISolidProxyGenerator).Name} registered.");
+                }
+                return generator;
+            }
+        }
 
         /// <summary>
         /// Returns the registered services

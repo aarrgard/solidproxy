@@ -88,6 +88,24 @@ namespace SolidProxy.Tests
         }
 
         [Test]
+        public void TestNoGeneratorRegistered()
+        {
+            RunProviderTests(adapter =>
+            {
+                try
+                {
+                    adapter.AddScoped<ITestInterface, TestImplementation1>();
+                    adapter.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyAdvice1<,,>));
+                    Assert.Fail();
+                }
+                catch (Exception e)
+                {
+                    Assert.AreEqual("No ISolidProxyGenerator registered.", e.Message);
+                }
+            }, false);
+        }
+
+        [Test]
         public void TestAddAdviceTwice()
         {
             RunProviderTests(adapter =>

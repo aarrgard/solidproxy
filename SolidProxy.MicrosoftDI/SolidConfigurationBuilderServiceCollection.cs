@@ -62,7 +62,18 @@ namespace SolidProxy.MicrosoftDI
         /// <summary>
         /// The proxy generator
         /// </summary>
-        public override ISolidProxyGenerator SolidProxyGenerator => (ISolidProxyGenerator)ServiceCollection.Single(o => o.ServiceType == typeof(ISolidProxyGenerator)).ImplementationInstance;
+        public override ISolidProxyGenerator SolidProxyGenerator
+        {
+            get
+            {
+                var generator = (ISolidProxyGenerator)ServiceCollection.SingleOrDefault(o => o.ServiceType == typeof(ISolidProxyGenerator))?.ImplementationInstance;
+                if (generator == null)
+                {
+                    throw new Exception($"No {typeof(ISolidProxyGenerator).Name} registered.");
+                }
+                return generator;
+            }
+        }
 
         /// <summary>
         ///  REturns the services

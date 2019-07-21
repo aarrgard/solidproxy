@@ -129,11 +129,14 @@ namespace SolidProxy.Tests
             }
         }
 
-        protected void RunProviderTests(Action<IProviderAdapter> testRun)
+        protected void RunProviderTests(Action<IProviderAdapter> testRun, bool addGenerator = true)
         {
             foreach(var provider in Providers)
             {
-                provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                if(addGenerator)
+                {
+                    provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                }
                 testRun(provider);
             }
         }
