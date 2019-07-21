@@ -69,7 +69,8 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
-            throw new NotImplementedException();
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders()
+                .Where(o => o.MethodInfo.DeclaringType.Assembly == Assembly);
         }
     }
 }

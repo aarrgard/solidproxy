@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -94,10 +95,14 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             object val;
             if (_items.TryGetValue(key, out val))
-            {
+            { 
+                if(val is Func<T> del)
+                {
+                    return del();
+                }
                 return (T)val;
             }
-            if(searchParentScope &&  ParentScope != null)
+            if(searchParentScope && ParentScope != null)
             {
                 return ParentScope.GetValue<T>(key, searchParentScope);
             }
@@ -156,6 +161,12 @@ namespace SolidProxy.Core.Configuration.Builder
         protected virtual void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope) where TConfig : class, ISolidProxyInvocationAdviceConfig
         {
             scope.SetValue(nameof(ISolidConfigurationScope), this);
+            SetValue<Func<IEnumerable<MethodInfo>>>($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.Methods)}", GetMethodInfos);
+        }
+
+        private IEnumerable<MethodInfo> GetMethodInfos()
+        {
+            return GetMethodConfigurationBuilders().Select(o => o.MethodInfo);
         }
 
         /// <summary>
