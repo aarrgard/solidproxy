@@ -71,5 +71,14 @@ namespace SolidProxy.Core.Configuration.Runtime
             var methodConfig = SolidProxyConfigurationStore.SolidConfigurationBuilder.ConfigureInterface<TInterface>().ConfigureMethod(methodInfo);
             return new SolidProxyInvocationConfiguration<TInterface, MRet, TRet>(methodConfig, this);
         }
+
+        /// <summary>
+        /// Returns the configurations from the parent scope
+        /// </summary>
+        /// <returns></returns>
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders();
+        }
     }
 }

@@ -232,10 +232,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Returns the configuration builders
         /// </summary>
         /// <returns></returns>
-        public virtual IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders();
 
         /// <summary>
         /// Configures the advice

@@ -121,5 +121,14 @@ namespace SolidProxy.Core.Configuration.Runtime
 
             return _advices;
         }
+
+        /// <summary>
+        /// Returns the configurations from the parent scope
+        /// </summary>
+        /// <returns></returns>
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders();
+        }
     }
 }
