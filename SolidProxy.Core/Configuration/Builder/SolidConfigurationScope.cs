@@ -149,9 +149,20 @@ namespace SolidProxy.Core.Configuration.Builder
                 {
                     i.Enabled = enable;
                 }
+                AdviceConfigured<TConfig>();
             }
             return i;
         }
+
+        /// <summary>
+        /// Overriden in the interface an method scope to configure the proxy.
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        protected virtual void AdviceConfigured<TConfig>() where TConfig : class, ISolidProxyInvocationAdviceConfig
+        {
+
+        }
+           
 
         /// <summary>
         /// Sets the advice configuration values
@@ -222,10 +233,12 @@ namespace SolidProxy.Core.Configuration.Builder
                     pointcut = (o) => o.IsAdviceConfigured(configType);
                 }
             }
-            GetMethodConfigurationBuilders().Where(o => pointcut(o)).ToList().ForEach(o =>
-            {
-                o.AddAdvice(adviceType);
-            }); 
+
+            GetMethodConfigurationBuilders()
+                .Where(o => pointcut(o))
+                .ToList().ForEach(o => {
+                    o.AddAdvice(adviceType);
+                }); 
         }
 
         /// <summary>

@@ -83,5 +83,15 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             return GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes;
         }
+
+        /// <summary>
+        /// Invoked when an advice has been configured
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        protected override void AdviceConfigured<TConfig>()
+        {
+            ConfigureProxy(ProxyConfiguration);
+            base.AdviceConfigured<TConfig>();
+        }
     }
 }

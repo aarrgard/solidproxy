@@ -54,12 +54,13 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
-            return GetServices()
+            return GetServices().ToList() // create list to prevent ConcurrentModificationException
                 .Where(o => o.IsInterface)
                 .Where(o => !o.IsGenericTypeDefinition)
                 .Where(o => !IsProtected(o))
                 .Select(o => ConfigureInterfaceAssembly(o.Assembly).ConfigureInterface(o))
-                .SelectMany(o => ((SolidConfigurationScope)o).GetMethodConfigurationBuilders());
+                .SelectMany(o => ((SolidConfigurationScope)o).GetMethodConfigurationBuilders())
+                .ToList();
         }
 
         private bool IsProtected(Type type)

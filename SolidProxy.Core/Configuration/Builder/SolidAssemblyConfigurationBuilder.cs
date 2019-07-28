@@ -57,10 +57,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public ISolidInterfaceConfigurationBuilder ConfigureInterface(Type t)
         {
-            return (ISolidInterfaceConfigurationBuilder) GetType().GetMethods()
-                .Where(o => o.Name == nameof(ConfigureInterface))
-                .Where(o => o.IsGenericMethod)
-                .Single().MakeGenericMethod(new[] { t }).Invoke(this, null);
+            try
+            {
+                return (ISolidInterfaceConfigurationBuilder)GetType().GetMethods()
+                    .Where(o => o.Name == nameof(ConfigureInterface))
+                    .Where(o => o.IsGenericMethod)
+                    .Single().MakeGenericMethod(new[] { t }).Invoke(this, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                throw e.InnerException;
+            }
         }
 
         /// <summary>
@@ -70,7 +77,8 @@ namespace SolidProxy.Core.Configuration.Builder
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
             return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders()
-                .Where(o => o.MethodInfo.DeclaringType.Assembly == Assembly);
+                .Where(o => o.MethodInfo.DeclaringType.Assembly == Assembly)
+                .ToList();
         }
     }
 }
