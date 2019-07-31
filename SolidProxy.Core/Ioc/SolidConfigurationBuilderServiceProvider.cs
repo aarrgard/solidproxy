@@ -109,9 +109,10 @@ namespace SolidProxy.Core.IoC
             foreach (var registration in registrationImpls)
             {
                 // check if this registration is mapped to the solid proxy.
-                if(registration.ServiceRegistration.ServiceType != registration.ImplementationType)
+                var implementationFactoryTarget = registration.Resolver?.Target?.GetType()?.DeclaringType;
+                if (implementationFactoryTarget == GetType())
                 {
-                    var resolverType = registration.Resolver.GetType();
+                    continue;
                 }
 
                 var registrationGuid = Guid.NewGuid();
@@ -135,6 +136,16 @@ namespace SolidProxy.Core.IoC
                         break;
                 }
             };
+
+            //
+            // make sure that all the methods are configured
+            //
+            interfaceConfig.Methods.ToList().ForEach(methodConfig =>
+            {
+                var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                invocAdviceConfig.Enabled = true;
+                methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
+            });
         }
 
         private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class

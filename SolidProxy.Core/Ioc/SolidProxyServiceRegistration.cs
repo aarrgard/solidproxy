@@ -8,18 +8,20 @@ namespace SolidProxy.Core.IoC
     /// <summary>
     /// Represents a service registration. One registration may have several implementations.
     /// </summary>
-    public class SolidProxyServiceRegistration
+    public abstract class SolidProxyServiceRegistration
     {
+        /// <summary>
+        /// The implementations
+        /// </summary>
+        protected IList<SolidProxyServiceRegistrationImplementation> _implementations;
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="serviceProvider"></param>
-        /// <param name="serviceType"></param>
-        public SolidProxyServiceRegistration(SolidProxyServiceProvider serviceProvider, Type serviceType)
+        protected SolidProxyServiceRegistration(SolidProxyServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            ServiceType = serviceType;
-            Implementations = new List<SolidProxyServiceRegistrationImplementation>();
+            _implementations = new List<SolidProxyServiceRegistrationImplementation>();
         }
 
         /// <summary>
@@ -30,22 +32,29 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// The service type
         /// </summary>
-        public Type ServiceType { get; }
+        public abstract Type ServiceType { get; }
 
         /// <summary>
         /// All the implementations for this service.
         /// </summary>
-        public IList<SolidProxyServiceRegistrationImplementation> Implementations { get; }
+        public IEnumerable<SolidProxyServiceRegistrationImplementation> Implementations => _implementations;
 
         /// <summary>
-        /// Resolves the actual instance of the service.
+        /// Retuens the resolved object
         /// </summary>
         /// <param name="solidProxyServiceProvider"></param>
         /// <returns></returns>
         public object Resolve(SolidProxyServiceProvider solidProxyServiceProvider)
         {
-            return Implementations.Last().Resolve(solidProxyServiceProvider);
+            return ResolveTyped(solidProxyServiceProvider);
         }
+
+        /// <summary>
+        /// Resolves the typeod instance
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
+        /// <returns></returns>
+        protected abstract object ResolveTyped(SolidProxyServiceProvider solidProxyServiceProvider);
 
         /// <summary>
         /// Resolves all the registrations
@@ -64,6 +73,39 @@ namespace SolidProxy.Core.IoC
             objArr.CopyTo(arr, 0);
             return arr;
         }
+    }
+    /// <summary>
+    /// Represents a service registration. One registration may have several implementations.
+    /// </summary>
+    public class SolidProxyServiceRegistration<T> : SolidProxyServiceRegistration
+    {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        public SolidProxyServiceRegistration(SolidProxyServiceProvider serviceProvider) : base(serviceProvider)
+        {
+        }
+
+        /// <summary>
+        /// Returns all the implementations
+        /// </summary>
+        public new IEnumerable<SolidProxyServiceRegistrationImplementation<T>> Implementations => _implementations.OfType<SolidProxyServiceRegistrationImplementation<T>>();
+
+        /// <summary>
+        /// Returns the service type
+        /// </summary>
+        public override Type ServiceType => typeof(T);
+
+        /// <summary>
+        /// Resolves the actual instance of the service.
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
+        /// <returns></returns>
+        public new T Resolve(SolidProxyServiceProvider solidProxyServiceProvider)
+        {
+            return Implementations.Last().Resolve(solidProxyServiceProvider);
+        }
 
         /// <summary>
         /// Adds an implementation to this registration
@@ -72,9 +114,9 @@ namespace SolidProxy.Core.IoC
         /// <param name="registrationScope"></param>
         /// <param name="implementationType"></param>
         /// <param name="resolver"></param>
-        public void AddImplementation(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, object> resolver)
+        public void AddImplementation(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, T> resolver)
         {
-            AddImplementation(new SolidProxyServiceRegistrationImplementation(this, registrationIdx, registrationScope, implementationType, resolver));
+            AddImplementation(new SolidProxyServiceRegistrationImplementation<T>(this, registrationIdx, registrationScope, implementationType, resolver));
         }
 
         /// <summary>
@@ -86,9 +128,19 @@ namespace SolidProxy.Core.IoC
             var lastImplementation = Implementations.LastOrDefault();
             if (lastImplementation?.RegistrationScope == SolidProxyServiceRegistrationScope.Nonexisting)
             {
-                Implementations.Remove(lastImplementation);
+                _implementations.Remove(lastImplementation);
             }
-            Implementations.Add(impl);
+            _implementations.Add(impl);
+        }
+
+        /// <summary>
+        /// Resolves the typed instance
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
+        /// <returns></returns>
+        protected override object ResolveTyped(SolidProxyServiceProvider solidProxyServiceProvider)
+        {
+            return Resolve(solidProxyServiceProvider);
         }
     }
 }
