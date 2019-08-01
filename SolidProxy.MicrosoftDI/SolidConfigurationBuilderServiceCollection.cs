@@ -51,7 +51,7 @@ namespace SolidProxy.MicrosoftDI
             ServiceCollection = serviceCollection;
             DoIfMissing<ISolidProxyConfigurationStore>(() => ServiceCollection.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
             DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(this));
-            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
+            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddTransient(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
         /// <summary>
@@ -171,10 +171,10 @@ namespace SolidProxy.MicrosoftDI
             //
             // make sure that all the methods are configured
             //
-            interfaceConfig.Methods.ToList().ForEach(methodConfig =>
+            typeof(TProxy).GetMethods().ToList().ForEach(m =>
             {
-                var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                invocAdviceConfig.Enabled = true;
+                var methodConfig = interfaceConfig.ConfigureMethod(m);
+                methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
                 methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
             });
         }

@@ -11,6 +11,7 @@ namespace SolidProxy.Tests
         {
             Task DoA(CancellationToken cancellationToken = default(CancellationToken));
             Task<string> DoB(string x, CancellationToken cancellationToken = default(CancellationToken));
+            Task<string> DoC(string x, string y, CancellationToken cancellationToken = default(CancellationToken));
         }
 
         public class TestImplementation : ITestInterface
@@ -24,6 +25,11 @@ namespace SolidProxy.Tests
             {
                 return Task.FromResult(x);
             }
+
+            public Task<string> DoC(string x, string y, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                return Task.FromResult(y);
+            }
         }
 
         [Test]
@@ -32,13 +38,17 @@ namespace SolidProxy.Tests
             await RunProviderTestsAsync(async adapter =>
             {
                 adapter.AddTransient<ITestInterface, TestImplementation>();
-                adapter.GetSolidConfigurationBuilder()
-                    .ConfigureInterface<ITestInterface>()
-                    .ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                var cb = adapter.GetSolidConfigurationBuilder();
+                var ic = cb.ConfigureInterface<ITestInterface>();
+                ic.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
 
                 var testInterface = adapter.GetRequiredService<ITestInterface>();
-                await testInterface.DoA();
-                await testInterface.DoB("string");
+                for(int i = 0; i < 10; i++)
+                {
+                    await testInterface.DoA();
+                    Assert.AreEqual("X", await testInterface.DoB("X"));
+                    Assert.AreEqual("Y", await testInterface.DoC("X", "Y"));
+                }
             });
         }
     }

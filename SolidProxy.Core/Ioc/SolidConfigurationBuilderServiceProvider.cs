@@ -52,6 +52,7 @@ namespace SolidProxy.Core.IoC
             DoIfMissing<ISolidProxyConfigurationStore>(() => SolidProxyServiceProvider.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
             DoIfMissing<ISolidConfigurationBuilder>(() => SolidProxyServiceProvider.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>());
             DoIfMissing(typeof(SolidConfigurationAdvice<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidConfigurationAdvice<,,>), typeof(SolidConfigurationAdvice<,,>)));
+            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => SolidProxyServiceProvider.AddTransient(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
         /// <summary>
@@ -135,17 +136,20 @@ namespace SolidProxy.Core.IoC
                         SolidProxyServiceProvider.AddSingleton(CreateProxyFactory(implementationFactory));
                         break;
                 }
-            };
 
-            //
-            // make sure that all the methods are configured
-            //
-            interfaceConfig.Methods.ToList().ForEach(methodConfig =>
-            {
-                var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                invocAdviceConfig.Enabled = true;
-                methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
-            });
+                //
+                // make sure that all the methods are configured
+                //
+                if (typeof(TProxy) != typeof(ISolidProxyInvocationImplAdviceConfig))
+                {
+                    typeof(TProxy).GetMethods().ToList().ForEach(m =>
+                    {
+                        var methodConfig = interfaceConfig.ConfigureMethod(m);
+                        methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                        methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
+                    });
+                }
+            };
         }
 
         private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class

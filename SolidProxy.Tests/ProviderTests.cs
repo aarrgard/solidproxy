@@ -123,8 +123,8 @@ namespace SolidProxy.Tests
             get
             {
                 return new IProviderAdapter[] {
-                    new MicrosoftDIAdapter(),
                     new SolidProxyDIAdapter(),
+                    new MicrosoftDIAdapter(),
                     //new UnityDIAdapter()
                 };
             }

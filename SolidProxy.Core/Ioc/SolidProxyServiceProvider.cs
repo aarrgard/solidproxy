@@ -96,23 +96,30 @@ namespace SolidProxy.Core.IoC
         }
 
         /// <summary>
-        /// REturns all the registrations
+        /// Returns all the registrations
         /// </summary>
         public IEnumerable<SolidProxyServiceRegistration> Registrations => _registrations.Values;
 
-        private SolidProxyServiceRegistration AddRegistration(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type serviceType, Type implementationType, Func<SolidProxyServiceProvider, object> factory)
+        private SolidProxyServiceRegistration AddRegistration(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type serviceType, Type implementationType, Func<IServiceProvider, object> factory)
         {
-            return (SolidProxyServiceRegistration) s_AddRegistrationMethod.MakeGenericMethod(serviceType).Invoke(this, new object[]
-                {
-                    registrationIdx,registrationScope,implementationType,factory
-                });
-        }
-
-        private SolidProxyServiceRegistration<T> AddRegistration<T>(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, T> factory)
-        {
-            var registration = (SolidProxyServiceRegistration<T>) _registrations.GetOrAdd(typeof(T), (type) => new SolidProxyServiceRegistration<T>(this));
+            SolidProxyServiceRegistration registration;
+            if (serviceType.IsGenericTypeDefinition)
+            {
+                registration = _registrations.GetOrAdd(serviceType, (type) => new SolidProxyServiceRegistrationGeneric(this, serviceType));
+            }
+            else
+            {
+                registration = _registrations.GetOrAdd(serviceType, (type) => (SolidProxyServiceRegistration)Activator.CreateInstance(typeof(SolidProxyServiceRegistration<>).MakeGenericType(serviceType), this));
+            }
             registration.AddImplementation(registrationIdx, registrationScope, implementationType, factory);
             return registration;
+        }
+
+        private SolidProxyServiceRegistration<T> AddRegistration<T>(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<IServiceProvider, T> factory)
+        {
+            var registration = _registrations.GetOrAdd(typeof(T), (type) => new SolidProxyServiceRegistration<T>(this));
+            registration.AddImplementation(registrationIdx, registrationScope, implementationType, factory);
+            return (SolidProxyServiceRegistration<T>)registration;
          }
 
         /// <summary>
@@ -375,8 +382,8 @@ namespace SolidProxy.Core.IoC
                 var genType = serviceType.GetGenericTypeDefinition();
                 if (_registrations.TryGetValue(genType, out tmp))
                 {
-                    registration = (SolidProxyServiceRegistration<T>)tmp;
-                    registration.Implementations.ToList().ForEach(o =>
+                    var genRegistration = (SolidProxyServiceRegistrationGeneric)tmp;
+                    genRegistration.Implementations.ToList().ForEach(o =>
                     {
                         var implType = o.ImplementationType.MakeGenericType(serviceType.GetGenericArguments());
                         registration = AddRegistration<T>(o.RegistrationIdx, o.RegistrationScope, implType, null);
@@ -418,7 +425,9 @@ namespace SolidProxy.Core.IoC
                 -1, 
                 SolidProxyServiceRegistrationScope.Nonexisting,
                 serviceType,
-                (sp) => default(T));
+                (sp) => {
+                    return default(T);
+                });
             return registration;
         }
     }
