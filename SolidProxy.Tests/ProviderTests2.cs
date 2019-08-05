@@ -33,7 +33,7 @@ namespace SolidProxy.Tests
         }
 
         [Test]
-        public async Task InvokeMoreThanOneMethod()
+        public async Task TestInvokeMoreThanOneMethod()
         {
             await RunProviderTestsAsync(async adapter =>
             {
@@ -43,12 +43,31 @@ namespace SolidProxy.Tests
                 ic.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
 
                 var testInterface = adapter.GetRequiredService<ITestInterface>();
-                for(int i = 0; i < 10; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     await testInterface.DoA();
                     Assert.AreEqual("X", await testInterface.DoB("X"));
                     Assert.AreEqual("Y", await testInterface.DoC("X", "Y"));
                 }
+            });
+        }
+
+        [Test]
+        public async Task TestProxiedType1()
+        {
+            await RunProviderTestsAsync(async adapter =>
+            {
+                adapter.AddTransient<ITestInterface, TestImplementation>();
+                var cb = adapter.GetSolidConfigurationBuilder();
+                var ic = cb.ConfigureInterface<ITestInterface>();
+                ic.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+
+                var proxy = adapter.GetRequiredService<ITestInterface>();
+                Assert.IsTrue(typeof(ISolidProxy).IsAssignableFrom(proxy.GetType()));
+                var proxied = adapter.GetRequiredService<ISolidProxied<ITestInterface>>();
+                Assert.AreEqual(typeof(TestImplementation), proxied.Service.GetType());
+
+
             });
         }
     }

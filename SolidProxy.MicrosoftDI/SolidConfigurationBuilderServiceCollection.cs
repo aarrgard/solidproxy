@@ -142,6 +142,8 @@ namespace SolidProxy.MicrosoftDI
                     throw new Exception("Cannot determine implementation type");
                 }
 
+                Func<IServiceProvider, ISolidProxied<TProxy>> proxiedFactory = (sp) => new SolidProxied<TProxy>(implementationFactory(sp));  
+
                 //
                 // add the configuration for the proxy and register 
                 // proxy and interface the same way as the removed service.
@@ -158,12 +160,15 @@ namespace SolidProxy.MicrosoftDI
                 {
                     case ServiceLifetime.Scoped:
                         ServiceCollection.AddScoped(proxyFactory);
+                        ServiceCollection.AddScoped(proxiedFactory);
                         break;
                     case ServiceLifetime.Transient:
                         ServiceCollection.AddTransient(proxyFactory);
+                        ServiceCollection.AddTransient(proxiedFactory);
                         break;
                     case ServiceLifetime.Singleton:
                         ServiceCollection.AddSingleton(proxyFactory);
+                        ServiceCollection.AddSingleton(proxiedFactory);
                         break;
                 }
             };
