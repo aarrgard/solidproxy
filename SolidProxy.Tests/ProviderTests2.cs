@@ -62,12 +62,18 @@ namespace SolidProxy.Tests
                 var ic = cb.ConfigureInterface<ITestInterface>();
                 ic.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
 
-                var proxy = adapter.GetRequiredService<ITestInterface>();
-                Assert.IsTrue(typeof(ISolidProxy).IsAssignableFrom(proxy.GetType()));
-                var proxied = adapter.GetRequiredService<ISolidProxied<ITestInterface>>();
-                Assert.AreEqual(typeof(TestImplementation), proxied.Service.GetType());
+                var proxy1 = adapter.GetRequiredService<ITestInterface>();
+                Assert.IsTrue(typeof(ISolidProxy).IsAssignableFrom(proxy1.GetType()));
+                var proxied1 = adapter.GetRequiredService<ISolidProxied<ITestInterface>>();
+                Assert.AreEqual(typeof(TestImplementation), proxied1.Service.GetType());
 
+                var proxy2 = adapter.GetRequiredService<ITestInterface>();
+                Assert.IsTrue(typeof(ISolidProxy).IsAssignableFrom(proxy2.GetType()));
+                var proxied2 = adapter.GetRequiredService<ISolidProxied<ITestInterface>>();
+                Assert.AreEqual(typeof(TestImplementation), proxied2.Service.GetType());
 
+                Assert.AreNotSame(proxy1, proxy2);
+                Assert.AreNotSame(proxied1, proxied2);
             });
         }
     }
