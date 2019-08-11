@@ -13,7 +13,8 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// The implementations
         /// </summary>
-        protected IList<SolidProxyServiceRegistrationImplementation> _implementations;
+        protected IEnumerable<SolidProxyServiceRegistrationImplementation> _implementations;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -45,12 +46,10 @@ namespace SolidProxy.Core.IoC
         /// <param name="impl"></param>
         public void AddImplementation(SolidProxyServiceRegistrationImplementation impl)
         {
-            var lastImplementation = Implementations.LastOrDefault();
-            if (lastImplementation?.RegistrationScope == SolidProxyServiceRegistrationScope.Nonexisting)
-            {
-                _implementations.Remove(lastImplementation);
-            }
-            _implementations.Add(impl);
+            _implementations = Implementations
+                .Where(o => o.RegistrationScope != SolidProxyServiceRegistrationScope.Nonexisting)
+                .Union(new[] { impl })
+                .ToArray();
         }
 
         /// <summary>
