@@ -53,9 +53,9 @@ namespace SolidProxy.Tests
         }
 
         [Test]
-        public async Task TestProxiedType1()
+        public void TestProxiedType1()
         {
-            await RunProviderTestsAsync(async adapter =>
+            RunProviderTests(adapter =>
             {
                 adapter.AddTransient<ITestInterface, TestImplementation>();
                 var cb = adapter.GetSolidConfigurationBuilder();

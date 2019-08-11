@@ -132,7 +132,8 @@ namespace SolidProxy.Core.IoC
             }
             if(ImplementationType.IsInterface)
             {
-                return (sp) => throw new Exception("Cannot create instances of interface types.");
+                return (sp) => default(T);
+                //return (sp) => throw new Exception("Cannot create instances of interface types.");
             }
             var ctr = ImplementationType.GetConstructors()
                 .OrderByDescending(o => o.GetParameters().Length)
