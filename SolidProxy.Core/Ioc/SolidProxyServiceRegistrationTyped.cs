@@ -35,7 +35,12 @@ namespace SolidProxy.Core.IoC
         /// <returns></returns>
         public new T Resolve(SolidProxyServiceProvider solidProxyServiceProvider)
         {
-            return Implementations.Last().Resolve(solidProxyServiceProvider);
+            var impl = Implementations.LastOrDefault();
+            if(impl == null)
+            {
+                return default(T);
+            }
+            return impl.Resolve(solidProxyServiceProvider);
         }
 
         /// <summary>
