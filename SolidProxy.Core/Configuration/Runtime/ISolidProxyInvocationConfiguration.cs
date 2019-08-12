@@ -30,8 +30,9 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <param name="solidProxy"></param>
         /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
         /// <returns></returns>
-        ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args);
+        ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues);
     }
 
     /// <summary>

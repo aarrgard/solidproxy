@@ -54,10 +54,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <param name="rpcProxy"></param>
         /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args)
+        public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args, IDictionary<string, object> invocationValues)
         {
-            return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args);
+            return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args, invocationValues);
         }
 
         /// <summary>

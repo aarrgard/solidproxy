@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -95,8 +96,9 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         /// <param name="method"></param>
         /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public object Invoke(MethodInfo method, object[] args)
+        public object Invoke(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
             object solidProxyResult;
             if(InvokeSolidProxy(method, args, out solidProxyResult))
@@ -104,7 +106,25 @@ namespace SolidProxy.Core.Proxy
                 return solidProxyResult;
             }
 
-            return CreateProxyInvocation(method, args).GetReturnValue();
+            return CreateProxyInvocation(method, args, invocationValues).GetReturnValue();
+        }
+
+        /// <summary>
+        /// Invokes the method async.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
+        /// <returns></returns>
+        public Task<object> InvokeAsync(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        {
+            object solidProxyResult;
+            if (InvokeSolidProxy(method, args, out solidProxyResult))
+            {
+                return Task.FromResult(solidProxyResult);
+            }
+
+            return CreateProxyInvocation(method, args, invocationValues).GetReturnValueAsync();
         }
 
         private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
@@ -119,30 +139,13 @@ namespace SolidProxy.Core.Proxy
             return true;
         }
 
-        /// <summary>
-        /// Invokes the method async.
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public Task<object> InvokeAsync(MethodInfo method, object[] args)
-        {
-            object solidProxyResult;
-            if (InvokeSolidProxy(method, args, out solidProxyResult))
-            {
-                return Task.FromResult(solidProxyResult);
-            }
-
-            return CreateProxyInvocation(method, args).GetReturnValueAsync();
-        }
-
-        private ISolidProxyInvocation CreateProxyInvocation(MethodInfo method, object[] args)
+        private ISolidProxyInvocation CreateProxyInvocation(MethodInfo method, object[] args, IDictionary<string, object> invocationValues)
         {
             //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
-            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(this, args);
+            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(this, args, invocationValues);
             return proxyInvocation;
         }
     }

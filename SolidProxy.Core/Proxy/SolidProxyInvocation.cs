@@ -24,15 +24,18 @@ namespace SolidProxy.Core.Proxy
         /// <param name="proxy"></param>
         /// <param name="invocationConfiguration"></param>
         /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
         public SolidProxyInvocation(
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
-            object[] args)
+            object[] args,
+            IDictionary<string, object> invocationValues) 
         {
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
             InvocationAdvices = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
+            _invocationValues = invocationValues;
         }
         /// <summary>
         /// The proxy
@@ -140,7 +143,10 @@ namespace SolidProxy.Core.Proxy
             object res;
             if(InvocationValues.TryGetValue(key, out res))
             {
-                return (T)res;
+                if(typeof(T).IsAssignableFrom(res.GetType()))
+                {
+                    return (T)res;
+                }
             }
             return default(T);
         }

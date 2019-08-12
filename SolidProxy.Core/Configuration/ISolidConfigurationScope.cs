@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using System;
+using System.Collections.Generic;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -69,6 +70,21 @@ namespace SolidProxy.Core.Configuration
         /// <param name="setting"></param>
         /// <returns></returns>
         bool IsAdviceConfigured(Type setting);
+
+        /// <summary>
+        /// Links two advices together. This ensures that if the "afterAdvice" is
+        /// configured on a proxy the "beforeAdvice" is guaranteed to be invoked begore that advice.
+        /// </summary>
+        /// <param name="beforeAdvice">The advice to run first</param>
+        /// <param name="afterAdvice">The advice to run after </param>
+        void AddAdviceDependency(Type beforeAdvice, Type afterAdvice);
+
+        /// <summary>
+        /// Returns all the advices that should be invoked before the supplied advice.
+        /// </summary>
+        /// <param name="advice"></param>
+        /// <returns></returns>
+        IEnumerable<Type> GetAdviceDependencies(Type advice);
     }
 
     /// <summary>

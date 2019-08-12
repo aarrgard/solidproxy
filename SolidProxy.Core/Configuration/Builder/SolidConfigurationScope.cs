@@ -16,6 +16,7 @@ namespace SolidProxy.Core.Configuration.Builder
     {
         private SolidProxyServiceProvider _internalServiceProvider;
         private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<Type, IEnumerable<Type>> _adviceDependencies = new ConcurrentDictionary<Type, IEnumerable<Type>>();
 
         /// <summary>
         /// Constructs a new instance
@@ -272,6 +273,51 @@ namespace SolidProxy.Core.Configuration.Builder
                 throw new Exception($"{GetType().FullName} does not implement ConfigureProxy");
             }
             ((SolidConfigurationScope)ParentScope).ConfigureProxy(interfaceConfig);
+        }
+
+        /// <summary>
+        /// Adds an advice dependency.
+        /// </summary>
+        /// <param name="beforeAdvice"></param>
+        /// <param name="afterAdvice"></param>
+        public void AddAdviceDependency(Type beforeAdvice, Type afterAdvice)
+        {
+            if(beforeAdvice == afterAdvice)
+            {
+                throw new Exception("Supplied advices cannot be the same advice.");
+            }
+            ConfigureAdvice(beforeAdvice);
+            ConfigureAdvice(afterAdvice);
+            if (_adviceDependencies.TryGetValue(afterAdvice, out IEnumerable<Type> beforeAdvices))
+            {
+                _adviceDependencies[afterAdvice] = beforeAdvices.Union(new[] { beforeAdvice }).ToArray();
+            }
+            else
+            {
+                _adviceDependencies[afterAdvice] = new[] { beforeAdvice };
+            }
+        }
+
+        /// <summary>
+        /// Returns all the advices that should be invoked before the supplied advice.
+        /// </summary>
+        /// <param name="advice"></param>
+        /// <returns></returns>
+        public IEnumerable<Type> GetAdviceDependencies(Type advice)
+        {
+            IEnumerable<Type> beforeAdvices;
+            if (!_adviceDependencies.TryGetValue(advice, out beforeAdvices))
+            {
+                beforeAdvices = Type.EmptyTypes;
+            }
+            if (ParentScope == null)
+            {
+                return beforeAdvices;
+            }
+            else
+            {
+                return beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));
+            }
         }
 
         /// <summary>
