@@ -39,7 +39,6 @@ namespace SolidProxy.Core.Proxy
                 return false;
             }
             Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
-            Console.WriteLine($"Created delegate{RuntimeHelpers.GetHashCode(Delegate)} for method {MethodInfo.Name}");
             GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
             return true;
         }
