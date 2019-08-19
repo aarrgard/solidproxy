@@ -129,6 +129,22 @@ namespace SolidProxy.Tests
                 var impls = adapter.GetRequiredService<IEnumerable<ITestInterface>>().ToList();
                 Assert.AreEqual(2, impls.Count);
 
+                // check number of advices
+                impls.ForEach(o =>
+                {
+                    typeof(ITestInterface).GetMethods().ToList().ForEach(m =>
+                    {
+                        var advices = ((ISolidProxy)o).GetInvocationAdvices(m);
+                        if(m.Name.EndsWith(nameof(ITestInterface.Int1)))
+                        {
+                            Assert.AreEqual(3, advices.Count());
+                        }
+                        else
+                        {
+                            Assert.AreEqual(1, advices.Count());
+                        }
+                    });
+                });
             });
         }
     }

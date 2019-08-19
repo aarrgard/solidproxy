@@ -148,5 +148,16 @@ namespace SolidProxy.Core.Proxy
             var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(this, args, invocationValues);
             return proxyInvocation;
         }
+
+        /// <summary>
+        /// Returns the invocation advices for specified method.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public IEnumerable<ISolidProxyInvocationAdvice> GetInvocationAdvices(MethodInfo method)
+        {
+            var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
+            return proxyInvocationConfiguration.GetSolidInvocationAdvices();
+        }
     }
 }

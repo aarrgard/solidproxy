@@ -118,8 +118,8 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Sets the generator
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TGen"></typeparam>
         /// <returns></returns>
-        public abstract ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
+        public abstract ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
     }
 }

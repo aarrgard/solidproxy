@@ -14,7 +14,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Sets the generator to use when creating proxies
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
+        ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
 
         /// <summary>
         /// Returns the generator for solid proxies

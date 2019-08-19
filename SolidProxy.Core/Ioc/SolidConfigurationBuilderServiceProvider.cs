@@ -164,11 +164,11 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// Sets the generator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TGen"></typeparam>
         /// <returns></returns>
-        public override ISolidConfigurationBuilder SetGenerator<T>()
+        public override ISolidConfigurationBuilder SetGenerator<TGen>() 
         {
-            SolidProxyServiceProvider.AddSingleton<ISolidProxyGenerator, T>();
+            SolidProxyServiceProvider.AddSingleton<ISolidProxyGenerator>(new TGen());
             return this;
         }
     }

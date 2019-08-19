@@ -33,6 +33,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <param name="invocationValues"></param>
         /// <returns></returns>
         ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues);
+        IEnumerable<ISolidProxyInvocationAdvice> GetSolidInvocationAdvices();
     }
 
     /// <summary>

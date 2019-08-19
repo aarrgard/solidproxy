@@ -21,6 +21,13 @@ namespace SolidProxy.Core.Proxy
         object Proxy { get; }
 
         /// <summary>
+        /// Returns all the invocation advices for supplied method.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        IEnumerable<ISolidProxyInvocationAdvice> GetInvocationAdvices(MethodInfo methodInfo);
+
+        /// <summary>
         /// Invokes the method with supplied args. If the return type of the method 
         /// is a Task this method does not wait for the task.
         /// </summary>

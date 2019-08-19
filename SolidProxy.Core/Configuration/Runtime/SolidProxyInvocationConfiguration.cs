@@ -72,6 +72,11 @@ namespace SolidProxy.Core.Configuration.Runtime
             SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}", this, false);
         }
 
+        IEnumerable<ISolidProxyInvocationAdvice> ISolidProxyInvocationConfiguration.GetSolidInvocationAdvices()
+        {
+            return GetSolidInvocationAdvices();
+        }
+
         /// <summary>
         /// Returns the advices for this invocation
         /// </summary>
