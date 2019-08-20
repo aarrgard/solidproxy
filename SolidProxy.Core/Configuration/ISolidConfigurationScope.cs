@@ -1,4 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.Core.IoC;
 using System;
 using System.Collections.Generic;
 
@@ -9,6 +10,11 @@ namespace SolidProxy.Core.Configuration
     /// </summary>
     public interface ISolidConfigurationScope
     {
+        /// <summary>
+        /// Returns the service provider for this scope.
+        /// </summary>
+        SolidProxyServiceProvider ServiceProvider { get; }
+
         /// <summary>
         /// Returns the scope type that this scope represents.
         /// </summary>

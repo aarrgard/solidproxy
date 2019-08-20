@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.IoC;
 
 namespace SolidProxy.Core.Proxy
 {

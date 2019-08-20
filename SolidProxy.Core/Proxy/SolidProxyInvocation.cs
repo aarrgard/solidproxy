@@ -33,7 +33,6 @@ namespace SolidProxy.Core.Proxy
         {
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
-            InvocationAdvices = SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
             _invocationValues = invocationValues;
         }
@@ -62,7 +61,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The advices
         /// </summary>
-        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices => SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
         /// <summary>
         /// The current advice index
         /// </summary>

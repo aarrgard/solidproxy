@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +59,7 @@ namespace SolidProxy.Core.IoC
         private ConcurrentDictionary<Type, SolidProxyServiceRegistration> _registrations;
         private SolidProxyServiceProvider _parentServiceProvider;
         internal IList<IDisposable> _disposeChain;
+        private string _containerId;
 
         /// <summary>
         /// Constructs a new IoC container. The parent provider may be null.
@@ -70,6 +70,7 @@ namespace SolidProxy.Core.IoC
             _parentServiceProvider = parentServiceProvider;
             _registrations = new ConcurrentDictionary<Type, SolidProxyServiceRegistration>();
             _disposeChain = new List<IDisposable>();
+            _containerId = RuntimeHelpers.GetHashCode(this).ToString();
 
             AddRegistration<IServiceProvider>(
                 NewRegistrationIdx(),
@@ -86,14 +87,7 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// The container id
         /// </summary>
-        public string ContainerId
-        {
-            get
-            {
-                var parentScope = _parentServiceProvider?.ContainerId ?? "";
-                return $"{parentScope}/{RuntimeHelpers.GetHashCode(this)}";
-            }
-        }
+        public string ContainerId { get => $"{_parentServiceProvider?.ContainerId ?? ""}/{_containerId}"; set => _containerId = value; }
 
         /// <summary>
         /// Returns all the registrations

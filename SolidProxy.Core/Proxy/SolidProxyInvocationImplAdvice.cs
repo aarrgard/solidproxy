@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -24,23 +25,33 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public bool Configure(ISolidProxyInvocationImplAdviceConfig config)
         {
-            if(Delegate != null)
+            try
             {
-                throw new Exception($"Something is wrong with the setup. The {typeof(SolidProxyInvocationImplAdvice<,,>).Name} must be transient.");
+                if (Delegate != null)
+                {
+                    throw new Exception($"Something is wrong with the setup. The {typeof(SolidProxyInvocationImplAdvice<,,>).Name} must be transient.");
+                }
+                MethodInfo = config.InvocationConfiguration.MethodInfo;
+                ImplementationFactory = config.ImplementationFactory;
+                if (ImplementationFactory == null && MethodInfo.DeclaringType != typeof(ISolidProxyInvocationImplAdviceConfig))
+                {
+                    var proxyConfig = config.InvocationConfiguration.ProxyConfiguration;
+                    var proxyInvocConfig = proxyConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                    ImplementationFactory = proxyInvocConfig.ImplementationFactory;
+                }
+                if(ImplementationFactory == null)
+                {
+                    return false;
+                }
+                Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
+                GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
+                return true;
             }
-            MethodInfo = config.InvocationConfiguration.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
-            ImplementationFactory = config.ImplementationFactory;
-            if(ImplementationFactory == null)
+            catch (Exception e)
             {
-                ImplementationFactory = config.InvocationConfiguration.ProxyConfiguration.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>().ImplementationFactory;
+                var x = config.InvocationConfiguration;
+                throw e;
             }
-            if(ImplementationFactory == null)
-            {
-                return false;
-            }
-            Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
-            GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
-            return true;
         }
 
         /// <summary>

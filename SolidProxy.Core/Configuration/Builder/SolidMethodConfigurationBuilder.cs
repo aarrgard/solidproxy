@@ -1,8 +1,10 @@
-﻿using SolidProxy.Core.Proxy;
+﻿using SolidProxy.Core.IoC;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -23,7 +25,17 @@ namespace SolidProxy.Core.Configuration.Builder
             ProxyConfiguration = parentScope;
             MethodInfo = methodInfo;
         }
-
+        
+        /// <summary>
+        /// Constructs a service provider for this method configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"{MethodInfo.Name}:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
         /// <summary>
         /// The proxy configuration
         /// </summary>

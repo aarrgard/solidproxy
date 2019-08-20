@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.Configuration.Runtime
@@ -28,6 +30,8 @@ namespace SolidProxy.Core.Configuration.Runtime
         {
             MethodConfiguration = methodConfiguration ?? throw new ArgumentNullException(nameof(methodConfiguration));
             ProxyConfiguration = proxyConfiguration ?? throw new ArgumentNullException(nameof(proxyConfiguration));
+
+            SetValue($"{typeof(ISolidProxyInvocationAdviceConfig).FullName}.InvocationConfiguration", this);
         }
 
         /// <summary>
@@ -50,6 +54,17 @@ namespace SolidProxy.Core.Configuration.Runtime
         public Type AdviceType => typeof(TAdvice);
 
         /// <summary>
+        /// Constructs a service provider for this method configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"invoc:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
+
+        /// <summary>
         /// Creates a new invocation
         /// </summary>
         /// <param name="rpcProxy"></param>
@@ -59,17 +74,6 @@ namespace SolidProxy.Core.Configuration.Runtime
         public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args, IDictionary<string, object> invocationValues)
         {
             return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args, invocationValues);
-        }
-
-        /// <summary>
-        /// Sets the avice config value
-        /// </summary>
-        /// <typeparam name="TConfig"></typeparam>
-        /// <param name="scope"></param>
-        protected override void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope)
-        {
-            base.SetAdviceConfigValues<TConfig>(scope);
-            SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}", this, false);
         }
 
         IEnumerable<ISolidProxyInvocationAdvice> ISolidProxyInvocationConfiguration.GetSolidInvocationAdvices()
@@ -87,11 +91,15 @@ namespace SolidProxy.Core.Configuration.Runtime
             {
                 var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
-                _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(stepTypes.Select(t =>
+
+                //
+                // create advices
+                //
+                _advices = stepTypes.Select(t =>
                 {
                     if (t.IsGenericTypeDefinition)
                     {
-                        switch(t.GetGenericArguments().Length)
+                        switch (t.GetGenericArguments().Length)
                         {
                             case 1:
                                 t = t.MakeGenericType(new[] { typeof(TObject) });
@@ -108,10 +116,18 @@ namespace SolidProxy.Core.Configuration.Runtime
                     }
 
                     var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
-                    if(step == null)
+                    if (step == null)
                     {
                         throw new Exception($"No step configured for type: {t.FullName}");
                     }
+                    return step;
+                }).ToList();
+
+                //
+                // configure the advices
+                //
+                _advices = _advices.Select(step =>
+                {
                     if (SolidConfigurationHelper.ConfigureStep(step, this))
                     {
                         return step;
@@ -121,8 +137,10 @@ namespace SolidProxy.Core.Configuration.Runtime
                         // step is not enabled.
                         return null;
                     }
-                }).Where(o => o != null)
-                .ToList());
+
+                }).Where(o => o != null).ToList();
+
+                _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
             }
 
             return _advices;

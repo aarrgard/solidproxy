@@ -1,4 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
@@ -111,7 +112,21 @@ namespace SolidProxy.Core.Configuration.Builder
         }
 
         /// <summary>
-        /// The proxy generation
+        /// Adds the solid proxy generator as a singleton
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.AddSingleton(SolidProxyGenerator);
+            sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
+            sp.AddTransient(typeof(SolidConfigurationAdvice<,,>), typeof(SolidConfigurationAdvice<,,>));
+            sp.AddTransient(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>));
+            return sp;
+        }
+
+        /// <summary>
+        /// The proxy generator
         /// </summary>
         public abstract ISolidProxyGenerator SolidProxyGenerator { get; }
 

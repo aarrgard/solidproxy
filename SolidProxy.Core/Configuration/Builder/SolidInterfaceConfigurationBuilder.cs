@@ -1,9 +1,11 @@
-﻿using System;
+﻿using SolidProxy.Core.IoC;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -40,6 +42,17 @@ namespace SolidProxy.Core.Configuration.Builder
         public Type InterfaceType => typeof(T);
 
         ISolidAssemblyConfigurationBuilder ISolidInterfaceConfigurationBuilder<T>.ParentScope => (ISolidAssemblyConfigurationBuilder)ParentScope;
+
+        /// <summary>
+        /// Constructs a service provider for this interface configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"{typeof(T).FullName}:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
 
         /// <summary>
         /// Returns the method builder for specified method

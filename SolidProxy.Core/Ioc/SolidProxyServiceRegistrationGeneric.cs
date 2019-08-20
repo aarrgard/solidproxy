@@ -7,13 +7,13 @@ namespace SolidProxy.Core.IoC
     /// <summary>
     /// Represents a typed service registration
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class SolidProxyServiceRegistrationGeneric : SolidProxyServiceRegistration
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="serviceProvider"></param>
+        /// <param name="serviceType"></param>
         public SolidProxyServiceRegistrationGeneric(SolidProxyServiceProvider serviceProvider, Type serviceType) : base(serviceProvider)
         {
             ServiceType = serviceType;

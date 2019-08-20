@@ -86,6 +86,7 @@ namespace SolidProxy.Tests
                 .ConfigureMethod(o);
                 m.ConfigureAdvice<IAdviceConfig>();
             });
+
             var sp = services.BuildServiceProvider();
             var store = sp.GetRequiredService<ISolidProxyConfigurationStore>();
             Assert.AreEqual(1, store.ProxyConfigurations.Count());

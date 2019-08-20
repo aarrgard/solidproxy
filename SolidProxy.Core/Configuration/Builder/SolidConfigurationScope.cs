@@ -60,7 +60,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Returns the internal service provider
         /// </summary>
-        public SolidProxyServiceProvider InternalServiceProvider {
+        public SolidProxyServiceProvider ServiceProvider {
             get
             {
                 if(_internalServiceProvider == null)
@@ -69,20 +69,23 @@ namespace SolidProxy.Core.Configuration.Builder
                     {
                         if(_internalServiceProvider == null)
                         {
-                            var proxyGeneratorType = GetScope<SolidConfigurationBuilder>()?.SolidProxyGenerator?.GetType();
-                            if(proxyGeneratorType == null)
-                            {
-                                throw new Exception("No proxy generator type set.");
-                            }
-                            var sp = new SolidProxyServiceProvider();
-                            sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
-                            sp.AddSingleton(typeof(ISolidProxyGenerator), proxyGeneratorType);
-                            _internalServiceProvider = sp;
+                            _internalServiceProvider = CreateServiceProvider();
                         }
                     }
                 }
                 return _internalServiceProvider;
             }
+        }
+
+        /// <summary>
+        /// Creates the service provider
+        /// </summary>
+        /// <returns></returns>
+        protected virtual SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = new SolidProxyServiceProvider(ParentScope?.ServiceProvider);
+            sp.AddSingleton<ISolidConfigurationScope>(this);
+            return sp;
         }
 
         /// <summary>
@@ -133,17 +136,19 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public TConfig ConfigureAdvice<TConfig>() where TConfig: class,ISolidProxyInvocationAdviceConfig
         {
-            var i = (TConfig)InternalServiceProvider.GetService(typeof(TConfig));
+            var i = (TConfig)ServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
                 bool enable = !IsAdviceConfigured<TConfig>();
-                var configBuilder = InternalServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
+                var configBuilder = ServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
                 var proxyConf = configBuilder.ConfigureInterface<TConfig>();
-                SetAdviceConfigValues<TConfig>(proxyConf);
+                proxyConf.SetValue(nameof(ISolidConfigurationScope), this);
+                SetValue<Func<IEnumerable<MethodInfo>>>($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.Methods)}", GetMethodInfos);
                 proxyConf.AddAdvice(typeof(SolidConfigurationAdvice<,,>));
 
-                i = InternalServiceProvider.GetRequiredService<TConfig>();
-                
+                SolidConfigurationBuilderServiceProvider.ConfigureProxyInternal(ServiceProvider, proxyConf);
+                i = ServiceProvider.GetRequiredService<TConfig>();
+
                 // we only set set value if we want to change it
                 // otherwise the interceptor won´t look in the parent scope.
                 if (enable)
@@ -154,7 +159,6 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             return i;
         }
-
         /// <summary>
         /// Overriden in the interface an method scope to configure the proxy.
         /// </summary>
@@ -162,18 +166,6 @@ namespace SolidProxy.Core.Configuration.Builder
         protected virtual void AdviceConfigured<TConfig>() where TConfig : class, ISolidProxyInvocationAdviceConfig
         {
 
-        }
-           
-
-        /// <summary>
-        /// Sets the advice configuration values
-        /// </summary>
-        /// <typeparam name="TConfig"></typeparam>
-        /// <param name="scope"></param>
-        protected virtual void SetAdviceConfigValues<TConfig>(ISolidConfigurationScope scope) where TConfig : class, ISolidProxyInvocationAdviceConfig
-        {
-            scope.SetValue(nameof(ISolidConfigurationScope), this);
-            SetValue<Func<IEnumerable<MethodInfo>>>($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.Methods)}", GetMethodInfos);
         }
 
         private IEnumerable<MethodInfo> GetMethodInfos()
@@ -204,7 +196,7 @@ namespace SolidProxy.Core.Configuration.Builder
             var stepScopeType = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
             if(!stepScopeType)
             {
-                if(InternalServiceProvider.GetService(settingsType) != null)
+                if(ServiceProvider.GetService(settingsType) != null)
                 {
                     stepScopeType = true;
                 }

@@ -1,8 +1,10 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
+using SolidProxy.Core.IoC;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
@@ -28,6 +30,17 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// The configuration store
         /// </summary>
         public ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
+
+        /// <summary>
+        /// Constructs a service provider for this method configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"proxy:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
 
         ISolidInterfaceConfigurationBuilder<TInterface> InterfaceConfiguration => (ISolidInterfaceConfigurationBuilder<TInterface>) ParentScope;
 

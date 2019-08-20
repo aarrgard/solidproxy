@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.MicrosoftDI
@@ -187,6 +189,18 @@ namespace SolidProxy.MicrosoftDI
         private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
         {
             return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
+        }
+
+        /// <summary>
+        /// Constructs a service provider
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"root(di):{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            sp.AddSingleton<ISolidConfigurationBuilder>(this);
+            return sp;
         }
 
         /// <summary>

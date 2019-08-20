@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SolidProxy.Core.IoC;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -39,6 +41,17 @@ namespace SolidProxy.Core.Configuration.Builder
         private ConcurrentDictionary<Type, ISolidInterfaceConfigurationBuilder> InterfaceBuilders { get; }
 
         ISolidConfigurationBuilder ISolidAssemblyConfigurationBuilder.ParentScope => (ISolidConfigurationBuilder) ParentScope;
+
+        /// <summary>
+        /// Constructs a service provider for this assembly configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"{Assembly.GetName().Name}:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
 
         /// <summary>
         /// Configures the specified interface
