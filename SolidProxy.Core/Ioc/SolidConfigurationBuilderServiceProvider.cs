@@ -97,7 +97,7 @@ namespace SolidProxy.Core.IoC
         /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
-            DoIfMissing(adviceType, () => ServiceProvider.AddSingleton(adviceType, adviceType));
+            DoIfMissing(adviceType, () => ServiceProvider.AddTransient(adviceType, adviceType));
         }
 
         /// <summary>
