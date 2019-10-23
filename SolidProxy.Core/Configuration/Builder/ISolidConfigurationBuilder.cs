@@ -13,8 +13,8 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// Sets the generator to use when creating proxies
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
+        /// <typeparam name="TGen"></typeparam>
+        ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
         
         /// <summary>
         /// This method registers the supplied advice type so that 

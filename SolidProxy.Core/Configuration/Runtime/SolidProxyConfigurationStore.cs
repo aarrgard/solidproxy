@@ -1,6 +1,8 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
@@ -37,6 +39,24 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// All the proxy configurations
         /// </summary>
         public ConcurrentDictionary<Guid, ISolidProxyConfiguration> ProxyConfigurations { get; }
+
+        IEnumerable<ISolidProxyConfiguration> ISolidProxyConfigurationStore.ProxyConfigurations
+        {
+            get
+            {
+                return SolidConfigurationBuilder.AssemblyBuilders
+                    .SelectMany(o => o.Interfaces)
+                    .Select(CreateProxyConfiguration)
+                    .Where(o => o != null);
+            }
+        }
+
+        private ISolidProxyConfiguration CreateProxyConfiguration(ISolidInterfaceConfigurationBuilder cb)
+        {
+            var ct = typeof(ISolidProxyConfiguration<>).MakeGenericType(cb.InterfaceType);
+            var ic = ServiceProvider.GetService(ct);
+            return (ISolidProxyConfiguration)ic;
+        }
 
         /// <summary>
         /// Returns the configuration for speficied type.

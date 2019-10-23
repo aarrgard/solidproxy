@@ -30,8 +30,15 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <param name="solidProxy"></param>
         /// <param name="args"></param>
+        /// <param name="invocationValues"></param>
         /// <returns></returns>
-        ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args);
+        ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues);
+
+        /// <summary>
+        /// Resturs all the invocation advices
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<ISolidProxyInvocationAdvice> GetSolidInvocationAdvices();
     }
 
     /// <summary>
@@ -46,6 +53,6 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// Returns the invocation steps configured for this invocation.
         /// </summary>
         /// <returns></returns>
-        IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices();
+        new IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices();
     }
 }

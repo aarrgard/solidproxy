@@ -1,4 +1,5 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Concurrent;
@@ -60,12 +61,13 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
-            return GetServices()
+            return GetServices().ToList() // create list to prevent ConcurrentModificationException
                 .Where(o => o.IsInterface)
                 .Where(o => !o.IsGenericTypeDefinition)
                 .Where(o => !IsProtected(o))
                 .Select(o => ConfigureInterfaceAssembly(o.Assembly).ConfigureInterface(o))
-                .SelectMany(o => ((SolidConfigurationScope)o).GetMethodConfigurationBuilders());
+                .SelectMany(o => ((SolidConfigurationScope)o).GetMethodConfigurationBuilders())
+                .ToList();
         }
 
         private bool IsProtected(Type type)
@@ -116,16 +118,30 @@ namespace SolidProxy.Core.Configuration.Builder
         }
 
         /// <summary>
-        /// The proxy generation
+        /// Adds the solid proxy generator as a singleton
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.AddSingleton(SolidProxyGenerator);
+            sp.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>();
+            sp.AddTransient(typeof(SolidConfigurationAdvice<,,>), typeof(SolidConfigurationAdvice<,,>));
+            sp.AddTransient(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>));
+            return sp;
+        }
+
+        /// <summary>
+        /// The proxy generator
         /// </summary>
         public abstract ISolidProxyGenerator SolidProxyGenerator { get; }
 
         /// <summary>
         /// Sets the generator
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TGen"></typeparam>
         /// <returns></returns>
-        public abstract ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
+        public abstract ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
 
         /// <summary>
         /// Registers supplied advice configuration

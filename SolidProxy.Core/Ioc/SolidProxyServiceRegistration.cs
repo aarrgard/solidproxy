@@ -8,18 +8,21 @@ namespace SolidProxy.Core.IoC
     /// <summary>
     /// Represents a service registration. One registration may have several implementations.
     /// </summary>
-    public class SolidProxyServiceRegistration
+    public abstract class SolidProxyServiceRegistration
     {
+        /// <summary>
+        /// The implementations
+        /// </summary>
+        protected IEnumerable<SolidProxyServiceRegistrationImplementation> _implementations;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="serviceProvider"></param>
-        /// <param name="serviceType"></param>
-        public SolidProxyServiceRegistration(SolidProxyServiceProvider serviceProvider, Type serviceType)
+        protected SolidProxyServiceRegistration(SolidProxyServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            ServiceType = serviceType;
-            Implementations = new List<SolidProxyServiceRegistrationImplementation>();
+            _implementations = new List<SolidProxyServiceRegistrationImplementation>();
         }
 
         /// <summary>
@@ -30,22 +33,50 @@ namespace SolidProxy.Core.IoC
         /// <summary>
         /// The service type
         /// </summary>
-        public Type ServiceType { get; }
+        public abstract Type ServiceType { get; }
 
         /// <summary>
         /// All the implementations for this service.
         /// </summary>
-        public IList<SolidProxyServiceRegistrationImplementation> Implementations { get; }
+        public IEnumerable<SolidProxyServiceRegistrationImplementation> Implementations => _implementations;
 
         /// <summary>
-        /// Resolves the actual instance of the service.
+        /// Adds an implementation.
+        /// </summary>
+        /// <param name="impl"></param>
+        public void AddImplementation(SolidProxyServiceRegistrationImplementation impl)
+        {
+            _implementations = Implementations
+                .Where(o => o.RegistrationScope != SolidProxyServiceRegistrationScope.Nonexisting)
+                .Union(new[] { impl })
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Adds an implementation
+        /// </summary>
+        /// <param name="registrationIdx"></param>
+        /// <param name="registrationScope"></param>
+        /// <param name="implementationType"></param>
+        /// <param name="resolver"></param>
+        public abstract void AddImplementation(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Delegate resolver);
+
+        /// <summary>
+        /// Retuens the resolved object
         /// </summary>
         /// <param name="solidProxyServiceProvider"></param>
         /// <returns></returns>
         public object Resolve(SolidProxyServiceProvider solidProxyServiceProvider)
         {
-            return Implementations.Last().Resolve(solidProxyServiceProvider);
+            return ResolveTyped(solidProxyServiceProvider);
         }
+
+        /// <summary>
+        /// Resolves the typeod instance
+        /// </summary>
+        /// <param name="solidProxyServiceProvider"></param>
+        /// <returns></returns>
+        protected abstract object ResolveTyped(SolidProxyServiceProvider solidProxyServiceProvider);
 
         /// <summary>
         /// Resolves all the registrations
@@ -63,32 +94,6 @@ namespace SolidProxy.Core.IoC
             var arr = Array.CreateInstance(ServiceType, objArr.Length);
             objArr.CopyTo(arr, 0);
             return arr;
-        }
-
-        /// <summary>
-        /// Adds an implementation to this registration
-        /// </summary>
-        /// <param name="registrationIdx"></param>
-        /// <param name="registrationScope"></param>
-        /// <param name="implementationType"></param>
-        /// <param name="resolver"></param>
-        public void AddImplementation(int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, object> resolver)
-        {
-            AddImplementation(new SolidProxyServiceRegistrationImplementation(this, registrationIdx, registrationScope, implementationType, resolver));
-        }
-
-        /// <summary>
-        /// Adds an implementation.
-        /// </summary>
-        /// <param name="impl"></param>
-        public void AddImplementation(SolidProxyServiceRegistrationImplementation impl)
-        {
-            var lastImplementation = Implementations.LastOrDefault();
-            if (lastImplementation?.RegistrationScope == SolidProxyServiceRegistrationScope.Nonexisting)
-            {
-                Implementations.Remove(lastImplementation);
-            }
-            Implementations.Add(impl);
         }
     }
 }

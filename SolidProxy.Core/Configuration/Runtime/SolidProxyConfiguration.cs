@@ -1,8 +1,10 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
-using System;
+using SolidProxy.Core.IoC;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
@@ -17,7 +19,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <param name="parentScope"></param>
         /// <param name="solidProxyConfigurationStore"></param>
-        public SolidProxyConfiguration(ISolidInterfaceConfigurationBuilder parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
+        public SolidProxyConfiguration(ISolidInterfaceConfigurationBuilder<TInterface> parentScope, ISolidProxyConfigurationStore solidProxyConfigurationStore) 
             : base(SolidScopeType.Interface, parentScope)
         {
             SolidProxyConfigurationStore = solidProxyConfigurationStore;
@@ -30,9 +32,24 @@ namespace SolidProxy.Core.Configuration.Runtime
         public ISolidProxyConfigurationStore SolidProxyConfigurationStore { get; }
 
         /// <summary>
+        /// Constructs a service provider for this method configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"proxy:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
+
+        ISolidInterfaceConfigurationBuilder<TInterface> InterfaceConfiguration => (ISolidInterfaceConfigurationBuilder<TInterface>) ParentScope;
+
+        /// <summary>
         /// The invocation configurations
         /// </summary>
         public ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration> InvocationConfigurations { get; }
+
+        IEnumerable<ISolidProxyInvocationConfiguration> ISolidProxyConfiguration.InvocationConfigurations => InterfaceConfiguration.Methods.Select(o => GetProxyInvocationConfiguration(o.MethodInfo));
 
         /// <summary>
         /// Return the invocation configuration.
@@ -65,6 +82,15 @@ namespace SolidProxy.Core.Configuration.Runtime
         {
             var methodConfig = SolidProxyConfigurationStore.SolidConfigurationBuilder.ConfigureInterface<TInterface>().ConfigureMethod(methodInfo);
             return new SolidProxyInvocationConfiguration<TInterface, MRet, TRet>(methodConfig, this);
+        }
+
+        /// <summary>
+        /// Returns the configurations from the parent scope
+        /// </summary>
+        /// <returns></returns>
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders();
         }
     }
 }

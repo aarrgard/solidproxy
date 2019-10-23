@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -20,23 +21,32 @@ namespace SolidProxy.Core.Proxy
         object Proxy { get; }
 
         /// <summary>
+        /// Returns all the invocation advices for supplied method.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        IEnumerable<ISolidProxyInvocationAdvice> GetInvocationAdvices(MethodInfo methodInfo);
+
+        /// <summary>
         /// Invokes the method with supplied args. If the return type of the method 
         /// is a Task this method does not wait for the task.
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="args"></param>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        object Invoke(MethodInfo method, object[] args);
+        object Invoke(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Invokes the method with supplied args. If the return type
         /// of the method is void or Task then the wrapped return value 
         /// will be null.
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="args"></param>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        Task<object> InvokeAsync(MethodInfo method, object[] args);
+        Task<object> InvokeAsync(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
     }
 
     /// <summary>

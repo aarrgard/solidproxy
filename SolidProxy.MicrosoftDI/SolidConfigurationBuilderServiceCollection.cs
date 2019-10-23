@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.Configuration.Runtime;
+using SolidProxy.Core.IoC;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.MicrosoftDI
@@ -51,7 +53,7 @@ namespace SolidProxy.MicrosoftDI
             ServiceCollection = serviceCollection;
             DoIfMissing<ISolidProxyConfigurationStore>(() => ServiceCollection.AddSingleton<ISolidProxyConfigurationStore, SolidProxyConfigurationStore>());
             DoIfMissing<ISolidConfigurationBuilder>(() => ServiceCollection.AddSingleton<ISolidConfigurationBuilder>(this));
-            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddSingleton(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
+            DoIfMissing(typeof(SolidProxyInvocationImplAdvice<,,>), () => ServiceCollection.AddTransient(typeof(SolidProxyInvocationImplAdvice<,,>), typeof(SolidProxyInvocationImplAdvice<,,>)));
         }
 
         /// <summary>
@@ -62,7 +64,18 @@ namespace SolidProxy.MicrosoftDI
         /// <summary>
         /// The proxy generator
         /// </summary>
-        public override ISolidProxyGenerator SolidProxyGenerator => (ISolidProxyGenerator)ServiceCollection.Single(o => o.ServiceType == typeof(ISolidProxyGenerator)).ImplementationInstance;
+        public override ISolidProxyGenerator SolidProxyGenerator
+        {
+            get
+            {
+                var generator = (ISolidProxyGenerator)ServiceCollection.SingleOrDefault(o => o.ServiceType == typeof(ISolidProxyGenerator))?.ImplementationInstance;
+                if (generator == null)
+                {
+                    throw new Exception($"No {typeof(ISolidProxyGenerator).Name} registered.");
+                }
+                return generator;
+            }
+        }
 
         /// <summary>
         ///  REturns the services
@@ -78,7 +91,7 @@ namespace SolidProxy.MicrosoftDI
         /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
-            DoIfMissing(adviceType, () => { ServiceCollection.AddSingleton(adviceType, adviceType); });
+            DoIfMissing(adviceType, () => { ServiceCollection.AddTransient(adviceType, adviceType); });
         }
         /// <summary>
         /// Configures the proxy
@@ -131,20 +144,33 @@ namespace SolidProxy.MicrosoftDI
                     throw new Exception("Cannot determine implementation type");
                 }
 
+                Func<IServiceProvider, ISolidProxied<TProxy>> proxiedFactory = (sp) => new SolidProxied<TProxy>(implementationFactory(sp));  
+
                 //
                 // add the configuration for the proxy and register 
                 // proxy and interface the same way as the removed service.
                 //
+                var proxyGenerator = SolidProxyGenerator;
+                var config = new SolidProxyConfig<TProxy>(implementationFactory);
+                ServiceCollection.AddSingleton(config.GetProxyConfiguration);
+
+                Func<IServiceProvider, TProxy> proxyFactory = (sp) =>
+                {
+                    return proxyGenerator.CreateSolidProxy(sp, config.GetProxyConfiguration(sp)).Proxy;
+                };
                 switch (service.Lifetime)
                 {
                     case ServiceLifetime.Scoped:
-                        ServiceCollection.AddScoped(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddScoped(proxyFactory);
+                        ServiceCollection.AddScoped(proxiedFactory);
                         break;
                     case ServiceLifetime.Transient:
-                        ServiceCollection.AddTransient(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddTransient(proxyFactory);
+                        ServiceCollection.AddTransient(proxiedFactory);
                         break;
                     case ServiceLifetime.Singleton:
-                        ServiceCollection.AddSingleton(CreateProxyFactory(implementationFactory));
+                        ServiceCollection.AddSingleton(proxyFactory);
+                        ServiceCollection.AddSingleton(proxiedFactory);
                         break;
                 }
             };
@@ -152,26 +178,29 @@ namespace SolidProxy.MicrosoftDI
             //
             // make sure that all the methods are configured
             //
-            interfaceConfig.Methods.ToList().ForEach(methodConfig =>
+            typeof(TProxy).GetMethods().ToList().ForEach(m =>
             {
-                var invocAdviceConfig = methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                invocAdviceConfig.Enabled = true;
+                var methodConfig = interfaceConfig.ConfigureMethod(m);
+                methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
                 methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
             });
-        }
-
-        private Func<IServiceProvider, TProxy> CreateProxyFactory<TProxy>(Func<IServiceProvider, TProxy> implementationFactory) where TProxy : class
-        {
-            var proxyGenerator = SolidProxyGenerator;
-            var config = new SolidProxyConfig<TProxy>(implementationFactory);
-            return (sp) => {
-                return proxyGenerator.CreateSolidProxy(sp, config.GetProxyConfiguration(sp)).Proxy;
-            };
         }
 
         private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
         {
             return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
+        }
+
+        /// <summary>
+        /// Constructs a service provider
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"root(di):{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            sp.AddSingleton<ISolidConfigurationBuilder>(this);
+            return sp;
         }
 
         /// <summary>
@@ -182,6 +211,7 @@ namespace SolidProxy.MicrosoftDI
         public override ISolidConfigurationBuilder SetGenerator<T>()
         {
             ISolidProxyGenerator generator = Activator.CreateInstance<T>();
+            ServiceCollection.Where(o => o.ServiceType == typeof(ISolidProxyGenerator)).ToList().ForEach(o => ServiceCollection.Remove(o));
             ServiceCollection.AddSingleton(generator);
             return this;
         }

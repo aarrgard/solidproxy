@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SolidProxy.Core.IoC;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -41,6 +43,17 @@ namespace SolidProxy.Core.Configuration.Builder
         ISolidConfigurationBuilder ISolidAssemblyConfigurationBuilder.ParentScope => (ISolidConfigurationBuilder) ParentScope;
 
         /// <summary>
+        /// Constructs a service provider for this assembly configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"{Assembly.GetName().Name}:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
+
+        /// <summary>
         /// Configures the specified interface
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -57,10 +70,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public ISolidInterfaceConfigurationBuilder ConfigureInterface(Type t)
         {
-            return (ISolidInterfaceConfigurationBuilder) GetType().GetMethods()
-                .Where(o => o.Name == nameof(ConfigureInterface))
-                .Where(o => o.IsGenericMethod)
-                .Single().MakeGenericMethod(new[] { t }).Invoke(this, null);
+            try
+            {
+                return (ISolidInterfaceConfigurationBuilder)GetType().GetMethods()
+                    .Where(o => o.Name == nameof(ConfigureInterface))
+                    .Where(o => o.IsGenericMethod)
+                    .Single().MakeGenericMethod(new[] { t }).Invoke(this, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                throw e.InnerException;
+            }
         }
 
         /// <summary>
@@ -69,7 +89,9 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
-            throw new NotImplementedException();
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders()
+                .Where(o => o.MethodInfo.DeclaringType.Assembly == Assembly)
+                .ToList();
         }
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
+using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
 {
@@ -44,6 +46,16 @@ namespace SolidProxy.Tests
         }
 
         [Test]
+        public void TestAddGeneratorTwice()
+        {
+            RunProviderTests(adapter =>
+            {
+                adapter.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                Assert.IsNotNull(adapter.GetSolidConfigurationBuilder().SolidProxyGenerator);
+            });
+        }
+
+        [Test]
         public void TestAddInterfaceInvocationStep()
         {
             RunProviderTests(adapter =>
@@ -76,6 +88,24 @@ namespace SolidProxy.Tests
         }
 
         [Test]
+        public void TestNoGeneratorRegistered()
+        {
+            RunProviderTests(adapter =>
+            {
+                try
+                {
+                    adapter.AddScoped<ITestInterface, TestImplementation1>();
+                    adapter.GetSolidConfigurationBuilder().AddAdvice(typeof(ProxyAdvice1<,,>));
+                    Assert.Fail();
+                }
+                catch (Exception e)
+                {
+                    Assert.AreEqual("No ISolidProxyGenerator registered.", e.Message);
+                }
+            }, false);
+        }
+
+        [Test]
         public void TestAddAdviceTwice()
         {
             RunProviderTests(adapter =>
@@ -88,12 +118,33 @@ namespace SolidProxy.Tests
                 adapter.GetSolidConfigurationBuilder()
                     .AddAdvice(typeof(ProxyAdvice2<,,>), mi => mi.MethodInfo.Name.EndsWith(nameof(ITestInterface.Int1)));
 
+                var cs = adapter.GetRequiredService<ISolidProxyConfigurationStore>();
+                Assert.AreEqual(1, cs.ProxyConfigurations.Count());
+                Assert.AreEqual(2, cs.ProxyConfigurations.SelectMany(o => o.InvocationConfigurations).Count());
+
                 var ti = adapter.GetRequiredService<ITestInterface>();
                 Assert.AreEqual(11, ti.Int1);
                 Assert.AreEqual(4, ti.Int2);
 
                 var impls = adapter.GetRequiredService<IEnumerable<ITestInterface>>().ToList();
                 Assert.AreEqual(2, impls.Count);
+
+                // check number of advices
+                impls.ForEach(o =>
+                {
+                    typeof(ITestInterface).GetMethods().ToList().ForEach(m =>
+                    {
+                        var advices = ((ISolidProxy)o).GetInvocationAdvices(m);
+                        if(m.Name.EndsWith(nameof(ITestInterface.Int1)))
+                        {
+                            Assert.AreEqual(3, advices.Count());
+                        }
+                        else
+                        {
+                            Assert.AreEqual(1, advices.Count());
+                        }
+                    });
+                });
             });
         }
     }

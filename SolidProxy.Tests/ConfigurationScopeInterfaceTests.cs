@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
@@ -30,7 +31,7 @@ namespace SolidProxy.Tests
             var config2 = services.GetSolidConfigurationBuilder().ConfigureAdvice<IConfig2>();
 
             // enabling on the parent scope should result in same value 
-            // on child scopes it not explicitly specified there
+            // on child scopes if not explicitly specified there
             config1.Enabled = true;
             Assert.IsTrue(config1.Enabled);
             Assert.IsTrue(config2.Enabled);

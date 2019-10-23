@@ -20,21 +20,30 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <returns></returns>
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
-            var conf = invocation.SolidProxyInvocationConfiguration;
-            var confScope = conf.GetValue<ISolidConfigurationScope>(nameof(ISolidConfigurationScope), true);
+            var methodInfo = invocation.SolidProxyInvocationConfiguration.MethodInfo;
+            var scope = typeof(TObject).FullName;
+            var methodName = methodInfo.Name;
+            if (methodInfo.DeclaringType == typeof(ISolidProxyInvocationAdviceConfig))
+            {
+                if (methodName == $"get_{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}")
+                {
+                    scope = typeof(ISolidProxyInvocationAdviceConfig).FullName;
+                }
+            }
+            var confScope = (ISolidConfigurationScope)invocation.ServiceProvider.GetService(typeof(ISolidConfigurationScope));
             if(confScope == null)
             {
                 throw new Exception("Cannot find configuration scope.");
             }
-            var methodName = conf.MethodInfo.Name;
-            if(methodName.StartsWith("get_"))
+            if (methodName.StartsWith("get_"))
             {
-                var key = $"{typeof(TObject).FullName}.{methodName.Substring(4)}";
-                return Task.FromResult(confScope.GetValue<TAdvice>(key, true));
+                var key = $"{scope}.{methodName.Substring(4)}";
+                var value = confScope.GetValue<TAdvice>(key, true);
+                return Task.FromResult(value);
             } 
             else if (methodName.StartsWith("set_"))
             {
-                var key = $"{typeof(TObject).FullName}.{methodName.Substring(4)}";
+                var key = $"{scope}.{methodName.Substring(4)}";
                 confScope.SetValue(key, invocation.Arguments[0]);
                 return Task.FromResult(default(TAdvice));
             }

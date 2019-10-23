@@ -1,7 +1,10 @@
-﻿using SolidProxy.Core.Proxy;
+﻿using SolidProxy.Core.IoC;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -22,7 +25,17 @@ namespace SolidProxy.Core.Configuration.Builder
             ProxyConfiguration = parentScope;
             MethodInfo = methodInfo;
         }
-
+        
+        /// <summary>
+        /// Constructs a service provider for this method configuration
+        /// </summary>
+        /// <returns></returns>
+        protected override SolidProxyServiceProvider CreateServiceProvider()
+        {
+            var sp = base.CreateServiceProvider();
+            sp.ContainerId = $"{MethodInfo.Name}:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            return sp;
+        }
         /// <summary>
         /// The proxy configuration
         /// </summary>
@@ -81,7 +94,40 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public IEnumerable<Type> GetSolidInvocationAdviceTypes()
         {
-            return GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes;
+            var advices = new List<Type>();
+            (GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes).ToList().ForEach(advice =>
+            {
+                AddAdvice(advices, advice, new HashSet<Type>());
+            });
+            return advices;
+        }
+
+        private void AddAdvice(List<Type> advices, Type advice, HashSet<Type> cyclicProtection)
+        {
+            if(cyclicProtection.Contains(advice))
+            {
+                throw new Exception("Found advice dependency cycle");
+            }
+            cyclicProtection.Add(advice);
+            if (advices.Contains(advice))
+            {
+                return;
+            }
+            foreach(var beforeAdvice in GetAdviceDependencies(advice))
+            {
+                AddAdvice(advices, beforeAdvice, cyclicProtection);
+            }
+            advices.Add(advice);
+        }
+
+        /// <summary>
+        /// Invoked when an advice has been configured
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        protected override void AdviceConfigured<TConfig>()
+        {
+            ConfigureProxy(ProxyConfiguration);
+            base.AdviceConfigured<TConfig>();
         }
     }
 }

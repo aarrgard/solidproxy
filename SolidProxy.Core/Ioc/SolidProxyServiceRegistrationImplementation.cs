@@ -1,13 +1,17 @@
 ﻿using System;
-using System.Linq;
 
 namespace SolidProxy.Core.IoC
 {
     /// <summary>
     /// Represents an implementation for a service.
     /// </summary>
-    public class SolidProxyServiceRegistrationImplementation
+    public abstract class SolidProxyServiceRegistrationImplementation
     {
+        /// <summary>
+        /// The resolver
+        /// </summary>
+        private Delegate _resolver;
+
         /// <summary>
         /// Constructs a new instance
         /// </summary>
@@ -16,7 +20,13 @@ namespace SolidProxy.Core.IoC
         /// <param name="registrationScope"></param>
         /// <param name="implementationType"></param>
         /// <param name="resolver"></param>
-        public SolidProxyServiceRegistrationImplementation(SolidProxyServiceRegistration serviceRegistration, int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, Func<SolidProxyServiceProvider, object> resolver)
+        protected SolidProxyServiceRegistrationImplementation(
+            SolidProxyServiceRegistration serviceRegistration, 
+            int registrationIdx, 
+            SolidProxyServiceRegistrationScope 
+            registrationScope, 
+            Type implementationType, 
+            Delegate resolver)
         {
             ServiceRegistration = serviceRegistration;
             RegistrationIdx = registrationIdx;
@@ -26,21 +36,22 @@ namespace SolidProxy.Core.IoC
         }
 
         /// <summary>
-        /// Constructs a new instance
+        /// Constructs a new instance.
         /// </summary>
         /// <param name="serviceRegistration"></param>
         /// <param name="registrationIdx"></param>
         /// <param name="registrationScope"></param>
         /// <param name="implementationType"></param>
-        /// <param name="resolved"></param>
-        public SolidProxyServiceRegistrationImplementation(SolidProxyServiceRegistration serviceRegistration, int registrationIdx, SolidProxyServiceRegistrationScope registrationScope, Type implementationType, object resolved)
+        protected SolidProxyServiceRegistrationImplementation(
+            SolidProxyServiceRegistration serviceRegistration, 
+            int registrationIdx, 
+            SolidProxyServiceRegistrationScope registrationScope, 
+            Type implementationType)
         {
-            RegistrationIdx = registrationIdx;
             ServiceRegistration = serviceRegistration;
+            RegistrationIdx = registrationIdx;
             RegistrationScope = registrationScope;
             ImplementationType = implementationType;
-            Resolved = resolved;
-            IsResolved = true;
         }
 
         /// <summary>
@@ -63,20 +74,28 @@ namespace SolidProxy.Core.IoC
         /// </summary>
         public Type ImplementationType { get; }
 
-        private Func<SolidProxyServiceProvider, object> _resolver;
-
         /// <summary>
-        /// The resolver.
+        /// The resolver
         /// </summary>
-        public Func<SolidProxyServiceProvider, object> Resolver {
-            get {
-                if(_resolver == null)
+        public Delegate Resolver
+        {
+            get
+            {
+                if (_resolver == null)
                 {
-                    _resolver = CreateResolver(ServiceRegistration.ServiceProvider, ImplementationType);
+                    _resolver = CreateResolver(ServiceRegistration.ServiceProvider);
                 }
                 return _resolver;
             }
         }
+
+        /// <summary>
+        /// Constructs the resolver
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <returns></returns>
+        protected abstract Delegate CreateResolver(SolidProxyServiceProvider serviceProvider);
+
 
         /// <summary>
         /// Set to true if resolved. Transient services are never resolved.
@@ -84,74 +103,20 @@ namespace SolidProxy.Core.IoC
         public bool IsResolved { get; set; }
 
         /// <summary>
-        /// The resolved objects. Always null for transient services.
-        /// </summary>
-        public Object Resolved { get; set; }
-
-        /// <summary>
         /// Resolves the object
         /// </summary>
-        /// <param name="topServiceProvider"></param>
+        /// <param name="solidProxyServiceProvider"></param>
         /// <returns></returns>
-        public object Resolve(SolidProxyServiceProvider topServiceProvider)
+        public object Resolve(SolidProxyServiceProvider solidProxyServiceProvider)
         {
-            if (!IsResolved)
-            {
-                lock (this)
-                {
-                    if (!IsResolved)
-                    {
-                        if (RegistrationScope == SolidProxyServiceRegistrationScope.Singleton)
-                        {
-                            topServiceProvider = ServiceRegistration.ServiceProvider;
-                        }
-                        //Console.WriteLine($"Registration for {registration.ServiceType.FullName} not resolved. Resolving {registration.RegistrationScope}@{registration.ServiceProvider.ContainerId} from {topServiceProvider.ContainerId}");
-                        Resolved = Resolver(topServiceProvider);
-                        IsResolved = RegistrationScope != SolidProxyServiceRegistrationScope.Transient;
-                        if (Resolved is IDisposable disposable)
-                        {
-                            topServiceProvider._disposeChain.Add(disposable);
-                        }
-                    }
-                }
-            }
-            return Resolved;
+            return ResolveTyped(solidProxyServiceProvider);
         }
 
         /// <summary>
-        /// Creates a resolver based on the implementation type.
+        /// Resolves the typed object
         /// </summary>
-        /// <param name="serviceProvider"></param>
-        /// <param name="implType"></param>
+        /// <param name="solidProxyServiceProvider"></param>
         /// <returns></returns>
-        private Func<SolidProxyServiceProvider, object> CreateResolver(SolidProxyServiceProvider serviceProvider, Type implType)
-        {
-            if (implType.IsGenericTypeDefinition)
-            {
-                return (sp) => throw new Exception("Cannot create instances of generic type definitions.");
-            }
-            var ctr = implType.GetConstructors()
-                .OrderByDescending(o => o.GetParameters().Length)
-                .Where(o => o.GetParameters().All(p => serviceProvider.CanResolve(p.ParameterType)))
-                .FirstOrDefault();
-            if (ctr == null)
-            {
-                var paramTypes = implType.GetConstructors().SelectMany(o => o.GetParameters()).Select(o => o.ParameterType).Distinct()
-                    .Select(o => $"{o.FullName}:{serviceProvider.CanResolve(o)}").ToList();
-                throw new Exception($"Cannot instantiate {implType.FullName}:{string.Join(",", paramTypes)}");
-            }
-            var argTypes = ctr.GetParameters().Select(o => o.ParameterType).ToArray();
-            return (sp) =>
-            {
-                var args = argTypes.Select(o => serviceProvider.GetService(o)).ToArray();
-                if (args.Any(o => o == null))
-                {
-                    throw new Exception($"Cannot instantiate {implType.FullName}");
-                }
-                var impl = Activator.CreateInstance(implType, args);
-
-                return impl;
-            };
-        }
+        protected abstract object ResolveTyped(SolidProxyServiceProvider solidProxyServiceProvider);
     }
 }

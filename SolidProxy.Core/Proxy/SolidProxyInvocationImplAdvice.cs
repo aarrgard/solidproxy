@@ -1,7 +1,9 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
@@ -23,19 +25,33 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public bool Configure(ISolidProxyInvocationImplAdviceConfig config)
         {
-            MethodInfo = config.InvocationConfiguration.MethodInfo ?? throw new Exception("MethodInfo cannot be null");
-            ImplementationFactory = config.ImplementationFactory;
-            if(ImplementationFactory == null)
+            try
             {
-                ImplementationFactory = config.InvocationConfiguration.ProxyConfiguration.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>().ImplementationFactory;
+                if (Delegate != null)
+                {
+                    throw new Exception($"Something is wrong with the setup. The {typeof(SolidProxyInvocationImplAdvice<,,>).Name} must be transient.");
+                }
+                MethodInfo = config.InvocationConfiguration.MethodInfo;
+                ImplementationFactory = config.ImplementationFactory;
+                if (ImplementationFactory == null && MethodInfo.DeclaringType != typeof(ISolidProxyInvocationImplAdviceConfig))
+                {
+                    var proxyConfig = config.InvocationConfiguration.ProxyConfiguration;
+                    var proxyInvocConfig = proxyConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                    ImplementationFactory = proxyInvocConfig.ImplementationFactory;
+                }
+                if(ImplementationFactory == null)
+                {
+                    return false;
+                }
+                Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
+                GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
+                return true;
             }
-            if(ImplementationFactory == null)
+            catch (Exception e)
             {
-                return false;
+                var x = config.InvocationConfiguration;
+                throw e;
             }
-            Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
-            GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
-            return true;
         }
 
         /// <summary>
@@ -66,7 +82,14 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
-            var res = Delegate(GetTarget(invocation), invocation.Arguments);
+            var m1 = invocation.SolidProxyInvocationConfiguration.MethodInfo;
+            var m2 = MethodInfo;
+            if (m1 != m2)
+            {
+                throw new Exception($"Invocation method not same as configured method! {m1.Name} {m2.Name}");
+            }
+            var target = GetTarget(invocation);
+            var res = Delegate(target, invocation.Arguments);
             return s_converter.Invoke(res);
         }
     }

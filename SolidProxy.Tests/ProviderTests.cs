@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.GeneratorCastle;
@@ -129,12 +130,27 @@ namespace SolidProxy.Tests
             }
         }
 
-        protected void RunProviderTests(Action<IProviderAdapter> testRun)
+        protected void RunProviderTests(Action<IProviderAdapter> testRun, bool addGenerator = true)
         {
-            foreach(var provider in Providers)
+            foreach (var provider in Providers)
             {
-                provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                if (addGenerator)
+                {
+                    provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                }
                 testRun(provider);
+            }
+        }
+
+        protected async Task RunProviderTestsAsync(Func<IProviderAdapter, Task> testRun, bool addGenerator = true)
+        {
+            foreach (var provider in Providers)
+            {
+                if (addGenerator)
+                {
+                    provider.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+                }
+                await testRun(provider);
             }
         }
     }
