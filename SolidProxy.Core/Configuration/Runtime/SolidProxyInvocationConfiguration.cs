@@ -70,6 +70,10 @@ namespace SolidProxy.Core.Configuration.Runtime
             base.SetAdviceConfigValues<TConfig>(scope);
             SetValue($"{typeof(TConfig).FullName}.{nameof(ISolidProxyInvocationAdviceConfig.InvocationConfiguration)}", this, false);
         }
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            yield return MethodConfiguration;
+        }
 
         /// <summary>
         /// Returns the advices for this invocation
@@ -106,7 +110,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                     {
                         throw new Exception($"No step configured for type: {t.FullName}");
                     }
-                    if (SolidConfigurationHelper.ConfigureStep(step, this))
+                    if (SolidConfigurationHelper.ConfigureAdvice(step, this))
                     {
                         return step;
                     }

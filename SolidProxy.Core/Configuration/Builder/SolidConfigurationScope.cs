@@ -67,14 +67,14 @@ namespace SolidProxy.Core.Configuration.Builder
                     {
                         if(_internalServiceProvider == null)
                         {
-                            var proxyGeneratorType = GetScope<SolidConfigurationBuilder>()?.SolidProxyGenerator?.GetType();
-                            if(proxyGeneratorType == null)
+                            var proxyGenerator = GetScope<SolidConfigurationBuilder>()?.SolidProxyGenerator;
+                            if(proxyGenerator == null)
                             {
                                 throw new Exception("No proxy generator type set.");
                             }
                             var sp = new SolidProxyServiceProvider();
                             sp.AddSingleton<ISolidConfigurationBuilder, SolidConfigurationBuilderServiceProvider>();
-                            sp.AddSingleton(typeof(ISolidProxyGenerator), proxyGeneratorType);
+                            sp.AddSingleton(proxyGenerator);
                             _internalServiceProvider = sp;
                         }
                     }
@@ -144,6 +144,15 @@ namespace SolidProxy.Core.Configuration.Builder
                 {
                     i.Enabled = enable;
                 }
+
+                //
+                // Add the advice for the configuration
+                //
+                var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
+                if(adviceType != null)
+                {
+                    AddAdvice(adviceType);
+                }
             }
             return i;
         }
@@ -196,6 +205,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="pointcut"></param>
         public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
+            if (adviceType == null) throw new ArgumentNullException(nameof(adviceType));
             ConfigureAdvice(adviceType);
             if (pointcut == null)
             {
@@ -223,7 +233,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public virtual IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(GetType().FullName);
         }
 
         /// <summary>

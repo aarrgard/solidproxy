@@ -19,12 +19,18 @@ namespace SolidProxy.Core.Configuration.Builder
         public SolidConfigurationBuilder() : base(SolidScopeType.Global, null)
         {
             AssemblyBuilders = new ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder>();
+            AdviceConfigurations = new ConcurrentDictionary<Type, Type>();
         }
 
         /// <summary>
         /// The assembly builders
         /// </summary>
         protected ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder> AssemblyBuilders { get; }
+
+        /// <summary>
+        /// The advice configurations
+        /// </summary>
+        public ConcurrentDictionary<Type, Type> AdviceConfigurations { get; }
 
         IEnumerable<ISolidAssemblyConfigurationBuilder> ISolidConfigurationBuilder.AssemblyBuilders => AssemblyBuilders.Values;
 
@@ -120,5 +126,29 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public abstract ISolidConfigurationBuilder SetGenerator<T>() where T : class, ISolidProxyGenerator;
+
+        /// <summary>
+        /// Registers supplied advice configuration
+        /// </summary>
+        /// <param name="adviceType"></param>
+        public void RegisterConfigurationAdvice(Type adviceType)
+        {
+            var configType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+            AdviceConfigurations[configType] = adviceType;
+        }
+
+        /// <summary>
+        /// Returns the advice for supplied configuration.
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        /// <returns></returns>
+        public Type GetAdviceForConfiguration<TConfig>()
+        {
+            if(AdviceConfigurations.TryGetValue(typeof(TConfig), out Type adviceType))
+            {
+                return adviceType;
+            }
+            return null;
+        }
     }
 }
