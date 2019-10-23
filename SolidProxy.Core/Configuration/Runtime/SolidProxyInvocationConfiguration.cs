@@ -82,6 +82,15 @@ namespace SolidProxy.Core.Configuration.Runtime
         }
 
         /// <summary>
+        /// Returns the configurations from the parent scope
+        /// </summary>
+        /// <returns></returns>
+        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
+        {
+            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders();
+        }
+
+        /// <summary>
         /// Returns the advices for this invocation
         /// </summary>
         /// <returns></returns>
@@ -128,7 +137,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                 //
                 _advices = _advices.Select(step =>
                 {
-                    if (SolidConfigurationHelper.ConfigureStep(step, this))
+                    if (SolidConfigurationHelper.ConfigureAdvice(step, this))
                     {
                         return step;
                     }
@@ -144,15 +153,6 @@ namespace SolidProxy.Core.Configuration.Runtime
             }
 
             return _advices;
-        }
-
-        /// <summary>
-        /// Returns the configurations from the parent scope
-        /// </summary>
-        /// <returns></returns>
-        public override IEnumerable<ISolidMethodConfigurationBuilder> GetMethodConfigurationBuilders()
-        {
-            return ((SolidConfigurationScope)ParentScope).GetMethodConfigurationBuilders();
         }
     }
 }

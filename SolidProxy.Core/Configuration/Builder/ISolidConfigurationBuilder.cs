@@ -15,6 +15,22 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="TGen"></typeparam>
         ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
+        
+        /// <summary>
+        /// This method registers the supplied advice type so that 
+        /// when the configuration for the advice is done the advice 
+        /// is also added.
+        /// </summary>
+        /// <param name="adviceType"></param>
+        void RegisterConfigurationAdvice(Type adviceType);
+
+        /// <summary>
+        /// Tries to map specified configuration to an advice. If no 
+        /// such registration exists null is returned.
+        /// </summary>
+        /// <typeparam name="TConfig"></typeparam>
+        /// <returns></returns>
+        Type GetAdviceForConfiguration<TConfig>();
 
         /// <summary>
         /// Returns the generator for solid proxies

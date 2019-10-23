@@ -155,7 +155,17 @@ namespace SolidProxy.Core.Configuration.Builder
                 {
                     i.Enabled = enable;
                 }
+
                 AdviceConfigured<TConfig>();
+
+                //
+                // Add the advice for the configuration
+                //
+                var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
+                if(adviceType != null)
+                {
+                    AddAdvice(adviceType);
+                }
             }
             return i;
         }
@@ -211,6 +221,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="pointcut"></param>
         public virtual void AddAdvice(Type adviceType, Func<ISolidMethodConfigurationBuilder, bool> pointcut = null)
         {
+            if (adviceType == null) throw new ArgumentNullException(nameof(adviceType));
             ConfigureAdvice(adviceType);
             if (pointcut == null)
             {

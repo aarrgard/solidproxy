@@ -46,11 +46,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <summary>
         /// Retunrs the step config type.
         /// </summary>
-        /// <param name="stepType"></param>
+        /// <param name="adviceType"></param>
         /// <returns></returns>
-        public static Type GetAdviceConfigType(Type stepType)
+        public static Type GetAdviceConfigType(Type adviceType)
         {
-            var configMethod = GetConfigMethod(stepType);
+            var configMethod = GetConfigMethod(adviceType);
             if(configMethod == null)
             {
                 return null;
@@ -61,14 +61,14 @@ namespace SolidProxy.Core.Configuration.Runtime
 
             if (types.Count != 1)
             {
-                throw new Exception($"The type {stepType.FullName} does not contain a constructor with _one_ settings param.");
+                throw new Exception($"The type {adviceType.FullName} does not contain a constructor with _one_ settings param.");
             }
 
             var type = types.First();
 
             if(!typeof(ISolidProxyInvocationAdviceConfig).IsAssignableFrom(type))
             {
-                throw new Exception($"The configuration for {stepType.FullName} does not implement {nameof(ISolidProxyInvocationAdviceConfig)}.");
+                throw new Exception($"The configuration for {adviceType.FullName} does not implement {nameof(ISolidProxyInvocationAdviceConfig)}.");
             }
 
             return type;
@@ -77,13 +77,13 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <summary>
         /// Configures the supplied step. Returns true if the step is enabled. false otherwise.
         /// </summary>
-        /// <param name="step"></param>
+        /// <param name="advice"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static bool ConfigureStep(ISolidProxyInvocationAdvice step, ISolidConfigurationScope config)
+        public static bool ConfigureAdvice(ISolidProxyInvocationAdvice advice, ISolidConfigurationScope config)
         {
-            var configAction = ConfigFunctions.GetOrAdd(step.GetType(), GetConfigFunction);
-            return configAction.Invoke(step, config);
+            var configAction = ConfigFunctions.GetOrAdd(advice.GetType(), GetConfigFunction);
+            return configAction.Invoke(advice, config);
         }
 
         private static Func<ISolidProxyInvocationAdvice, ISolidConfigurationScope, bool> GetConfigFunction(Type type)
