@@ -159,6 +159,21 @@ namespace SolidProxy.Core.IoC
         /// Adds a singleton implementation. 
         /// </summary>
         /// <param name="serviceType"></param>
+        /// <param name="factory"></param>
+        public void AddSingleton(Type serviceType, Func<IServiceProvider, object> factory)
+        {
+            AddRegistration(
+                NewRegistrationIdx(),
+                SolidProxyServiceRegistrationScope.Singleton,
+                serviceType,
+                serviceType,
+                (sp) => factory(sp));
+        }
+
+        /// <summary>
+        /// Adds a singleton implementation. 
+        /// </summary>
+        /// <param name="serviceType"></param>
         /// <param name="implementation"></param>
         public void AddSingleton(Type serviceType, object implementation)
         {

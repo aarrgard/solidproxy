@@ -186,11 +186,6 @@ namespace SolidProxy.MicrosoftDI
             });
         }
 
-        private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
-        {
-            return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
-        }
-
         /// <summary>
         /// Constructs a service provider
         /// </summary>
