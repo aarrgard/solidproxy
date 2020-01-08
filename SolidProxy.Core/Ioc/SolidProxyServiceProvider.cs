@@ -12,12 +12,12 @@ namespace SolidProxy.Core.IoC
     /// </summary>
     public class SolidProxyServiceProvider : IServiceProvider, IDisposable
     {
-        private static MethodInfo s_AddRegistrationMethod = typeof(SolidProxyServiceProvider)
+        private static readonly MethodInfo s_AddRegistrationMethod = typeof(SolidProxyServiceProvider)
             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
             .Where(o => o.Name == nameof(AddRegistration))
             .Where(o => o.IsGenericMethod)
             .First();
-        private static MethodInfo s_ResolveRegistrationMethod = typeof(SolidProxyServiceProvider)
+        private static readonly MethodInfo s_ResolveRegistrationMethod = typeof(SolidProxyServiceProvider)
             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
             .Where(o => o.Name == nameof(ResolveRegistration))
             .Where(o => o.IsGenericMethod)
@@ -56,8 +56,8 @@ namespace SolidProxy.Core.IoC
             });
         }
 
-        private ConcurrentDictionary<Type, SolidProxyServiceRegistration> _registrations;
-        private SolidProxyServiceProvider _parentServiceProvider;
+        private readonly ConcurrentDictionary<Type, SolidProxyServiceRegistration> _registrations;
+        private readonly SolidProxyServiceProvider _parentServiceProvider;
         internal IList<IDisposable> _disposeChain;
         private string _containerId;
 
