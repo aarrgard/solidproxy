@@ -149,7 +149,15 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="adviceType"></param>
         public void RegisterConfigurationAdvice(Type adviceType)
         {
+            if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
+            {
+                throw new ArgumentException("Supplied type is not an advice.");
+            }
             var configType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+            if(configType == null)
+            {
+                throw new ArgumentException("Supplied advice does not have a valid Configuration method.");
+            }
             AdviceConfigurations[configType] = adviceType;
         }
 
@@ -160,11 +168,25 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public Type GetAdviceForConfiguration<TConfig>()
         {
-            if(AdviceConfigurations.TryGetValue(typeof(TConfig), out Type adviceType))
+            return AdviceConfigurations.GetOrAdd(typeof(TConfig), _ => GetAdviceForConfiguration(_));
+        }
+
+        private Type GetAdviceForConfiguration(Type configType)
+        {
+            // find the advices in the configuration assembly
+            foreach (var adviceType in configType.Assembly.GetTypes())
             {
-                return adviceType;
+                if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
+                {
+                    continue;
+                }
+                var adviceConfigType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+                if (adviceConfigType == configType)
+                {
+                    return adviceType;
+                }
             }
-            return null;
+            throw new Exception($"Could not find advice for configuration {configType.FullName}");
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
@@ -33,6 +34,7 @@ namespace SolidProxy.Core.Proxy
         {
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
+            InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
             _invocationValues = invocationValues;
         }
@@ -61,7 +63,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The advices
         /// </summary>
-        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices => SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
         /// <summary>
         /// The current advice index
         /// </summary>
@@ -103,7 +105,8 @@ namespace SolidProxy.Core.Proxy
                 if (stepIdx >= InvocationAdvices.Count)
                 {
                     var mi = SolidProxyInvocationConfiguration.MethodInfo;
-                    throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}");
+                    var strAdviceChain = $"{InvocationAdvices.Count}:{string.Join("->", InvocationAdvices.Select(o => o.GetType().Name))}";
+                    throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}, {strAdviceChain}");
                 }
                 InvocationAdviceIdx = stepIdx;
                 return InvocationAdvices[stepIdx].Handle(CreateStepIterator(stepIdx+1), this);

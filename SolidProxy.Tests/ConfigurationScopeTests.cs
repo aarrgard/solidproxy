@@ -35,6 +35,7 @@ namespace SolidProxy.Tests
 
         public class AdviceWithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
+            public void Configure(IAdviceConfig adviceConfig) { }
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 throw new NotImplementedException();

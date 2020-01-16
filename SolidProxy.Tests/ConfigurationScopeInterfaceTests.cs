@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
+using SolidProxy.Core.Proxy;
 using SolidProxy.GeneratorCastle;
 
 namespace SolidProxy.Tests
@@ -20,6 +22,40 @@ namespace SolidProxy.Tests
         }
         public interface IConfig4 : ISolidProxyInvocationAdviceConfig
         {
+        }
+        public class Advice1<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public void Configure(IConfig1 config1) { }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class Advice2<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public void Configure(IConfig2 config1) { }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class Advice3<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public void Configure(IConfig3 config1) { }
+
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class Advice4<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public void Configure(IConfig4 config1) { }
+
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [Test]
