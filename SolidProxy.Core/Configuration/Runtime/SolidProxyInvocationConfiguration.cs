@@ -127,7 +127,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                     var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
                     if (step == null)
                     {
-                        throw new Exception($"No step configured for type: {t.FullName}");
+                        throw new Exception($"Advice not registered in service provider:{t.FullName}");
                     }
                     return step;
                 }).ToList();

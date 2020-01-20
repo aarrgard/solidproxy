@@ -159,6 +159,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 throw new ArgumentException("Supplied advice does not have a valid Configuration method.");
             }
             AdviceConfigurations[configType] = adviceType;
+            ConfigureAdvice(adviceType);
         }
 
         /// <summary>
