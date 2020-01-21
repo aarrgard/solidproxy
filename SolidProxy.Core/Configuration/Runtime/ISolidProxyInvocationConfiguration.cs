@@ -35,7 +35,14 @@ namespace SolidProxy.Core.Configuration.Runtime
         ISolidProxyInvocation CreateProxyInvocation(ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues);
 
         /// <summary>
-        /// Resturs all the invocation advices
+        /// Returns all the invocation advice types.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<Type> GetSolidInvocationAdviceTypes();
+
+        /// <summary>
+        /// Returns all the invocation advices. ie all the types resolved in the
+        /// IoC container for the proxy.
         /// </summary>
         /// <returns></returns>
         IEnumerable<ISolidProxyInvocationAdvice> GetSolidInvocationAdvices();

@@ -98,7 +98,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         {
             if(_advices == null)
             {
-                var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
+                var stepTypes = GetSolidInvocationAdviceTypes();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
 
                 //
@@ -133,7 +133,8 @@ namespace SolidProxy.Core.Configuration.Runtime
                 }).ToList();
 
                 //
-                // configure the advices
+                // configure the advices - remove the ones that return false
+                // in config method.
                 //
                 _advices = _advices.Select(step =>
                 {
@@ -149,10 +150,22 @@ namespace SolidProxy.Core.Configuration.Runtime
 
                 }).Where(o => o != null).ToList();
 
+                //
+                // make collection readonly
+                //
                 _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
             }
 
             return _advices;
+        }
+
+        /// <summary>
+        /// Returns the invocation advice types
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Type> GetSolidInvocationAdviceTypes()
+        {
+            return MethodConfiguration.GetSolidInvocationAdviceTypes();
         }
     }
 }
