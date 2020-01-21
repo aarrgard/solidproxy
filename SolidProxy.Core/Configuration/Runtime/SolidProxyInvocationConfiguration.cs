@@ -153,7 +153,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                         return null;
                     }
 
-                }).Where(o => o != null).ToList();
+                }).Where(o => o != null).Reverse().ToList();
 
                 _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
             }
