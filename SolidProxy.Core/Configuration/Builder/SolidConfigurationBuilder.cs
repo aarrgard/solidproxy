@@ -193,19 +193,26 @@ namespace SolidProxy.Core.Configuration.Builder
 
         private Type GetAdviceType(Assembly assembly, Type configType)
         {
-            foreach (var adviceType in assembly.GetTypes())
+            try
             {
-                if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
+                foreach (var adviceType in assembly.GetTypes())
                 {
-                    continue;
+                    if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
+                    {
+                        continue;
+                    }
+                    var adviceConfigType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+                    if (adviceConfigType == configType)
+                    {
+                        return adviceType;
+                    }
                 }
-                var adviceConfigType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
-                if (adviceConfigType == configType)
-                {
-                    return adviceType;
-                }
+                return null;
+            } 
+            catch
+            {
+                return null;
             }
-            return null;
         }
     }
 }
