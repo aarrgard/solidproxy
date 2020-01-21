@@ -141,21 +141,13 @@ namespace SolidProxy.Core.Configuration.Runtime
                 // This lets the other advices determine if an implementation exists
                 // based on if the implementation advice exists.
                 //
-                _advices = _advices.Reverse().Select(step =>
+                foreach(var advice in _advices.Reverse())
                 {
-                    if (SolidConfigurationHelper.ConfigureAdvice(step, this))
+                    if (!SolidConfigurationHelper.ConfigureAdvice(advice, this))
                     {
-                        return step;
+                        _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices.Where(o => o != advice).ToList());
                     }
-                    else
-                    {
-                        // step is not enabled.
-                        return null;
-                    }
-
-                }).Where(o => o != null).Reverse().ToList();
-
-                _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
+                }
             }
 
             return _advices;
