@@ -175,7 +175,25 @@ namespace SolidProxy.Core.Configuration.Builder
         private Type GetAdviceForConfiguration(Type configType)
         {
             // find the advices in the configuration assembly
-            foreach (var adviceType in configType.Assembly.GetTypes())
+            var adviceType = GetAdviceType(configType.Assembly, configType);
+            if (adviceType != null)
+            {
+                return adviceType;
+            }
+            foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                adviceType = GetAdviceType(assembly, configType);
+                if (adviceType != null)
+                {
+                    return adviceType;
+                }
+            }
+            throw new Exception($"Could not find advice for configuration {configType.FullName}");
+        }
+
+        private Type GetAdviceType(Assembly assembly, Type configType)
+        {
+            foreach (var adviceType in assembly.GetTypes())
             {
                 if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
                 {
@@ -187,7 +205,7 @@ namespace SolidProxy.Core.Configuration.Builder
                     return adviceType;
                 }
             }
-            throw new Exception($"Could not find advice for configuration {configType.FullName}");
+            return null;
         }
     }
 }
