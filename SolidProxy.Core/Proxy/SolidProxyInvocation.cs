@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,8 +15,9 @@ namespace SolidProxy.Core.Proxy
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation<TObject, TMethod, TAdvice> where TObject : class
     {
-        private static Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
-        private static Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
+        private static readonly string[] EmptyStringList = new string[0];
+        private static readonly Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
+        private static readonly Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
         private IDictionary<string, object> _invocationValues;
 
@@ -80,7 +82,7 @@ namespace SolidProxy.Core.Proxy
                     {
                         if (_invocationValues == null)
                         {
-                            _invocationValues = new Dictionary<string, object>();
+                            _invocationValues = new ConcurrentDictionary<string, object>();
                         }
                     }
                 }
@@ -92,6 +94,11 @@ namespace SolidProxy.Core.Proxy
         /// Returns true if this is the last step.
         /// </summary>
         public bool IsLastStep =>InvocationAdviceIdx == InvocationAdvices.Count-1;
+
+        /// <summary>
+        /// Returns the keys associated with this invocation.
+        /// </summary>
+        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Keys;
 
         private async Task<TAdvice> InvokeProxyPipeline()
         {

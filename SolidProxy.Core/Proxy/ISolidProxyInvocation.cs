@@ -11,6 +11,11 @@ namespace SolidProxy.Core.Proxy
     public interface ISolidProxyInvocation
     {
         /// <summary>
+        /// Returns the keys associated with this invocation.
+        /// </summary>
+        IEnumerable<string> Keys { get; }
+
+        /// <summary>
         /// Returns the scoped value associated with this invocation
         /// </summary>
         /// <typeparam name="T">The type of value</typeparam>

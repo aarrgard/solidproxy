@@ -1,20 +1,39 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
 {
+    /// <summary>
+    /// Base class for the invocations
+    /// </summary>
+    public abstract class SolidProxyInvocationImplAdvice
+    {
+        /// <summary>
+        /// The current invocation
+        /// </summary>
+        protected static AsyncLocal<ISolidProxyInvocation> s_currentInvocation = new AsyncLocal<ISolidProxyInvocation>();
+
+        /// <summary>
+        /// Returns the currently running invocation.
+        /// </summary>
+        public static ISolidProxyInvocation CurrentInvocation
+        {
+            get
+            {
+                return s_currentInvocation.Value;
+            }
+        }
+    }
     /// <summary>
     /// The advice that performs the actual invocation on the underlying implementation
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
     /// <typeparam name="TAdvice"></typeparam>
-    public class SolidProxyInvocationImplAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+    public class SolidProxyInvocationImplAdvice<TObject, TMethod, TAdvice> : SolidProxyInvocationImplAdvice, ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
         private static Func<TMethod, Task<TAdvice>> s_converter = TypeConverter.CreateConverter<TMethod, Task<TAdvice>>();
 
@@ -88,8 +107,17 @@ namespace SolidProxy.Core.Proxy
             {
                 throw new Exception($"Invocation method not same as configured method! {m1.Name} {m2.Name}");
             }
-            var target = GetTarget(invocation);
-            var res = Delegate(target, invocation.Arguments);
+            TMethod res;
+            try
+            {
+                s_currentInvocation.Value = invocation;
+                var target = GetTarget(invocation);
+                res = Delegate(target, invocation.Arguments);
+            } 
+            finally
+            {
+                s_currentInvocation.Value = null;
+            }
             return s_converter.Invoke(res);
         }
     }
