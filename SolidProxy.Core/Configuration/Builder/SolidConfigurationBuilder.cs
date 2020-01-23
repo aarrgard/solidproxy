@@ -144,25 +144,6 @@ namespace SolidProxy.Core.Configuration.Builder
         public abstract ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
 
         /// <summary>
-        /// Registers supplied advice configuration
-        /// </summary>
-        /// <param name="adviceType"></param>
-        public void RegisterConfigurationAdvice(Type adviceType)
-        {
-            if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
-            {
-                throw new ArgumentException("Supplied type is not an advice.");
-            }
-            var configType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
-            if(configType == null)
-            {
-                throw new ArgumentException("Supplied advice does not have a valid Configuration method.");
-            }
-            AdviceConfigurations[configType] = adviceType;
-            ConfigureAdvice(adviceType);
-        }
-
-        /// <summary>
         /// Returns the advice for supplied configuration.
         /// </summary>
         /// <typeparam name="TConfig"></typeparam>
@@ -204,6 +185,7 @@ namespace SolidProxy.Core.Configuration.Builder
                     var adviceConfigType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
                     if (adviceConfigType == configType)
                     {
+                        ConfigureAdvice(adviceType);
                         return adviceType;
                     }
                 }
