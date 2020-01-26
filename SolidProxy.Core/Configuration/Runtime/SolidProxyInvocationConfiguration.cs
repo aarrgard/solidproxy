@@ -82,6 +82,19 @@ namespace SolidProxy.Core.Configuration.Runtime
         }
 
         /// <summary>
+        /// Returns true if this invocation has an implementation.
+        /// </summary>
+        public bool HasImplementation
+        {
+            get
+            {
+                var lastAdvice = GetSolidInvocationAdvices().LastOrDefault();
+                if (lastAdvice == null) return false;
+                return typeof(SolidProxyInvocationImplAdvice).IsAssignableFrom(lastAdvice.GetType());
+            }
+        }
+
+        /// <summary>
         /// Returns the configurations from the parent scope
         /// </summary>
         /// <returns></returns>

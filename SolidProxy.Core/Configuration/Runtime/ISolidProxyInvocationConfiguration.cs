@@ -40,6 +40,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         /// <returns></returns>
         IEnumerable<ISolidProxyInvocationAdvice> GetSolidInvocationAdvices();
+
+        /// <summary>
+        /// Returns true if this invocation ends in a "InvocationAdvice".
+        /// </summary>
+        bool HasImplementation { get; }
     }
 
     /// <summary>

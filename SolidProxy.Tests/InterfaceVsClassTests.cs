@@ -15,7 +15,7 @@ namespace SolidProxy.Tests
         {
             public async Task<int> Handle(Func<Task<int>> next, ISolidProxyInvocation<TObject, TReturnType, int> invocation)
             {
-                if(invocation.IsLastStep)
+                if (invocation.IsLastStep)
                 {
                     return -1;
                 }
@@ -25,11 +25,12 @@ namespace SolidProxy.Tests
                 }
             }
         }
-        public class Advice2<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+
+        public class HasImplementationAdvice<TObject, TReturnType> : ISolidProxyInvocationAdvice<TObject, TReturnType, bool> where TObject : class
         {
-            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            public async Task<bool> Handle(Func<Task<bool>> next, ISolidProxyInvocation<TObject, TReturnType, bool> invocation)
             {
-                return Task.FromResult(default(TAdvice));
+                return invocation.SolidProxyInvocationConfiguration.HasImplementation;
             }
         }
 
@@ -37,14 +38,19 @@ namespace SolidProxy.Tests
         {
             [Aop]
             int GetValue();
+
+            bool HasImplementation { get; }
         }
 
         public class TestImplementation : ITestInterface
         {
+            public bool HasImplementation => throw new NotImplementedException();
+
             public int GetValue()
             {
                 return 1000;
             }
+            
         }
 
         [Test]
@@ -54,14 +60,14 @@ namespace SolidProxy.Tests
             services.AddTransient<ITestInterface>();
 
             services.GetSolidConfigurationBuilder()
-                .AddAdvice(
-                typeof(Advice<,>),
-                mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any()
-            );
+                .AddAdvice(typeof(Advice<,>),mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any());
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(HasImplementationAdvice<,>), mi => mi.MethodInfo.ReturnType == typeof(bool));
 
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
             Assert.AreEqual(-1, test.GetValue());
+            Assert.IsFalse(test.HasImplementation);
         }
 
         [Test]
@@ -72,10 +78,13 @@ namespace SolidProxy.Tests
 
             services.GetSolidConfigurationBuilder()
                 .AddAdvice(typeof(Advice<,>), mi => mi.MethodInfo.GetCustomAttributes(true).OfType<AopAttribute>().Any());
- 
+            services.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(HasImplementationAdvice<,>), mi => mi.MethodInfo.ReturnType == typeof(bool));
+
             var sp = services.BuildServiceProvider();
             var test = sp.GetRequiredService<ITestInterface>();
             Assert.AreEqual(1001, test.GetValue());
+            Assert.IsTrue(test.HasImplementation);
         }
     }
 }
