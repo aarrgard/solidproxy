@@ -7,18 +7,18 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
 {
-    public class ExampleInvocationValueTests : TestBase
+    public class ExampleInvocationIdTests : TestBase
     {
         public interface ISingletonInterface
         {
-            int GetValue();
+            Guid GetInvocationId();
         }
 
         public class InvocationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                return Task.FromResult(invocation.GetValue<TAdvice>("result"));
+                return Task.FromResult((TAdvice)(object)invocation.Id);
             }
         }
 
@@ -34,9 +34,9 @@ namespace SolidProxy.Tests
             var sp = services.BuildServiceProvider();
 
             var si = sp.GetRequiredService<ISingletonInterface>();
-            var siProxy = (ISolidProxy)si;
-            var result = siProxy.Invoke(typeof(ISingletonInterface).GetMethods()[0], null, new Dictionary<string, object>() { { "result", 20 } });
-            Assert.AreEqual(20, result);
+            var guid1 = si.GetInvocationId();
+            var guid2 = si.GetInvocationId();
+            Assert.AreNotEqual(guid1, guid2);
         }
     }
 }

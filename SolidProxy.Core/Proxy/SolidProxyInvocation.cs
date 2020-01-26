@@ -12,13 +12,14 @@ namespace SolidProxy.Core.Proxy
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
-    /// <typeparam name="TAdvice"></typeparam>
+    /// <typeparam name="TAdvice"></typeparam>s
     public class SolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation<TObject, TMethod, TAdvice> where TObject : class
     {
         private static readonly string[] EmptyStringList = new string[0];
         private static readonly Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
         private static readonly Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
+        private Guid _id;
         private IDictionary<string, object> _invocationValues;
 
         /// <summary>
@@ -39,7 +40,30 @@ namespace SolidProxy.Core.Proxy
             InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
             _invocationValues = invocationValues;
+
         }
+
+        /// <summary>
+        /// The unique id of this invocation
+        /// </summary>
+        public Guid Id
+        {
+            get
+            {
+                if (_id == Guid.Empty)
+                {
+                    lock (this)
+                    {
+                       if(_id == Guid.Empty)
+                       {
+                            _id = Guid.NewGuid();
+                       }
+                    }
+                }
+                return _id;
+            }
+        }
+
         /// <summary>
         /// The proxy
         /// </summary>

@@ -11,6 +11,11 @@ namespace SolidProxy.Core.Proxy
     public interface ISolidProxyInvocation
     {
         /// <summary>
+        /// The unique id of this invocation.
+        /// </summary>
+        Guid Id { get; }
+
+        /// <summary>
         /// Returns the keys associated with this invocation.
         /// </summary>
         IEnumerable<string> Keys { get; }
