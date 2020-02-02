@@ -31,7 +31,9 @@ namespace SolidProxy.Tests
             }
         }
 
-        public interface IAdviceConfig : ISolidProxyInvocationImplAdviceConfig { }
+        public interface IAdviceConfig : ISolidProxyInvocationImplAdviceConfig
+        {
+        }
 
         public class AdviceWithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
@@ -83,6 +85,7 @@ namespace SolidProxy.Tests
             Assert.AreEqual(2, test.Get12Value());
             Assert.AreEqual(3, test.Get123Value());
         }
+
         [Test]
         public void TestAdviceConfigAddsAdvice()
         {
@@ -96,11 +99,28 @@ namespace SolidProxy.Tests
                 .ConfigureInterface<ITestInterface>()
                 .ConfigureAdvice<IAdviceConfig>();
 
-            services.GetSolidConfigurationBuilder().AddAdvice(typeof(AdviceWithConfiguration<,,>));
-
             var sp = services.BuildServiceProvider();
             Assert.AreEqual(typeof(AnotherImplementation), sp.GetRequiredService<IAnotherTestInterface>().GetType());
             var solidProxy = ((ISolidProxy)sp.GetRequiredService<ITestInterface>());
+            Assert.IsNotNull(solidProxy);
+        }
+
+        [Test]
+        public void TestConfigureAdviceConfigFromOtherConfig()
+        {
+            var services = SetupServiceCollection();
+
+            services.AddSingleton<ITestInterface>();
+
+            // this should enable the advice on the test interface
+            var adviceConfig = services.GetSolidConfigurationBuilder()
+                .ConfigureInterface<ITestInterface>()
+                .ConfigureAdvice<IAdviceConfig>();
+
+            Assert.IsTrue(adviceConfig.Enabled);
+
+            var adviceConfig2 = adviceConfig.GetAdviceConfig<IAdviceConfig>();
+            Assert.AreSame(adviceConfig, adviceConfig2);
         }
     }
 }

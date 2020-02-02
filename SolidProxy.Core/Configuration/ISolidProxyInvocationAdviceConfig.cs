@@ -15,6 +15,14 @@ namespace SolidProxy.Core.Configuration
         ISolidProxyInvocationConfiguration InvocationConfiguration { get; }
 
         /// <summary>
+        /// Returns the advice configuration for specified config type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        T GetAdviceConfig<T>() where T : ISolidProxyInvocationAdviceConfig;
+
+
+        /// <summary>
         /// Returns the methods that this configuration applies to.
         /// </summary>
         IEnumerable<MethodInfo> Methods { get; }

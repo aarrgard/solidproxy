@@ -55,8 +55,11 @@ namespace SolidProxy.Core.Proxy
                 if (ImplementationFactory == null && MethodInfo.DeclaringType != typeof(ISolidProxyInvocationImplAdviceConfig))
                 {
                     var proxyConfig = config.InvocationConfiguration.ProxyConfiguration;
-                    var proxyInvocConfig = proxyConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                    ImplementationFactory = proxyInvocConfig.ImplementationFactory;
+                    if(proxyConfig.IsAdviceConfigured<ISolidProxyInvocationImplAdviceConfig>())
+                    {
+                        var proxyInvocConfig = proxyConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                        ImplementationFactory = proxyInvocConfig.ImplementationFactory;
+                    }
                 }
                 if(ImplementationFactory == null)
                 {

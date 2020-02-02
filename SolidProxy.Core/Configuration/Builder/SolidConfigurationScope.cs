@@ -136,14 +136,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public TConfig ConfigureAdvice<TConfig>() where TConfig: class,ISolidProxyInvocationAdviceConfig
         {
-            //
-            // Fetch advice for configuration.
-            //
-            var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
- 
             var i = (TConfig)ServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
+                //
+                // Fetch advice for configuration.
+                //
+                var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
+
+                //
+                // configure it
+                //
                 bool enable = !IsAdviceConfigured<TConfig>();
                 var configBuilder = ServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
                 var proxyConf = configBuilder.ConfigureInterface<TConfig>();

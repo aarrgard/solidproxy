@@ -80,6 +80,10 @@ namespace SolidProxy.Core.Configuration.Runtime
 
         private SolidProxyInvocationConfiguration<TInterface, MRet, TRet> CreateRpcProxyInvocationConfiguration<MRet, TRet>(MethodInfo methodInfo)
         {
+            if(methodInfo.IsGenericMethod)
+            {
+                methodInfo = methodInfo.GetGenericMethodDefinition();
+            }
             var methodConfig = SolidProxyConfigurationStore.SolidConfigurationBuilder.ConfigureInterface<TInterface>().ConfigureMethod(methodInfo);
             return new SolidProxyInvocationConfiguration<TInterface, MRet, TRet>(methodConfig, this);
         }
