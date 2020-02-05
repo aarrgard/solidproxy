@@ -18,6 +18,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> where TObject : class
     {
+        private object _mutex = new object();
         private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _advices;
 
         /// <summary>
@@ -109,8 +110,16 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <returns></returns>
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
-            if(_advices == null)
+            if (_advices != null)
             {
+                return _advices;
+            }
+            lock(_mutex) 
+            {
+                if (_advices != null)
+                {
+                    return _advices;
+                }
                 var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
 
@@ -161,9 +170,8 @@ namespace SolidProxy.Core.Configuration.Runtime
                         _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices.Where(o => o != advice).ToList());
                     }
                 }
+                return _advices;
             }
-
-            return _advices;
         }
     }
 }

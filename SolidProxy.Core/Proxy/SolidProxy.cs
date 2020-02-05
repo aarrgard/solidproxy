@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.IoC;
 
 namespace SolidProxy.Core.Proxy
 {
@@ -159,6 +159,15 @@ namespace SolidProxy.Core.Proxy
         {
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
             return proxyInvocationConfiguration.GetSolidInvocationAdvices();
+        }
+
+        /// <summary>
+        /// Returns invocations for every method that this proxy handles
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ISolidProxyInvocation> GetInvocations()
+        {
+            return typeof(T).GetMethods().Select(o => CreateProxyInvocation(o, null, null)).ToList();
         }
     }
 }
