@@ -110,10 +110,6 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <returns></returns>
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
-            if (_advices != null)
-            {
-                return _advices;
-            }
             lock(_mutex) 
             {
                 if (_advices != null)

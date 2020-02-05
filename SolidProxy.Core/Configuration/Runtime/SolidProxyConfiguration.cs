@@ -1,5 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.IoC;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TInterface"></typeparam>
     public class SolidProxyConfiguration<TInterface> : SolidConfigurationScope, ISolidProxyConfiguration<TInterface> where TInterface : class
     {
+        private IDictionary<MethodInfo, ISolidProxyInvocationConfiguration> _invocationConfigurations;
+
         /// <summary>
         /// Constructs a new instance
         /// </summary>
@@ -23,7 +26,7 @@ namespace SolidProxy.Core.Configuration.Runtime
             : base(SolidScopeType.Interface, parentScope)
         {
             SolidProxyConfigurationStore = solidProxyConfigurationStore;
-            InvocationConfigurations = new ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration>();
+            _invocationConfigurations = new ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration>();
         }
 
         /// <summary>
@@ -44,11 +47,6 @@ namespace SolidProxy.Core.Configuration.Runtime
 
         ISolidInterfaceConfigurationBuilder<TInterface> InterfaceConfiguration => (ISolidInterfaceConfigurationBuilder<TInterface>) ParentScope;
 
-        /// <summary>
-        /// The invocation configurations
-        /// </summary>
-        public ConcurrentDictionary<MethodInfo, ISolidProxyInvocationConfiguration> InvocationConfigurations { get; }
-
         IEnumerable<ISolidProxyInvocationConfiguration> ISolidProxyConfiguration.InvocationConfigurations => InterfaceConfiguration.Methods.Select(o => GetProxyInvocationConfiguration(o.MethodInfo));
 
         /// <summary>
@@ -58,24 +56,34 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <returns></returns>
         public ISolidProxyInvocationConfiguration GetProxyInvocationConfiguration(MethodInfo methodInfo)
         {
-            return InvocationConfigurations.GetOrAdd(methodInfo, _ =>
+            lock (_invocationConfigurations)
             {
-                var returnType = methodInfo.ReturnType;
-                var invocationType = returnType;
-                if(returnType == typeof(void))
+                ISolidProxyInvocationConfiguration config;
+                if (!_invocationConfigurations.TryGetValue(methodInfo, out config))
                 {
-                    returnType = typeof(object);
-                    invocationType = typeof(object);
+                    _invocationConfigurations[methodInfo] = config = CreateConfiguration(methodInfo);
                 }
-                else
-                {
-                    invocationType = TypeConverter.GetRootType(methodInfo.ReturnType);
-                }
-                return (ISolidProxyInvocationConfiguration)GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Single(o => o.Name == nameof(CreateRpcProxyInvocationConfiguration))
-                    .MakeGenericMethod(new[] { returnType, invocationType })
-                    .Invoke(this, new[] { methodInfo });
-            });
+                return config;
+            }
+        }
+
+        private ISolidProxyInvocationConfiguration CreateConfiguration(MethodInfo methodInfo)
+        {
+            var returnType = methodInfo.ReturnType;
+            var invocationType = returnType;
+            if (returnType == typeof(void))
+            {
+                returnType = typeof(object);
+                invocationType = typeof(object);
+            }
+            else
+            {
+                invocationType = TypeConverter.GetRootType(methodInfo.ReturnType);
+            }
+            return (ISolidProxyInvocationConfiguration)GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(o => o.Name == nameof(CreateRpcProxyInvocationConfiguration))
+                .MakeGenericMethod(new[] { returnType, invocationType })
+                .Invoke(this, new[] { methodInfo });
         }
 
         private SolidProxyInvocationConfiguration<TInterface, MRet, TRet> CreateRpcProxyInvocationConfiguration<MRet, TRet>(MethodInfo methodInfo)
