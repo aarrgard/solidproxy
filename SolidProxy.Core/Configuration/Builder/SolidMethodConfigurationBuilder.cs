@@ -85,14 +85,14 @@ namespace SolidProxy.Core.Configuration.Builder
         public IEnumerable<Type> GetSolidInvocationAdviceTypes()
         {
             var advices = new List<Type>();
-            var cyclicProtection = new HashSet<Type>();
             (GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes)
                 .Where(advice => advice != typeof(SolidProxyInvocationImplAdvice<,,>))
+                .Distinct()
                 .ToList()
                 .ForEach(advice => {
-                    AddAdvice(advices, advice, cyclicProtection);
+                    AddAdvice(advices, advice, new HashSet<Type>());
                 });
-            AddAdvice(advices, typeof(SolidProxyInvocationImplAdvice<,,>), cyclicProtection);
+            AddAdvice(advices, typeof(SolidProxyInvocationImplAdvice<,,>), new HashSet<Type>());
             return advices;
         }
 
@@ -100,7 +100,7 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             if(cyclicProtection.Contains(advice))
             {
-                throw new Exception("Found advice dependency cycle");
+                throw new Exception("Found advice dependency cycle when adding advice:"+advice.FullName);
             }
             cyclicProtection.Add(advice);
             if (advices.Contains(advice))
