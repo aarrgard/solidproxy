@@ -78,6 +78,41 @@ namespace SolidProxy.Tests
             var services = SetupServiceCollection();
             services.AddTransient<ITestInterface1>();
             services.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
+
+            var enable = true;
+            typeof(ITestInterface1).GetMethods().ToList().ForEach(o =>
+            {
+                var m = services.GetSolidConfigurationBuilder()
+                .ConfigureInterfaceAssembly(o.DeclaringType.Assembly)
+                .ConfigureInterface(o.DeclaringType)
+                .ConfigureMethod(o);
+                m.ConfigureAdvice<IAdviceConfig>().Enabled = enable;
+                enable = !enable;
+            });
+
+            var sp = services.BuildServiceProvider();
+            var store = sp.GetRequiredService<ISolidProxyConfigurationStore>();
+            var pConfig = store.ProxyConfigurations.First();
+            Assert.IsFalse(pConfig.Enabled);
+
+            var methodInvovations = pConfig.InvocationConfigurations;
+            Assert.AreEqual(4, methodInvovations.Count());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get0Value)).IsAdviceConfigured<IAdviceConfig>());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get0Value)).IsAdviceEnabled<IAdviceConfig>());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get1Value)).IsAdviceConfigured<IAdviceConfig>());
+            Assert.IsFalse(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get1Value)).IsAdviceEnabled<IAdviceConfig>());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get12Value)).IsAdviceConfigured<IAdviceConfig>());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get12Value)).IsAdviceEnabled<IAdviceConfig>());
+            Assert.IsTrue(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get123Value)).IsAdviceConfigured<IAdviceConfig>());
+            Assert.IsFalse(methodInvovations.First(o => o.MethodInfo.Name == nameof(ITestInterface1.Get123Value)).IsAdviceEnabled<IAdviceConfig>());
+        }
+
+        [Test]
+        public void TestMethodConfigurationNotEnabled()
+        {
+            var services = SetupServiceCollection();
+            services.AddTransient<ITestInterface1>();
+            services.GetSolidConfigurationBuilder().SetGenerator<SolidProxyCastleGenerator>();
             typeof(ITestInterface1).GetMethods().ToList().ForEach(o =>
             {
                 var m = services.GetSolidConfigurationBuilder()

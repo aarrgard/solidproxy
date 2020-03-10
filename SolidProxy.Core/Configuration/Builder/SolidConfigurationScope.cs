@@ -207,6 +207,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
+        public bool IsAdviceEnabled<T>() where T : class, ISolidProxyInvocationAdviceConfig
+        {
+            if (!IsAdviceConfigured<T>()) return false;
+            return ConfigureAdvice<T>().Enabled;
+        }
+
+        /// <summary>
+        /// Determines if the advice has been configures
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
         {
             return IsAdviceConfigured(typeof(T));
@@ -222,15 +233,15 @@ namespace SolidProxy.Core.Configuration.Builder
             //
             // The advice is configured if we can find the configuration "service".
             //
-            var stepScopeType = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
-            if(!stepScopeType)
+            var isAdviceConfigured = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
+            if(!isAdviceConfigured)
             {
                 if(ServiceProvider.GetService(settingsType) != null)
                 {
-                    stepScopeType = true;
+                    isAdviceConfigured = true;
                 }
             }
-            return stepScopeType;
+            return isAdviceConfigured;
         }
 
         /// <summary>

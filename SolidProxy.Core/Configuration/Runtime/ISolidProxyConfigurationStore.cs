@@ -21,7 +21,6 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// </summary>
         ISolidConfigurationBuilder SolidConfigurationBuilder { get; }
 
-
         /// <summary>
         /// Returns all the configurations.
         /// </summary>
