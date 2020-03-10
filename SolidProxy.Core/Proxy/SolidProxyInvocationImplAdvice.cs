@@ -35,7 +35,7 @@ namespace SolidProxy.Core.Proxy
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidProxyInvocationImplAdvice<TObject, TMethod, TAdvice> : SolidProxyInvocationImplAdvice, ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
-        private static Func<TMethod, Task<TAdvice>> s_converter = TypeConverter.CreateConverter<TMethod, Task<TAdvice>>();
+        private static readonly Func<TMethod, Task<TAdvice>> s_converter = TypeConverter.CreateConverter<TMethod, Task<TAdvice>>();
 
         /// <summary>
         /// 
@@ -67,6 +67,21 @@ namespace SolidProxy.Core.Proxy
                 }
                 Delegate = SolidProxy<TObject>.CreateDelegate<TObject, TMethod>(MethodInfo);
                 GetTarget = (invocation) => (TObject)ImplementationFactory(invocation.ServiceProvider);
+
+                // 
+                // Setup pre invocation callbacks
+                //
+                PreInvocationCallbacks = i => Task.CompletedTask;
+                foreach(var callback in config.PreInvocationCallbacks)
+                {
+                    var oldCallback = PreInvocationCallbacks;
+                    PreInvocationCallbacks = async i =>
+                    {
+                        await oldCallback(i);
+                        await callback(i);
+                    };
+                }
+
                 return true;
             }
             catch (Exception e)
@@ -79,22 +94,24 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The method that this advice invokes
         /// </summary>
-        public MethodInfo MethodInfo { get; private set; }
+        private MethodInfo MethodInfo { get; set; }
 
         /// <summary>
         /// The delegate to use to create the implementation.
         /// </summary>
-        public Func<IServiceProvider, object> ImplementationFactory { get; private set; }
+        private Func<IServiceProvider, object> ImplementationFactory { get; set; }
 
         /// <summary>
         /// Returns the target method
         /// </summary>
-        public Func<ISolidProxyInvocation<TObject, TMethod, TAdvice>, TObject> GetTarget { get; private set; }
+        private Func<ISolidProxyInvocation<TObject, TMethod, TAdvice>, TObject> GetTarget { get; set; }
 
         /// <summary>
         /// The MethodInfo converted to a delegate.
         /// </summary>
-        public Func<TObject, object[], TMethod> Delegate { get; private set; }
+        private Func<TObject, object[], TMethod> Delegate { get; set; }
+
+        private Func<ISolidProxyInvocation, Task> PreInvocationCallbacks { get; set; }
 
         /// <summary>
         /// Handles the invocation
@@ -102,14 +119,15 @@ namespace SolidProxy.Core.Proxy
         /// <param name="next"></param>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+        public async Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
-            var m1 = invocation.SolidProxyInvocationConfiguration.MethodInfo;
-            var m2 = MethodInfo;
-            if (m1 != m2)
-            {
-                throw new Exception($"Invocation method not same as configured method! {m1.Name} {m2.Name}");
-            }
+            //var m1 = invocation.SolidProxyInvocationConfiguration.MethodInfo;
+            //var m2 = MethodInfo;
+            //if (m1 != m2)
+            //{
+            //    throw new Exception($"Invocation method not same as configured method! {m1.Name} {m2.Name}");
+            //}
+            await PreInvocationCallbacks(invocation);
             TMethod res;
             try
             {
@@ -121,7 +139,7 @@ namespace SolidProxy.Core.Proxy
             {
                 s_currentInvocation.Value = null;
             }
-            return s_converter.Invoke(res);
+            return await s_converter.Invoke(res);
         }
     }
 }

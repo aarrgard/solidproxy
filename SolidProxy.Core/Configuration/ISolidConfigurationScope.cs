@@ -1,7 +1,9 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.IoC;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -37,6 +39,12 @@ namespace SolidProxy.Core.Configuration
         /// <param name="searchParentScopes"></param>
         /// <returns></returns>
         T GetValue<T>(string key, bool searchParentScopes);
+
+        /// <summary>
+        /// Adds a pre invocation callback.
+        /// </summary>
+        /// <param name="callback"></param>
+        void AddPreInvocationCallback(Func<ISolidProxyInvocation, Task> callback);
 
         /// <summary>
         /// Sets the value

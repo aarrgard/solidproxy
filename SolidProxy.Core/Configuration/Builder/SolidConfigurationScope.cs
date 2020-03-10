@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -15,8 +16,8 @@ namespace SolidProxy.Core.Configuration.Builder
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
         private SolidProxyServiceProvider _internalServiceProvider;
-        private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
-        private ConcurrentDictionary<Type, IEnumerable<Type>> _adviceDependencies = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private readonly ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<Type, IEnumerable<Type>> _adviceDependencies = new ConcurrentDictionary<Type, IEnumerable<Type>>();
 
         /// <summary>
         /// Constructs a new instance
@@ -97,16 +98,30 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public T GetValue<T>(string key, bool searchParentScope)
         {
-            object val;
-            if (_items.TryGetValue(key, out val))
-            { 
-                if(val is Func<T> del)
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(ICollection<>))
+            {
+                if (!_items.TryGetValue(key, out object coll))
+                {
+                    var t = typeof(T).GetGenericArguments()[0];
+                    coll = Activator.CreateInstance(typeof(SolidConfigurationScopeCollection<>).MakeGenericType(t));
+                    if (searchParentScope && ParentScope != null)
+                    {
+                        var parent = (SolidConfigurationScopeCollection)(object)ParentScope.GetValue<T>(key, searchParentScope);
+                        ((SolidConfigurationScopeCollection)coll).Parent = parent;
+                    }
+                    _items[key] = coll;
+                }
+                return (T)coll;
+            }
+            if (_items.TryGetValue(key, out object val))
+            {
+                if (val is Func<T> del)
                 {
                     return del();
                 }
-                return (T)val;
+                return(T)val;
             }
-            if(searchParentScope && ParentScope != null)
+            if (searchParentScope && ParentScope != null)
             {
                 return ParentScope.GetValue<T>(key, searchParentScope);
             }
@@ -312,8 +327,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public IEnumerable<Type> GetAdviceDependencies(Type advice)
         {
-            IEnumerable<Type> beforeAdvices;
-            if (!_adviceDependencies.TryGetValue(advice, out beforeAdvices))
+            if (!_adviceDependencies.TryGetValue(advice, out IEnumerable<Type> beforeAdvices))
             {
                 beforeAdvices = Type.EmptyTypes;
             }
@@ -325,6 +339,12 @@ namespace SolidProxy.Core.Configuration.Builder
             {
                 return beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));
             }
+        }
+
+        public void AddPreInvocationCallback(Func<ISolidProxyInvocation, Task> callback)
+        {
+            var invocConfig = ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+            invocConfig.PreInvocationCallbacks.Add(callback);
         }
 
         /// <summary>

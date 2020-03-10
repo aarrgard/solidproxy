@@ -14,7 +14,8 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidConfigurationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
-        private static ConcurrentDictionary<Type, MethodInfo> s_ConfigureAdviceMethod = new ConcurrentDictionary<Type, MethodInfo>();
+        private static readonly ConcurrentDictionary<Type, MethodInfo> s_ConfigureAdviceMethod = new ConcurrentDictionary<Type, MethodInfo>();
+        private static readonly ConcurrentDictionary<Type, MethodInfo> s_AddPreInvocationCallbackMethod = new ConcurrentDictionary<Type, MethodInfo>();
 
         /// <summary>
         /// Handles the invocation
@@ -39,7 +40,7 @@ namespace SolidProxy.Core.Configuration.Runtime
                 {
                     scope = typeof(ISolidProxyInvocationAdviceConfig).FullName;
                 }
-                if(methodName == nameof(ISolidProxyInvocationAdviceConfig.GetAdviceConfig))
+                if (methodName == nameof(ISolidProxyInvocationAdviceConfig.GetAdviceConfig))
                 {
                     return Task.FromResult((TAdvice)s_ConfigureAdviceMethod.GetOrAdd(typeof(TAdvice), _ =>
                     {
