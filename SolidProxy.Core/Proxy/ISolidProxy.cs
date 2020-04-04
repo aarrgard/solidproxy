@@ -16,6 +16,11 @@ namespace SolidProxy.Core.Proxy
         IServiceProvider ServiceProvider { get; }
 
         /// <summary>
+        /// The type that this proxy represents.
+        /// </summary>
+        Type ServiceType { get; }
+
+        /// <summary>
         /// Returns the proxy implementing the interface.
         /// </summary>
         object Proxy { get; }

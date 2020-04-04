@@ -78,6 +78,11 @@ namespace SolidProxy.Core.Proxy
         public IServiceProvider ServiceProvider { get; }
 
         /// <summary>
+        /// The type that this proxy represets.
+        /// </summary>
+        public Type ServiceType => typeof(T);
+
+        /// <summary>
         /// The proxy configuration.
         /// </summary>
         public ISolidProxyConfiguration<T> ProxyConfiguration { get; }
