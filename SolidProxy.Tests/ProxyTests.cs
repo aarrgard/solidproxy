@@ -85,40 +85,40 @@ namespace SolidProxy.Tests
             //
             // DoX[Async]
             //
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
             Assert.IsNull(res);
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
             Assert.IsNull(res);
 
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoXAsync)), null);
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoXAsync)), null);
             Assert.AreEqual(Task.CompletedTask, res);
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoXAsync)), null);
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoXAsync)), null);
             Assert.IsNull(res);
 
             //
             // DoY[Async]
             //
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoY)), new object[] { 2 });
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoY)), new object[] { 2 });
             Assert.AreEqual(2, res);
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoY)), new object[] { 2 });
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoY)), new object[] { 2 });
             Assert.AreEqual(2, res);
 
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoYAsync)), new object[] { 2 });
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoYAsync)), new object[] { 2 });
             Assert.AreEqual(2, await ((Task<int>)res));
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoYAsync)), new object[] { 2 });
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoYAsync)), new object[] { 2 });
             Assert.AreEqual(2, res);
 
             //
             // DoZ[Async]
             //
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
             Assert.AreEqual(proxy, res);
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZ)), new object[] { proxy });
             Assert.AreEqual(proxy, res);
 
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
             Assert.AreEqual(proxy, await ((Task<ITestInterface>)res));
-            res = await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
+            res = await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoZAsync)), new object[] { proxy });
             Assert.AreEqual(proxy, res);
 
             //
@@ -126,7 +126,7 @@ namespace SolidProxy.Tests
             //
             try
             {
-                proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
+                proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
                 Assert.Fail();
             }
             catch (MyException)
@@ -136,7 +136,7 @@ namespace SolidProxy.Tests
 
             try
             {
-                await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
+                await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowException)), new object[0]);
                 Assert.Fail();
             }
             catch (MyException)
@@ -146,7 +146,7 @@ namespace SolidProxy.Tests
 
             try
             {
-                proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowExceptionAsync)), new object[0]);
+                proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowExceptionAsync)), new object[0]);
                 Assert.Fail();
             }
             catch (MyException)
@@ -156,7 +156,7 @@ namespace SolidProxy.Tests
 
             try
             {
-                await proxy.InvokeAsync(typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowExceptionAsync)), new object[0]);
+                await proxy.InvokeAsync(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.ThrowExceptionAsync)), new object[0]);
                 Assert.Fail();
             }
             catch (MyException)

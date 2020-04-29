@@ -42,9 +42,9 @@ namespace SolidProxy.Tests
             //
             // DoX
             //
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null);
             Assert.AreEqual(0, res);
-            res = proxy.Invoke(typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null, new Dictionary<string, object>() {
+            res = proxy.Invoke(this, typeof(ITestInterface).GetMethod(nameof(ITestInterface.DoX)), null, new Dictionary<string, object>() {
                 { "IntValue", 10 }
             });
             Assert.AreEqual(10, res);

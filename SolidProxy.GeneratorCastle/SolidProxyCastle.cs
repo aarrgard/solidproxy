@@ -28,7 +28,7 @@ namespace SolidProxy.GeneratorCastle
         /// <param name="invocation"></param>
         public void Intercept(IInvocation invocation)
         {
-            invocation.ReturnValue = Invoke(invocation.Method, invocation.Arguments);
+            invocation.ReturnValue = Invoke(invocation.Proxy, invocation.Method, invocation.Arguments);
         }
 
     }

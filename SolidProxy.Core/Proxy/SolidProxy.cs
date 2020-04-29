@@ -100,11 +100,12 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Invokes the method
         /// </summary>
+        /// <param name="caller"></param>
         /// <param name="method"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public object Invoke(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        public object Invoke(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
             object solidProxyResult;
             if(InvokeSolidProxy(method, args, out solidProxyResult))
@@ -112,17 +113,18 @@ namespace SolidProxy.Core.Proxy
                 return solidProxyResult;
             }
 
-            return CreateProxyInvocation(method, args, invocationValues).GetReturnValue();
+            return CreateProxyInvocation(caller, method, args, invocationValues).GetReturnValue();
         }
 
         /// <summary>
         /// Invokes the method async.
         /// </summary>
+        /// <param name="caller"></param>
         /// <param name="method"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public Task<object> InvokeAsync(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        public Task<object> InvokeAsync(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
             object solidProxyResult;
             if (InvokeSolidProxy(method, args, out solidProxyResult))
@@ -130,7 +132,7 @@ namespace SolidProxy.Core.Proxy
                 return Task.FromResult(solidProxyResult);
             }
 
-            return CreateProxyInvocation(method, args, invocationValues).GetReturnValueAsync();
+            return CreateProxyInvocation(caller, method, args, invocationValues).GetReturnValueAsync();
         }
 
         private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
@@ -145,13 +147,13 @@ namespace SolidProxy.Core.Proxy
             return true;
         }
 
-        private ISolidProxyInvocation CreateProxyInvocation(MethodInfo method, object[] args, IDictionary<string, object> invocationValues)
+        private ISolidProxyInvocation CreateProxyInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues)
         {
             //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
-            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(this, args, invocationValues);
+            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(caller, this, args, invocationValues);
             return proxyInvocation;
         }
 
@@ -172,7 +174,7 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public IEnumerable<ISolidProxyInvocation> GetInvocations()
         {
-            return typeof(T).GetMethods().Select(o => CreateProxyInvocation(o, null, null)).ToList();
+            return typeof(T).GetMethods().Select(o => CreateProxyInvocation(this, o, null, null)).ToList();
         }
     }
 }

@@ -25,16 +25,19 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Constructs a new instance
         /// </summary>
+        /// <param name="caller"></param>
         /// <param name="proxy"></param>
         /// <param name="invocationConfiguration"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
         public SolidProxyInvocation(
+            object caller,
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
             object[] args,
             IDictionary<string, object> invocationValues) 
         {
+            Caller = caller;
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
             InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
@@ -65,13 +68,20 @@ namespace SolidProxy.Core.Proxy
         }
 
         /// <summary>
+        /// The caller
+        /// </summary>
+        public object Caller { get; }
+
+        /// <summary>
         /// The proxy
         /// </summary>
         public ISolidProxy<TObject> Proxy { get; }
+
         /// <summary>
         /// The proxy
         /// </summary>
         public ISolidProxy SolidProxy => Proxy;
+
         ISolidProxy<TObject> ISolidProxyInvocation<TObject, TMethod, TAdvice>.SolidProxy => Proxy;
         /// <summary>
         /// The service provider

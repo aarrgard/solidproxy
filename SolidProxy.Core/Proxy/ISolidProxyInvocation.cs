@@ -74,6 +74,11 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         bool IsLastStep { get; }
 
+        /// <summary>
+        /// The object invoking this method
+        /// </summary>
+        object Caller { get; }
+
     }
 
     /// <summary>

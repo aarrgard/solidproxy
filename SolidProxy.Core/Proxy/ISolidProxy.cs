@@ -46,18 +46,19 @@ namespace SolidProxy.Core.Proxy
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        object Invoke(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        object Invoke(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Invokes the method with supplied args. If the return type
         /// of the method is void or Task then the wrapped return value 
         /// will be null.
         /// </summary>
+        /// <param name="caller">The object invoking the metho - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        Task<object> InvokeAsync(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        Task<object> InvokeAsync(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
     }
 
     /// <summary>
