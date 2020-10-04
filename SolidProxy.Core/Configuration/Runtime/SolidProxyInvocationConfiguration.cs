@@ -65,17 +65,9 @@ namespace SolidProxy.Core.Configuration.Runtime
             return sp;
         }
 
-        /// <summary>
-        /// Creates a new invocation
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="rpcProxy"></param>
-        /// <param name="args"></param>
-        /// <param name="invocationValues"></param>
-        /// <returns></returns>
-        public ISolidProxyInvocation CreateProxyInvocation(object caller, ISolidProxy rpcProxy, object[] args, IDictionary<string, object> invocationValues)
+        public ISolidProxyInvocation CreateProxyInvocation(object caller, ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues, bool canCancel)
         {
-            return new SolidProxyInvocation<TObject, TMethod, TAdvice>(caller, (ISolidProxy<TObject>)rpcProxy, this, args, invocationValues);
+            return new SolidProxyInvocation<TObject, TMethod, TAdvice>(caller, (ISolidProxy<TObject>)solidProxy, this, args, invocationValues, canCancel);
         }
 
         IEnumerable<ISolidProxyInvocationAdvice> ISolidProxyInvocationConfiguration.GetSolidInvocationAdvices()

@@ -113,7 +113,7 @@ namespace SolidProxy.Core.Proxy
                 return solidProxyResult;
             }
 
-            return CreateProxyInvocation(caller, method, args, invocationValues).GetReturnValue();
+            return GetInvocation(caller, method, args, invocationValues, false).GetReturnValue();
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace SolidProxy.Core.Proxy
                 return Task.FromResult(solidProxyResult);
             }
 
-            return CreateProxyInvocation(caller, method, args, invocationValues).GetReturnValueAsync();
+            return GetInvocation(caller, method, args, invocationValues, false).GetReturnValueAsync();
         }
 
         private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
@@ -147,13 +147,51 @@ namespace SolidProxy.Core.Proxy
             return true;
         }
 
-        private ISolidProxyInvocation CreateProxyInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues)
+        public ISolidProxyInvocation GetInvocation(object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null)
+        {
+            var mi = ProxyConfiguration.InvocationConfigurations
+                .Select(o => o.MethodInfo)
+                .Where(o => o.Name == methodName)
+                .Where(o => AreAssignable(o.GetParameters().Select(o2 => o2.ParameterType).ToList(), args))
+                .FirstOrDefault();
+            if (mi == null) throw new ArgumentException("Cannot find method matching name and arguments");
+            return GetInvocation(caller, mi, args, invocationValues, true);
+        }
+
+        public ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        {
+            return GetInvocation(caller, method, args, invocationValues, true);
+        }
+
+        private bool AreAssignable(IEnumerable<Type> paramTypes, IEnumerable<object> args)
+        {
+            var te = paramTypes.GetEnumerator();
+            var ae = args.GetEnumerator();
+            while(te.MoveNext())
+            {
+                if(!ae.MoveNext())
+                {
+                    return false;
+                }
+                if(ae.Current == null)
+                {
+                    continue;
+                }
+                if(!te.Current.IsAssignableFrom(ae.Current.GetType()))
+                {
+                    return false;
+                }
+            }
+            return !ae.MoveNext();
+        }
+
+        private ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues, bool canCancel)
         {
             //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
-            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(caller, this, args, invocationValues);
+            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(caller, this, args, invocationValues, canCancel);
             return proxyInvocation;
         }
 
@@ -174,7 +212,7 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public IEnumerable<ISolidProxyInvocation> GetInvocations()
         {
-            return typeof(T).GetMethods().Select(o => CreateProxyInvocation(this, o, null, null)).ToList();
+            return typeof(T).GetMethods().Select(o => GetInvocation(this, o, null, null, false)).ToList();
         }
     }
 }

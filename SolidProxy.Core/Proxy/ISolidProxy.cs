@@ -39,9 +39,30 @@ namespace SolidProxy.Core.Proxy
         IEnumerable<ISolidProxyInvocation> GetInvocations();
 
         /// <summary>
+        /// Returns a solid proxy invocation representing the specified method.
+        /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
+        /// <param name="methodName">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
+        /// <returns></returns>
+        ISolidProxyInvocation GetInvocation(object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null);
+
+        /// <summary>
+        /// Returns a solid proxy invocation representing the specified method.
+        /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
+        /// <returns></returns>
+        ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+
+        /// <summary>
         /// Invokes the method with supplied args. If the return type of the method 
         /// is a Task this method does not wait for the task.
         /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
@@ -53,7 +74,7 @@ namespace SolidProxy.Core.Proxy
         /// of the method is void or Task then the wrapped return value 
         /// will be null.
         /// </summary>
-        /// <param name="caller">The object invoking the metho - usually "this"</param>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>

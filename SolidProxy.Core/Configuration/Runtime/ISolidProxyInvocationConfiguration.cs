@@ -32,8 +32,9 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <param name="solidProxy"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
+        /// <param name="canCancel"></param>
         /// <returns></returns>
-        ISolidProxyInvocation CreateProxyInvocation(object caller, ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues);
+        ISolidProxyInvocation CreateProxyInvocation(object caller, ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues, bool canCancel);
 
         /// <summary>
         /// Returns all the invocation advices. ie all the types resolved in the

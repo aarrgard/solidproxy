@@ -92,7 +92,10 @@ namespace SolidProxy.MicrosoftDI
         /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
-            DoIfMissing(adviceType, () => { ServiceCollection.AddTransient(adviceType, adviceType); });
+            DoIfMissing(adviceType, () => {
+                ServiceCollection.AddTransient(adviceType, adviceType);
+                AddAdviceDependencies(adviceType);
+            });
         }
         /// <summary>
         /// Configures the proxy

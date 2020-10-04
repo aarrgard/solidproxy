@@ -3,6 +3,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
@@ -30,22 +32,42 @@ namespace SolidProxy.Core.Proxy
         /// <param name="invocationConfiguration"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
+        /// <param name="canCancel"></param>
         public SolidProxyInvocation(
             object caller,
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
             object[] args,
-            IDictionary<string, object> invocationValues) 
+            IDictionary<string, object> invocationValues,
+            bool canCancel) 
         {
+            CancellationTokenSource = SetupCancellationTokenSource(args, canCancel);
             Caller = caller;
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
             InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
             _invocationValues = invocationValues;
-
         }
 
+        private CancellationTokenSource SetupCancellationTokenSource(object[] args, bool canCancel)
+        {
+            if(!canCancel)
+            {
+                return null;
+            }
+            for (int i = args.Length - 1; i >= 0; i--)
+            {
+                if (args[i] is CancellationToken ct)
+                {
+                    var cts = new CancellationTokenSource();
+                    ct.Register(() => cts.Cancel());
+                    args[i] = cts.Token;
+                    return cts;
+                }
+            }
+            return null;
+        }
         /// <summary>
         /// The unique id of this invocation
         /// </summary>
@@ -134,6 +156,16 @@ namespace SolidProxy.Core.Proxy
         /// </summary>
         public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Keys;
 
+        /// <summary>
+        /// The cancellation token source(if configured)
+        /// </summary>
+        private CancellationTokenSource CancellationTokenSource { get; }
+
+        /// <summary>
+        /// Returns the cancellation token.
+        /// </summary>
+        public CancellationToken CancellationToken => Arguments.OfType<CancellationToken>().FirstOrDefault();
+
         private async Task<TAdvice> InvokeProxyPipeline()
         {
             return await CreateStepIterator(0).Invoke();
@@ -202,6 +234,11 @@ namespace SolidProxy.Core.Proxy
         public void SetValue<T>(string key, T value)
         {
             InvocationValues[key] = value;
+        }
+
+        public void Cancel()
+        {
+            CancellationTokenSource?.Cancel();
         }
     }
 }

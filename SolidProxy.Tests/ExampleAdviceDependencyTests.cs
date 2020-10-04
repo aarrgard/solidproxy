@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -15,6 +17,8 @@ namespace SolidProxy.Tests
 
         public class SecurityAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
+            public static IEnumerable<Type> BeforeAdvices = new[] { typeof(InvocationAdvice<,,>) };
+
             public async Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 invocation.SetValue("security_checked", true);
@@ -45,6 +49,9 @@ namespace SolidProxy.Tests
                 .ConfigureInterface<IServiceInterface>()
                 .AddAdvice(typeof(InvocationAdvice<,,>));
 
+            var deps = services.GetSolidConfigurationBuilder().GetAdviceDependencies(typeof(InvocationAdvice<,,>));
+            Assert.IsFalse(deps.Any());
+
             var sp = services.BuildServiceProvider();
             var si = sp.GetRequiredService<IServiceInterface>();
 
@@ -60,7 +67,11 @@ namespace SolidProxy.Tests
 
             // add advice dependency
             services.GetSolidConfigurationBuilder()
-                .AddAdviceDependency(typeof(SecurityAdvice<,,>), typeof(InvocationAdvice<,,>));
+                .ConfigureInterface<IServiceInterface>()
+                .AddAdvice(typeof(SecurityAdvice<,,>));
+
+            deps = services.GetSolidConfigurationBuilder().GetAdviceDependencies(typeof(InvocationAdvice<,,>));
+            Assert.AreEqual(typeof(SecurityAdvice<,,>), deps.Single());
 
             sp = services.BuildServiceProvider();
             si = sp.GetRequiredService<IServiceInterface>();

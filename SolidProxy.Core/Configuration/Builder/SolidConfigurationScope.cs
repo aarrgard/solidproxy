@@ -268,11 +268,33 @@ namespace SolidProxy.Core.Configuration.Builder
                 }
             }
 
+            //
+            // Add the advice to all the methods that meet the pointcut requirement.
+            //
             GetMethodConfigurationBuilders()
                 .Where(o => pointcut(o))
                 .ToList().ForEach(o => {
                     o.AddAdvice(adviceType);
                 }); 
+        }
+
+        protected void AddAdviceDependencies(Type adviceType)
+        {
+            AddAdviceDependencies(adviceType, "BeforeAdvices", (a1, a2) => AddAdviceDependency(a1, a2));
+            AddAdviceDependencies(adviceType, "AfterAdvices", (a1, a2) => AddAdviceDependency(a2, a1));
+        }
+
+        protected void AddAdviceDependencies(Type adviceType, string fieldName, Action<Type, Type> action)
+        {
+            var prop = adviceType.GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            if (prop == null) return;
+            prop = adviceType.MakeGenericType(adviceType.GetGenericArguments().Select(o => typeof(object)).ToArray()).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var adviceEnum = prop.GetValue(null) as IEnumerable<Type>;
+            if (adviceEnum == null) throw new ArgumentException("Before or after advices cannot be converted to a type enum");
+            foreach(var advice in adviceEnum)
+            {
+                action(adviceType, advice);
+            }
         }
 
         /// <summary>

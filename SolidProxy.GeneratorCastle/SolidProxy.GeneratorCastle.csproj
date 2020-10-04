@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SolidProxy.Core\SolidProxy.Core.csproj" />
-    <PackageReference Include="Castle.Core" Version="4.4.0" />
+    <PackageReference Include="Castle.Core" Version="4.4.1" />
   </ItemGroup>
 
 </Project>

@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Proxy;
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Tests
@@ -20,6 +22,7 @@ namespace SolidProxy.Tests
             Task<ITestInterface> DoZAsync(ITestInterface x);
             void ThrowException();
             Task ThrowExceptionAsync();
+            Task<string> ReturnWhenCancelledAsync(CancellationToken cancellationToken);
         }
 
         public class TestImplementation : ITestInterface
@@ -54,6 +57,19 @@ namespace SolidProxy.Tests
                 return Task.FromResult(x);
             }
 
+            public async Task<string> ReturnWhenCancelledAsync(CancellationToken cancellationToken)
+            {
+                try
+                {
+                    await Task.Delay(10000, cancellationToken);
+                    return "timeout";
+                } 
+                catch(TaskCanceledException)
+                {
+                    return "canceled";
+                }
+            }
+
             public void ThrowException()
             {
                 throw new MyException();
@@ -61,7 +77,8 @@ namespace SolidProxy.Tests
 
             public Task ThrowExceptionAsync()
             {
-                return Task.Run(async () => {
+                return Task.Run(async () =>
+                {
                     await Task.Yield();
                     throw new MyException();
                 });
@@ -163,6 +180,37 @@ namespace SolidProxy.Tests
             {
 
             }
+        }
+        [Test]
+
+        public async Task TestCancellationToken()
+        {
+            var sc = SetupServiceCollection();
+            sc.AddTransient<ITestInterface, TestImplementation>();
+
+            sc.GetSolidConfigurationBuilder()
+                .AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>), o => o.MethodInfo.DeclaringType == typeof(ITestInterface));
+
+            var sp = sc.BuildServiceProvider();
+            var proxy = sp.GetRequiredService<ITestInterface>();
+            var proxyI = (ISolidProxy)sp.GetRequiredService<ITestInterface>();
+
+            //
+            // test cancelling the argument token
+            //
+            var cs = new CancellationTokenSource();
+            var t = proxy.ReturnWhenCancelledAsync(cs.Token);
+            cs.Cancel();
+            Assert.AreEqual("canceled", await t);
+
+            //
+            // test cancelling the invocation on the proxy
+            //
+            var invocation = proxyI.GetInvocations().Single(o => o.SolidProxyInvocationConfiguration.MethodInfo.Name == nameof(ITestInterface.ReturnWhenCancelledAsync));
+            var pinvoc = proxyI.GetInvocation(null, nameof(ITestInterface.ReturnWhenCancelledAsync), new object[] { cs.Token });
+            pinvoc.Cancel();
+            var res = (string)(await pinvoc.GetReturnValueAsync());
+            Assert.AreEqual("canceled", await t);
         }
     }
 }
