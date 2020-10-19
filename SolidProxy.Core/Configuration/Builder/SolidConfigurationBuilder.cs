@@ -155,21 +155,12 @@ namespace SolidProxy.Core.Configuration.Builder
 
         private IEnumerable<Type> GetAdvicesForConfiguration(Type configType)
         {
-            // find the advices in the configuration assembly
-            var adviceTypes = GetAdviceTypes(configType.Assembly, configType);
-            if (adviceTypes != null)
+            var advices = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => GetAdviceTypes(a, configType));
+            if(!advices.Any())
             {
-                return adviceTypes;
+                throw new Exception($"Could not find advice for configuration {configType.FullName}");
             }
-            foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                adviceTypes = GetAdviceTypes(assembly, configType);
-                if (adviceTypes != null)
-                {
-                    return adviceTypes;
-                }
-            }
-            throw new Exception($"Could not find advice for configuration {configType.FullName}");
+            return advices;
         }
 
         private IEnumerable<Type> GetAdviceTypes(Assembly assembly, Type configType)
