@@ -286,8 +286,9 @@ namespace SolidProxy.Core.Configuration.Builder
 
         protected void AddAdviceDependencies(Type adviceType, string fieldName, Action<Type, Type> action)
         {
-            var prop = adviceType.GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var prop = adviceType.GetField(fieldName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             if (prop == null) return;
+            if (!prop.IsStatic) throw new Exception($"Field {fieldName} is not static");
             prop = adviceType.MakeGenericType(adviceType.GetGenericArguments().Select(o => typeof(object)).ToArray()).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             var adviceEnum = prop.GetValue(null) as IEnumerable<Type>;
             if (adviceEnum == null) throw new ArgumentException("Before or after advices cannot be converted to a type enum");
@@ -371,6 +372,10 @@ namespace SolidProxy.Core.Configuration.Builder
             if (ParentScope != null)
             {
                 beforeAdvices = beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));;
+            }
+            if(beforeAdvices.Any())
+            {
+                return beforeAdvices;
             }
             return beforeAdvices;
         }
