@@ -22,7 +22,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="TConfig"></typeparam>
         /// <returns></returns>
-        Type GetAdviceForConfiguration<TConfig>();
+        IEnumerable<Type> GetAdvicesForConfiguration<TConfig>();
 
         /// <summary>
         /// Returns the generator for solid proxies

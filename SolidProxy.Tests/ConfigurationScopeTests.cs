@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -35,9 +37,41 @@ namespace SolidProxy.Tests
         {
         }
 
-        public class AdviceWithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        public class Advice1WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
         {
-            public void Configure(IAdviceConfig adviceConfig) { }
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Advice2WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public static IEnumerable<Type> BeforeAdvices = new[] { typeof(Advice1WithConfiguration<,,>) };
+
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Advice3WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public static IEnumerable<Type> BeforeAdvices = new[] { typeof(Advice1WithConfiguration<,,>) };
+            public static IEnumerable<Type> AfterAdvices = new[] { typeof(Advice2WithConfiguration<,,>) };
+
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 throw new NotImplementedException();
@@ -103,6 +137,12 @@ namespace SolidProxy.Tests
             Assert.AreEqual(typeof(AnotherImplementation), sp.GetRequiredService<IAnotherTestInterface>().GetType());
             var solidProxy = ((ISolidProxy)sp.GetRequiredService<ITestInterface>());
             Assert.IsNotNull(solidProxy);
+            var invocation = solidProxy.GetInvocation(null, typeof(ITestInterface).GetMethod(nameof(ITestInterface.Get1Value)), new object[0]);
+            var advices = invocation.SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
+            Assert.AreEqual(3, advices.Count());
+            Assert.AreEqual(typeof(Advice2WithConfiguration<,,>), advices.Skip(0).First().GetType().GetGenericTypeDefinition());
+            Assert.AreEqual(typeof(Advice3WithConfiguration<,,>), advices.Skip(1).First().GetType().GetGenericTypeDefinition());
+            Assert.AreEqual(typeof(Advice1WithConfiguration<,,>), advices.Skip(2).First().GetType().GetGenericTypeDefinition());
         }
 
         [Test]

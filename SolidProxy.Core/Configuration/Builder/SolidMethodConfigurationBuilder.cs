@@ -98,9 +98,9 @@ namespace SolidProxy.Core.Configuration.Builder
 
         private void AddAdvice(List<Type> advices, Type advice, HashSet<Type> cyclicProtection)
         {
-            if(cyclicProtection.Contains(advice))
+            if (cyclicProtection.Contains(advice))
             {
-                throw new Exception("Found advice dependency cycle when adding advice:"+advice.FullName);
+                return;
             }
             cyclicProtection.Add(advice);
             if (advices.Contains(advice))

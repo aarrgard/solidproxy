@@ -157,7 +157,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 //
                 // Fetch advice for configuration.
                 //
-                var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
+                var adviceTypes = GetScope<ISolidConfigurationBuilder>().GetAdvicesForConfiguration<TConfig>();
 
                 //
                 // configure it
@@ -184,7 +184,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 //
                 // Add the advice for the configuration
                 //
-                AddAdvice(adviceType);
+                adviceTypes.ToList().ForEach(adviceType => AddAdvice(adviceType));
             }
             return i;
         }
@@ -337,6 +337,10 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="afterAdvice"></param>
         public void AddAdviceDependency(Type beforeAdvice, Type afterAdvice)
         {
+            if(beforeAdvice.IsConstructedGenericType || afterAdvice.IsConstructedGenericType)
+            {
+                throw new Exception("Advices cannot be constructed when setting up advice dependencies");
+            }
             if(beforeAdvice == afterAdvice)
             {
                 throw new Exception("Supplied advices cannot be the same advice.");
@@ -364,14 +368,11 @@ namespace SolidProxy.Core.Configuration.Builder
             {
                 beforeAdvices = Type.EmptyTypes;
             }
-            if (ParentScope == null)
+            if (ParentScope != null)
             {
-                return beforeAdvices;
+                beforeAdvices = beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));;
             }
-            else
-            {
-                return beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));
-            }
+            return beforeAdvices;
         }
 
         public void AddPreInvocationCallback(Func<ISolidProxyInvocation, Task> callback)
