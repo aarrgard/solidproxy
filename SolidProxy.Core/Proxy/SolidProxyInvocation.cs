@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
@@ -17,12 +18,26 @@ namespace SolidProxy.Core.Proxy
     /// <typeparam name="TAdvice"></typeparam>s
     public class SolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation<TObject, TMethod, TAdvice> where TObject : class
     {
+        private static readonly IDictionary<string, object> EmptyDictionary = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>(0));
         private static readonly string[] EmptyStringList = new string[0];
         private static readonly Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
         private static readonly Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
+        private class InvocationValue
+        {
+            public InvocationValue(string key, object value)
+            {
+                Key = key;
+                KeyLower = key.ToLower();
+                Value = value;
+            }
+            public string KeyLower { get; }
+            public string Key { get; }
+            public object Value { get; }
+        }
+
         private Guid _id;
-        private IDictionary<string, object> _invocationValues;
+        private IDictionary<string, InvocationValue> _invocationValues;
 
         /// <summary>
         /// Constructs a new instance
@@ -47,7 +62,10 @@ namespace SolidProxy.Core.Proxy
             SolidProxyInvocationConfiguration = invocationConfiguration;
             InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
-            _invocationValues = invocationValues;
+            if(invocationValues != null && invocationValues.Any())
+            {
+                _invocationValues = invocationValues.Select(o => new InvocationValue(o.Key, o.Value)).ToDictionary(o => o.KeyLower, o => o);
+            }
         }
 
         private CancellationTokenSource SetupCancellationTokenSource(object[] args, bool canCancel)
@@ -129,7 +147,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The invocation values
         /// </summary>
-        public IDictionary<string, object> InvocationValues {
+        private IDictionary<string, InvocationValue> InvocationValues {
             get
             {
                 if(_invocationValues == null)
@@ -138,7 +156,7 @@ namespace SolidProxy.Core.Proxy
                     {
                         if (_invocationValues == null)
                         {
-                            _invocationValues = new ConcurrentDictionary<string, object>();
+                            _invocationValues = new ConcurrentDictionary<string, InvocationValue>();
                         }
                     }
                 }
@@ -154,7 +172,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the keys associated with this invocation.
         /// </summary>
-        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Keys;
+        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Select(o => o.Value.Key);
 
         /// <summary>
         /// The cancellation token source(if configured)
@@ -215,12 +233,12 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public T GetValue<T>(string key)
         {
-            object res;
-            if(InvocationValues.TryGetValue(key, out res))
+            InvocationValue res;
+            if(InvocationValues.TryGetValue(key.ToLower(), out res))
             {
-                if(typeof(T).IsAssignableFrom(res.GetType()))
+                if(typeof(T).IsAssignableFrom(res.Value.GetType()))
                 {
-                    return (T)res;
+                    return (T)res.Value;
                 }
             }
             return default(T);
@@ -233,7 +251,8 @@ namespace SolidProxy.Core.Proxy
         /// <param name="value"></param>
         public void SetValue<T>(string key, T value)
         {
-            InvocationValues[key] = value;
+            var invocationValue = new InvocationValue(key, value);
+            InvocationValues[invocationValue.KeyLower] = invocationValue;
         }
 
         public void Cancel()

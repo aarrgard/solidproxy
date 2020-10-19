@@ -35,7 +35,7 @@ namespace SolidProxy.Tests
 
             var si = sp.GetRequiredService<ISingletonInterface>();
             var siProxy = (ISolidProxy)si;
-            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, new Dictionary<string, object>() { { "result", 20 } });
+            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, new Dictionary<string, object>() { { "ReSuLt", 20 } });
             Assert.AreEqual(20, result);
         }
     }
