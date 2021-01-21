@@ -38,6 +38,13 @@ namespace SolidProxy.Core.Proxy
         void SetValue<T>(string key, T value);
 
         /// <summary>
+        /// Invokes supplied function on all the types of supplied type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="replaceFunc"></param>
+        void ReplaceArgument<T>(Func<string, T,T> replaceFunc);
+
+        /// <summary>
         /// This is the service provider that the proxy belongs to
         /// </summary>
         IServiceProvider ServiceProvider { get; }

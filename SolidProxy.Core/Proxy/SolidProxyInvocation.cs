@@ -255,9 +255,30 @@ namespace SolidProxy.Core.Proxy
             InvocationValues[invocationValue.KeyLower] = invocationValue;
         }
 
+        /// <summary>
+        /// Cancels the invocation
+        /// </summary>
         public void Cancel()
         {
             CancellationTokenSource?.Cancel();
+        }
+
+        /// <summary>
+        /// Replaces the arguments of a specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="replaceFunc"></param>
+        public void ReplaceArgument<T>(Func<string, T, T> replaceFunc)
+        {
+            var parameters = SolidProxyInvocationConfiguration.MethodInfo.GetParameters();
+            if (parameters.Length != Arguments.Length) throw new Exception("Number of parameters does not match number of arguments");
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if(parameters[i].ParameterType == typeof(T))
+                {
+                    Arguments[i] = replaceFunc(parameters[i].Name, (T)Arguments[i]);
+                }
+            }
         }
     }
 }
