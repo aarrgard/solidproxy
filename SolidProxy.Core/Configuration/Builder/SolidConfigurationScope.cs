@@ -356,6 +356,24 @@ namespace SolidProxy.Core.Configuration.Builder
             {
                 _adviceDependencies[afterAdvice] = new[] { beforeAdvice };
             }
+            _adviceDependencies[afterAdvice] = ExpandList(new List<Type>(), afterAdvice);
+            _adviceDependencies[beforeAdvice] = ExpandList(new List<Type>(), beforeAdvice);
+        }
+
+        private IEnumerable<Type> ExpandList(IList<Type> adviceDependencies, Type advice)
+        {
+            if (_adviceDependencies.TryGetValue(advice, out IEnumerable<Type> beforeAdvices))
+            {
+                foreach(var otherAdvice in beforeAdvices)
+                {
+                    if(!adviceDependencies.Contains(otherAdvice))
+                    {
+                        adviceDependencies.Add(otherAdvice);
+                        ExpandList(adviceDependencies, otherAdvice);
+                    }
+                }
+            }
+            return adviceDependencies;
         }
 
         /// <summary>
@@ -371,7 +389,7 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             if (ParentScope != null)
             {
-                beforeAdvices = beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));;
+                beforeAdvices = beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice)).Distinct();
             }
             if(beforeAdvices.Any())
             {
