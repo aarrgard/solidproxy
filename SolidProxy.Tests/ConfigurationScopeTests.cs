@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -31,10 +33,45 @@ namespace SolidProxy.Tests
             }
         }
 
-        public interface IAdviceConfig : ISolidProxyInvocationImplAdviceConfig { }
-
-        public class AdviceWithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        public interface IAdviceConfig : ISolidProxyInvocationImplAdviceConfig
         {
+        }
+
+        public class Advice1WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Advice2WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public static IEnumerable<Type> BeforeAdvices = new[] { typeof(Advice1WithConfiguration<,,>) };
+
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
+            public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Advice3WithConfiguration<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+        {
+            public static IEnumerable<Type> BeforeAdvices = new[] { typeof(Advice1WithConfiguration<,,>) };
+            public static IEnumerable<Type> AfterAdvices = new[] { typeof(Advice2WithConfiguration<,,>) };
+
+            public bool Configure(IAdviceConfig adviceConfig)
+            {
+                return true;
+            }
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
                 throw new NotImplementedException();
@@ -82,6 +119,7 @@ namespace SolidProxy.Tests
             Assert.AreEqual(2, test.Get12Value());
             Assert.AreEqual(3, test.Get123Value());
         }
+
         [Test]
         public void TestAdviceConfigAddsAdvice()
         {
@@ -95,11 +133,34 @@ namespace SolidProxy.Tests
                 .ConfigureInterface<ITestInterface>()
                 .ConfigureAdvice<IAdviceConfig>();
 
-            services.GetSolidConfigurationBuilder().AddAdvice(typeof(AdviceWithConfiguration<,,>));
-
             var sp = services.BuildServiceProvider();
             Assert.AreEqual(typeof(AnotherImplementation), sp.GetRequiredService<IAnotherTestInterface>().GetType());
             var solidProxy = ((ISolidProxy)sp.GetRequiredService<ITestInterface>());
+            Assert.IsNotNull(solidProxy);
+            var invocation = solidProxy.GetInvocation(null, typeof(ITestInterface).GetMethod(nameof(ITestInterface.Get1Value)), new object[0]);
+            var advices = invocation.SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
+            Assert.AreEqual(3, advices.Count());
+            Assert.AreEqual(typeof(Advice2WithConfiguration<,,>), advices.Skip(0).First().GetType().GetGenericTypeDefinition());
+            Assert.AreEqual(typeof(Advice3WithConfiguration<,,>), advices.Skip(1).First().GetType().GetGenericTypeDefinition());
+            Assert.AreEqual(typeof(Advice1WithConfiguration<,,>), advices.Skip(2).First().GetType().GetGenericTypeDefinition());
+        }
+
+        [Test]
+        public void TestConfigureAdviceConfigFromOtherConfig()
+        {
+            var services = SetupServiceCollection();
+
+            services.AddSingleton<ITestInterface>();
+
+            // this should enable the advice on the test interface
+            var adviceConfig = services.GetSolidConfigurationBuilder()
+                .ConfigureInterface<ITestInterface>()
+                .ConfigureAdvice<IAdviceConfig>();
+
+            Assert.IsTrue(adviceConfig.Enabled);
+
+            var adviceConfig2 = adviceConfig.GetAdviceConfig<IAdviceConfig>();
+            Assert.AreSame(adviceConfig, adviceConfig2);
         }
     }
 }

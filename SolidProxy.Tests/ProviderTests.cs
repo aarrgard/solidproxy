@@ -55,13 +55,15 @@ namespace SolidProxy.Tests
 
         protected class MicrosoftDIAdapter : IProviderAdapter
         {
-            public MicrosoftDIAdapter()
+            public MicrosoftDIAdapter(Func<IServiceCollection, IServiceProvider> providerFactory)
             {
                 ServiceCollection = new ServiceCollection();
+                ProviderFactory = providerFactory;
             }
 
             public IServiceCollection ServiceCollection { get; }
-            public Lazy<IServiceProvider> ServiceProvider => new Lazy<IServiceProvider>(() => ServiceCollection.BuildServiceProvider());
+            public Func<IServiceCollection, IServiceProvider> ProviderFactory { get; }
+            public Lazy<IServiceProvider> ServiceProvider => new Lazy<IServiceProvider>(() => ProviderFactory(ServiceCollection));
 
             public void AddSingleton<TService, TImpl>() where TService : class where TImpl : class, TService
             {
@@ -124,7 +126,15 @@ namespace SolidProxy.Tests
             {
                 return new IProviderAdapter[] {
                     new SolidProxyDIAdapter(),
-                    new MicrosoftDIAdapter(),
+                    new MicrosoftDIAdapter(_ => _.BuildServiceProvider()),
+                    new MicrosoftDIAdapter(_ => {
+                        return _.BuildServiceProvider(new MicrosoftDI.ServiceCollection());
+                    }),
+                    new MicrosoftDIAdapter(_ => {
+                        var fact = new Autofac.Extensions.DependencyInjection.AutofacServiceProviderFactory((__) => { });
+                        var cb = fact.CreateBuilder(_);
+                        return fact.CreateServiceProvider(cb);
+                    }),
                     //new UnityDIAdapter()
                 };
             }

@@ -1,6 +1,11 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Proxy
@@ -10,40 +15,113 @@ namespace SolidProxy.Core.Proxy
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
-    /// <typeparam name="TAdvice"></typeparam>
+    /// <typeparam name="TAdvice"></typeparam>s
     public class SolidProxyInvocation<TObject, TMethod, TAdvice> : ISolidProxyInvocation<TObject, TMethod, TAdvice> where TObject : class
     {
-        private static Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
-        private static Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
+        private static readonly IDictionary<string, object> EmptyDictionary = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>(0));
+        private static readonly string[] EmptyStringList = new string[0];
+        private static readonly Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
+        private static readonly Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
-        private IDictionary<string, object> _invocationValues;
+        private class InvocationValue
+        {
+            public InvocationValue(string key, object value)
+            {
+                Key = key;
+                KeyLower = key.ToLower();
+                Value = value;
+            }
+            public string KeyLower { get; }
+            public string Key { get; }
+            public object Value { get; }
+        }
+
+        private Guid _id;
+        private IDictionary<string, InvocationValue> _invocationValues;
 
         /// <summary>
         /// Constructs a new instance
         /// </summary>
+        /// <param name="caller"></param>
         /// <param name="proxy"></param>
         /// <param name="invocationConfiguration"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
+        /// <param name="canCancel"></param>
         public SolidProxyInvocation(
+            object caller,
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
             object[] args,
-            IDictionary<string, object> invocationValues) 
+            IDictionary<string, object> invocationValues,
+            bool canCancel) 
         {
+            CancellationTokenSource = SetupCancellationTokenSource(args, canCancel);
+            Caller = caller;
             Proxy = proxy;
             SolidProxyInvocationConfiguration = invocationConfiguration;
+            InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
-            _invocationValues = invocationValues;
+            if(invocationValues != null && invocationValues.Any())
+            {
+                _invocationValues = invocationValues.Select(o => new InvocationValue(o.Key, o.Value)).ToDictionary(o => o.KeyLower, o => o);
+            }
         }
+
+        private CancellationTokenSource SetupCancellationTokenSource(object[] args, bool canCancel)
+        {
+            if(!canCancel)
+            {
+                return null;
+            }
+            for (int i = args.Length - 1; i >= 0; i--)
+            {
+                if (args[i] is CancellationToken ct)
+                {
+                    var cts = new CancellationTokenSource();
+                    ct.Register(() => cts.Cancel());
+                    args[i] = cts.Token;
+                    return cts;
+                }
+            }
+            return null;
+        }
+        /// <summary>
+        /// The unique id of this invocation
+        /// </summary>
+        public Guid Id
+        {
+            get
+            {
+                if (_id == Guid.Empty)
+                {
+                    lock (this)
+                    {
+                       if(_id == Guid.Empty)
+                       {
+                            _id = Guid.NewGuid();
+                       }
+                    }
+                }
+                return _id;
+            }
+        }
+
+        /// <summary>
+        /// The caller
+        /// </summary>
+        public object Caller { get; }
+
         /// <summary>
         /// The proxy
         /// </summary>
         public ISolidProxy<TObject> Proxy { get; }
+
         /// <summary>
         /// The proxy
         /// </summary>
         public ISolidProxy SolidProxy => Proxy;
+
         ISolidProxy<TObject> ISolidProxyInvocation<TObject, TMethod, TAdvice>.SolidProxy => Proxy;
         /// <summary>
         /// The service provider
@@ -61,7 +139,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The advices
         /// </summary>
-        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices => SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
+        public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> InvocationAdvices { get; }
         /// <summary>
         /// The current advice index
         /// </summary>
@@ -69,7 +147,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// The invocation values
         /// </summary>
-        public IDictionary<string, object> InvocationValues {
+        private IDictionary<string, InvocationValue> InvocationValues {
             get
             {
                 if(_invocationValues == null)
@@ -78,7 +156,7 @@ namespace SolidProxy.Core.Proxy
                     {
                         if (_invocationValues == null)
                         {
-                            _invocationValues = new Dictionary<string, object>();
+                            _invocationValues = new ConcurrentDictionary<string, InvocationValue>();
                         }
                     }
                 }
@@ -90,6 +168,21 @@ namespace SolidProxy.Core.Proxy
         /// Returns true if this is the last step.
         /// </summary>
         public bool IsLastStep =>InvocationAdviceIdx == InvocationAdvices.Count-1;
+
+        /// <summary>
+        /// Returns the keys associated with this invocation.
+        /// </summary>
+        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Select(o => o.Value.Key);
+
+        /// <summary>
+        /// The cancellation token source(if configured)
+        /// </summary>
+        private CancellationTokenSource CancellationTokenSource { get; }
+
+        /// <summary>
+        /// Returns the cancellation token.
+        /// </summary>
+        public CancellationToken CancellationToken => Arguments.OfType<CancellationToken>().FirstOrDefault();
 
         private async Task<TAdvice> InvokeProxyPipeline()
         {
@@ -103,7 +196,8 @@ namespace SolidProxy.Core.Proxy
                 if (stepIdx >= InvocationAdvices.Count)
                 {
                     var mi = SolidProxyInvocationConfiguration.MethodInfo;
-                    throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}");
+                    var strAdviceChain = $"{InvocationAdvices.Count}:{string.Join("->", InvocationAdvices.Select(o => o.GetType().Name))}";
+                    throw new NotImplementedException($"Reached end of pipline invoking {mi.DeclaringType.FullName}.{mi.Name}, {strAdviceChain}");
                 }
                 InvocationAdviceIdx = stepIdx;
                 return InvocationAdvices[stepIdx].Handle(CreateStepIterator(stepIdx+1), this);
@@ -139,12 +233,12 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public T GetValue<T>(string key)
         {
-            object res;
-            if(InvocationValues.TryGetValue(key, out res))
+            InvocationValue res;
+            if(InvocationValues.TryGetValue(key.ToLower(), out res))
             {
-                if(typeof(T).IsAssignableFrom(res.GetType()))
+                if(typeof(T).IsAssignableFrom(res.Value.GetType()))
                 {
-                    return (T)res;
+                    return (T)res.Value;
                 }
             }
             return default(T);
@@ -157,7 +251,34 @@ namespace SolidProxy.Core.Proxy
         /// <param name="value"></param>
         public void SetValue<T>(string key, T value)
         {
-            InvocationValues[key] = value;
+            var invocationValue = new InvocationValue(key, value);
+            InvocationValues[invocationValue.KeyLower] = invocationValue;
+        }
+
+        /// <summary>
+        /// Cancels the invocation
+        /// </summary>
+        public void Cancel()
+        {
+            CancellationTokenSource?.Cancel();
+        }
+
+        /// <summary>
+        /// Replaces the arguments of a specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="replaceFunc"></param>
+        public void ReplaceArgument<T>(Func<string, T, T> replaceFunc)
+        {
+            var parameters = SolidProxyInvocationConfiguration.MethodInfo.GetParameters();
+            if (parameters.Length != Arguments.Length) throw new Exception("Number of parameters does not match number of arguments");
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if(parameters[i].ParameterType == typeof(T))
+                {
+                    Arguments[i] = replaceFunc(parameters[i].Name, (T)Arguments[i]);
+                }
+            }
         }
     }
 }

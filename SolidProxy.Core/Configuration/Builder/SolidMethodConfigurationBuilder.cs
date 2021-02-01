@@ -64,17 +64,7 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             if(!advices.Contains(adviceType))
             {
-                //
-                // place the invocation advice last.
-                //
-                if(advices.Contains(typeof(SolidProxyInvocationImplAdvice<,,>)))
-                {
-                    advices.Insert(advices.Count - 1, adviceType);
-                }
-                else
-                {
-                    advices.Add(adviceType);
-                }
+                advices.Add(adviceType);
                 ConfigureProxy<T>(GetScope<ISolidInterfaceConfigurationBuilder<T>>());
             }
         }
@@ -95,18 +85,22 @@ namespace SolidProxy.Core.Configuration.Builder
         public IEnumerable<Type> GetSolidInvocationAdviceTypes()
         {
             var advices = new List<Type>();
-            (GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes).ToList().ForEach(advice =>
-            {
-                AddAdvice(advices, advice, new HashSet<Type>());
-            });
+            (GetValue<IList<Type>>(nameof(GetSolidInvocationAdviceTypes), false) ?? Type.EmptyTypes)
+                .Where(advice => advice != typeof(SolidProxyInvocationImplAdvice<,,>))
+                .Distinct()
+                .ToList()
+                .ForEach(advice => {
+                    AddAdvice(advices, advice, new HashSet<Type>());
+                });
+            AddAdvice(advices, typeof(SolidProxyInvocationImplAdvice<,,>), new HashSet<Type>());
             return advices;
         }
 
         private void AddAdvice(List<Type> advices, Type advice, HashSet<Type> cyclicProtection)
         {
-            if(cyclicProtection.Contains(advice))
+            if (cyclicProtection.Contains(advice))
             {
-                throw new Exception("Found advice dependency cycle");
+                return;
             }
             cyclicProtection.Add(advice);
             if (advices.Contains(advice))

@@ -46,7 +46,6 @@ namespace SolidProxy.Tests
             services.AddSingleton<IEnabledInterface>();
             services.AddSingleton<IDisabledInterface>();
             
-            services.GetSolidConfigurationBuilder().RegisterConfigurationAdvice(typeof(InvocationAdvice<,,>));
             services.GetSolidConfigurationBuilder().ConfigureAdvice<IInvocationStepConfig>().Enabled = true;
             services.GetSolidConfigurationBuilder().ConfigureAdvice<IInvocationStepConfig>().Retries = 123;
             services.GetSolidConfigurationBuilder().ConfigureInterface<IEnabledInterface>()

@@ -1,7 +1,9 @@
 ﻿using SolidProxy.Core.Configuration.Builder;
 using SolidProxy.Core.IoC;
+using SolidProxy.Core.Proxy;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -39,6 +41,12 @@ namespace SolidProxy.Core.Configuration
         T GetValue<T>(string key, bool searchParentScopes);
 
         /// <summary>
+        /// Adds a pre invocation callback.
+        /// </summary>
+        /// <param name="callback"></param>
+        void AddPreInvocationCallback(Func<ISolidProxyInvocation, Task> callback);
+
+        /// <summary>
         /// Sets the value
         /// </summary>
         /// <typeparam name="T">The value type to write</typeparam>
@@ -64,6 +72,14 @@ namespace SolidProxy.Core.Configuration
         T ConfigureAdvice<T>() where T : class, ISolidProxyInvocationAdviceConfig;
 
         /// <summary>
+        /// Returns true if the specified advice is enabled on this scope level.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        bool IsAdviceEnabled<T>() where T : class, ISolidProxyInvocationAdviceConfig;
+
+
+        /// <summary>
         /// Returns true if the advice is configured on this scope or a parent scope.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -79,7 +95,7 @@ namespace SolidProxy.Core.Configuration
 
         /// <summary>
         /// Links two advices together. This ensures that if the "afterAdvice" is
-        /// configured on a proxy the "beforeAdvice" is guaranteed to be invoked begore that advice.
+        /// configured on a proxy the "beforeAdvice" is guaranteed to be invoked before that advice.
         /// </summary>
         /// <param name="beforeAdvice">The advice to run first</param>
         /// <param name="afterAdvice">The advice to run after </param>

@@ -20,7 +20,7 @@ namespace SolidProxy.Core.Configuration.Builder
         public SolidConfigurationBuilder() : base(SolidScopeType.Global, null)
         {
             AssemblyBuilders = new ConcurrentDictionary<Assembly, SolidAssemblyConfigurationBuilder>();
-            AdviceConfigurations = new ConcurrentDictionary<Type, Type>();
+            AdviceConfigurations = new ConcurrentDictionary<Type, IEnumerable<Type>>();
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <summary>
         /// The advice configurations
         /// </summary>
-        public ConcurrentDictionary<Type, Type> AdviceConfigurations { get; }
+        public ConcurrentDictionary<Type, IEnumerable<Type>> AdviceConfigurations { get; }
 
         IEnumerable<ISolidAssemblyConfigurationBuilder> ISolidConfigurationBuilder.AssemblyBuilders => AssemblyBuilders.Values;
 
@@ -144,27 +144,49 @@ namespace SolidProxy.Core.Configuration.Builder
         public abstract ISolidConfigurationBuilder SetGenerator<TGen>() where TGen : class, ISolidProxyGenerator, new();
 
         /// <summary>
-        /// Registers supplied advice configuration
-        /// </summary>
-        /// <param name="adviceType"></param>
-        public void RegisterConfigurationAdvice(Type adviceType)
-        {
-            var configType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
-            AdviceConfigurations[configType] = adviceType;
-        }
-
-        /// <summary>
         /// Returns the advice for supplied configuration.
         /// </summary>
         /// <typeparam name="TConfig"></typeparam>
         /// <returns></returns>
-        public Type GetAdviceForConfiguration<TConfig>()
+        public IEnumerable<Type> GetAdvicesForConfiguration<TConfig>()
         {
-            if(AdviceConfigurations.TryGetValue(typeof(TConfig), out Type adviceType))
+            return AdviceConfigurations.GetOrAdd(typeof(TConfig), _ => GetAdvicesForConfiguration(_));
+        }
+
+        private IEnumerable<Type> GetAdvicesForConfiguration(Type configType)
+        {
+            var advices = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => GetAdviceTypes(a, configType));
+            if(!advices.Any())
             {
-                return adviceType;
+                throw new Exception($"Could not find advice for configuration {configType.FullName}");
             }
-            return null;
+            return advices;
+        }
+
+        private IEnumerable<Type> GetAdviceTypes(Assembly assembly, Type configType)
+        {
+            var adviceTypes = new HashSet<Type>();
+            try
+            {
+                foreach (var adviceType in assembly.GetTypes())
+                {
+                    if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
+                    {
+                        continue;
+                    }
+                    var adviceConfigType = SolidConfigurationHelper.GetAdviceConfigType(adviceType);
+                    if (adviceConfigType == configType)
+                    {
+                        ConfigureAdvice(adviceType);
+                        adviceTypes.Add(adviceType);
+                    }
+                }
+                return adviceTypes;
+            }
+            catch (TypeLoadException)
+            {
+                return adviceTypes;
+            }
         }
     }
 }

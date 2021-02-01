@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Configuration.Builder
 {
@@ -15,8 +16,8 @@ namespace SolidProxy.Core.Configuration.Builder
     public abstract class SolidConfigurationScope : ISolidConfigurationScope
     {
         private SolidProxyServiceProvider _internalServiceProvider;
-        private ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
-        private ConcurrentDictionary<Type, IEnumerable<Type>> _adviceDependencies = new ConcurrentDictionary<Type, IEnumerable<Type>>();
+        private readonly ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<Type, IEnumerable<Type>> _adviceDependencies = new ConcurrentDictionary<Type, IEnumerable<Type>>();
 
         /// <summary>
         /// Constructs a new instance
@@ -97,16 +98,30 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public T GetValue<T>(string key, bool searchParentScope)
         {
-            object val;
-            if (_items.TryGetValue(key, out val))
-            { 
-                if(val is Func<T> del)
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(ICollection<>))
+            {
+                if (!_items.TryGetValue(key, out object coll))
+                {
+                    var t = typeof(T).GetGenericArguments()[0];
+                    coll = Activator.CreateInstance(typeof(SolidConfigurationScopeCollection<>).MakeGenericType(t));
+                    if (searchParentScope && ParentScope != null)
+                    {
+                        var parent = (SolidConfigurationScopeCollection)(object)ParentScope.GetValue<T>(key, searchParentScope);
+                        ((SolidConfigurationScopeCollection)coll).Parent = parent;
+                    }
+                    _items[key] = coll;
+                }
+                return (T)coll;
+            }
+            if (_items.TryGetValue(key, out object val))
+            {
+                if (val is Func<T> del)
                 {
                     return del();
                 }
-                return (T)val;
+                return(T)val;
             }
-            if(searchParentScope && ParentScope != null)
+            if (searchParentScope && ParentScope != null)
             {
                 return ParentScope.GetValue<T>(key, searchParentScope);
             }
@@ -139,6 +154,14 @@ namespace SolidProxy.Core.Configuration.Builder
             var i = (TConfig)ServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
+                //
+                // Fetch advice for configuration.
+                //
+                var adviceTypes = GetScope<ISolidConfigurationBuilder>().GetAdvicesForConfiguration<TConfig>();
+
+                //
+                // configure it
+                //
                 bool enable = !IsAdviceConfigured<TConfig>();
                 var configBuilder = ServiceProvider.GetRequiredService<ISolidConfigurationBuilder>();
                 var proxyConf = configBuilder.ConfigureInterface<TConfig>();
@@ -161,11 +184,7 @@ namespace SolidProxy.Core.Configuration.Builder
                 //
                 // Add the advice for the configuration
                 //
-                var adviceType = this.GetScope<ISolidConfigurationBuilder>().GetAdviceForConfiguration<TConfig>();
-                if(adviceType != null)
-                {
-                    AddAdvice(adviceType);
-                }
+                adviceTypes.ToList().ForEach(adviceType => AddAdvice(adviceType));
             }
             return i;
         }
@@ -188,6 +207,17 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
+        public bool IsAdviceEnabled<T>() where T : class, ISolidProxyInvocationAdviceConfig
+        {
+            if (!IsAdviceConfigured<T>()) return false;
+            return ConfigureAdvice<T>().Enabled;
+        }
+
+        /// <summary>
+        /// Determines if the advice has been configures
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
         {
             return IsAdviceConfigured(typeof(T));
@@ -203,15 +233,15 @@ namespace SolidProxy.Core.Configuration.Builder
             //
             // The advice is configured if we can find the configuration "service".
             //
-            var stepScopeType = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
-            if(!stepScopeType)
+            var isAdviceConfigured = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
+            if(!isAdviceConfigured)
             {
                 if(ServiceProvider.GetService(settingsType) != null)
                 {
-                    stepScopeType = true;
+                    isAdviceConfigured = true;
                 }
             }
-            return stepScopeType;
+            return isAdviceConfigured;
         }
 
         /// <summary>
@@ -238,11 +268,34 @@ namespace SolidProxy.Core.Configuration.Builder
                 }
             }
 
+            //
+            // Add the advice to all the methods that meet the pointcut requirement.
+            //
             GetMethodConfigurationBuilders()
                 .Where(o => pointcut(o))
                 .ToList().ForEach(o => {
                     o.AddAdvice(adviceType);
                 }); 
+        }
+
+        protected void AddAdviceDependencies(Type adviceType)
+        {
+            AddAdviceDependencies(adviceType, "BeforeAdvices", (a1, a2) => AddAdviceDependency(a1, a2));
+            AddAdviceDependencies(adviceType, "AfterAdvices", (a1, a2) => AddAdviceDependency(a2, a1));
+        }
+
+        protected void AddAdviceDependencies(Type adviceType, string fieldName, Action<Type, Type> action)
+        {
+            var prop = adviceType.GetField(fieldName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            if (prop == null) return;
+            if (!prop.IsStatic) throw new Exception($"Field {fieldName} is not static");
+            prop = adviceType.MakeGenericType(adviceType.GetGenericArguments().Select(o => typeof(object)).ToArray()).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var adviceEnum = prop.GetValue(null) as IEnumerable<Type>;
+            if (adviceEnum == null) throw new ArgumentException("Before or after advices cannot be converted to a type enum");
+            foreach(var advice in adviceEnum)
+            {
+                action(adviceType, advice);
+            }
         }
 
         /// <summary>
@@ -285,6 +338,10 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <param name="afterAdvice"></param>
         public void AddAdviceDependency(Type beforeAdvice, Type afterAdvice)
         {
+            if(beforeAdvice.IsConstructedGenericType || afterAdvice.IsConstructedGenericType)
+            {
+                throw new Exception("Advices cannot be constructed when setting up advice dependencies");
+            }
             if(beforeAdvice == afterAdvice)
             {
                 throw new Exception("Supplied advices cannot be the same advice.");
@@ -299,6 +356,24 @@ namespace SolidProxy.Core.Configuration.Builder
             {
                 _adviceDependencies[afterAdvice] = new[] { beforeAdvice };
             }
+            _adviceDependencies[afterAdvice] = ExpandList(new List<Type>(), afterAdvice);
+            _adviceDependencies[beforeAdvice] = ExpandList(new List<Type>(), beforeAdvice);
+        }
+
+        private IEnumerable<Type> ExpandList(IList<Type> adviceDependencies, Type advice)
+        {
+            if (_adviceDependencies.TryGetValue(advice, out IEnumerable<Type> beforeAdvices))
+            {
+                foreach(var otherAdvice in beforeAdvices)
+                {
+                    if(!adviceDependencies.Contains(otherAdvice))
+                    {
+                        adviceDependencies.Add(otherAdvice);
+                        ExpandList(adviceDependencies, otherAdvice);
+                    }
+                }
+            }
+            return adviceDependencies;
         }
 
         /// <summary>
@@ -308,19 +383,25 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public IEnumerable<Type> GetAdviceDependencies(Type advice)
         {
-            IEnumerable<Type> beforeAdvices;
-            if (!_adviceDependencies.TryGetValue(advice, out beforeAdvices))
+            if (!_adviceDependencies.TryGetValue(advice, out IEnumerable<Type> beforeAdvices))
             {
                 beforeAdvices = Type.EmptyTypes;
             }
-            if (ParentScope == null)
+            if (ParentScope != null)
+            {
+                beforeAdvices = beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice)).Distinct();
+            }
+            if(beforeAdvices.Any())
             {
                 return beforeAdvices;
             }
-            else
-            {
-                return beforeAdvices.Union(ParentScope.GetAdviceDependencies(advice));
-            }
+            return beforeAdvices;
+        }
+
+        public void AddPreInvocationCallback(Func<ISolidProxyInvocation, Task> callback)
+        {
+            var invocConfig = ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+            invocConfig.PreInvocationCallbacks.Add(callback);
         }
 
         /// <summary>

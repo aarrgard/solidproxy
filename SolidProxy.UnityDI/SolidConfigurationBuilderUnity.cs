@@ -50,7 +50,10 @@ namespace SolidProxy.UnityDI
         /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
-            DoIfMissing(adviceType, () => { UnityContainer.RegisterType(adviceType, adviceType); });
+            DoIfMissing(adviceType, () => { 
+                UnityContainer.RegisterType(adviceType, adviceType);
+                AddAdviceDependencies(adviceType);
+            });
         }
 
         /// <summary>

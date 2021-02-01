@@ -18,6 +18,7 @@ namespace SolidProxy.Core.Configuration.Runtime
     /// <typeparam name="TAdvice"></typeparam>
     public class SolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> : SolidConfigurationScope, ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> where TObject : class
     {
+        private object _mutex = new object();
         private IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> _advices;
 
         /// <summary>
@@ -64,21 +65,27 @@ namespace SolidProxy.Core.Configuration.Runtime
             return sp;
         }
 
-        /// <summary>
-        /// Creates a new invocation
-        /// </summary>
-        /// <param name="rpcProxy"></param>
-        /// <param name="args"></param>
-        /// <param name="invocationValues"></param>
-        /// <returns></returns>
-        public ISolidProxyInvocation CreateProxyInvocation(ISolidProxy rpcProxy, object[] args, IDictionary<string, object> invocationValues)
+        public ISolidProxyInvocation CreateProxyInvocation(object caller, ISolidProxy solidProxy, object[] args, IDictionary<string, object> invocationValues, bool canCancel)
         {
-            return new SolidProxyInvocation<TObject, TMethod, TAdvice>((ISolidProxy<TObject>)rpcProxy, this, args, invocationValues);
+            return new SolidProxyInvocation<TObject, TMethod, TAdvice>(caller, (ISolidProxy<TObject>)solidProxy, this, args, invocationValues, canCancel);
         }
 
         IEnumerable<ISolidProxyInvocationAdvice> ISolidProxyInvocationConfiguration.GetSolidInvocationAdvices()
         {
             return GetSolidInvocationAdvices();
+        }
+
+        /// <summary>
+        /// Returns true if this invocation has an implementation.
+        /// </summary>
+        public bool HasImplementation
+        {
+            get
+            {
+                var lastAdvice = GetSolidInvocationAdvices().LastOrDefault();
+                if (lastAdvice == null) return false;
+                return typeof(SolidProxyInvocationImplAdvice).IsAssignableFrom(lastAdvice.GetType());
+            }
         }
 
         /// <summary>
@@ -96,9 +103,13 @@ namespace SolidProxy.Core.Configuration.Runtime
         /// <returns></returns>
         public IList<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>> GetSolidInvocationAdvices()
         {
-            if(_advices == null)
+            lock(_mutex) 
             {
-                var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes().ToList();
+                if (_advices != null)
+                {
+                    return _advices;
+                }
+                var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
 
                 //
@@ -127,32 +138,29 @@ namespace SolidProxy.Core.Configuration.Runtime
                     var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
                     if (step == null)
                     {
-                        throw new Exception($"No step configured for type: {t.FullName}");
+                        throw new Exception($"Advice not registered in service provider:{t.FullName}");
                     }
                     return step;
                 }).ToList();
 
-                //
-                // configure the advices
-                //
-                _advices = _advices.Select(step =>
-                {
-                    if (SolidConfigurationHelper.ConfigureAdvice(step, this))
-                    {
-                        return step;
-                    }
-                    else
-                    {
-                        // step is not enabled.
-                        return null;
-                    }
-
-                }).Where(o => o != null).ToList();
-
                 _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
-            }
 
-            return _advices;
+                //
+                // configure the advices - remove the ones that return false
+                // in config method. Do this in reverse order - thus removing
+                // the implementation advice before any other advice is configured.
+                // This lets the other advices determine if an implementation exists
+                // based on if the implementation advice exists.
+                //
+                foreach(var advice in _advices.Reverse())
+                {
+                    if (!SolidConfigurationHelper.ConfigureAdvice(advice, this))
+                    {
+                        _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices.Where(o => o != advice).ToList());
+                    }
+                }
+                return _advices;
+            }
         }
     }
 }

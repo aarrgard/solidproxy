@@ -16,6 +16,11 @@ namespace SolidProxy.Core.Proxy
         IServiceProvider ServiceProvider { get; }
 
         /// <summary>
+        /// The type that this proxy represents.
+        /// </summary>
+        Type ServiceType { get; }
+
+        /// <summary>
         /// Returns the proxy implementing the interface.
         /// </summary>
         object Proxy { get; }
@@ -28,25 +33,53 @@ namespace SolidProxy.Core.Proxy
         IEnumerable<ISolidProxyInvocationAdvice> GetInvocationAdvices(MethodInfo methodInfo);
 
         /// <summary>
-        /// Invokes the method with supplied args. If the return type of the method 
-        /// is a Task this method does not wait for the task.
+        /// Returns a solid proxy invocation instance for every method that this proxy represents.
         /// </summary>
+        /// <returns></returns>
+        IEnumerable<ISolidProxyInvocation> GetInvocations();
+
+        /// <summary>
+        /// Returns a solid proxy invocation representing the specified method.
+        /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
+        /// <param name="methodName">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
+        /// <returns></returns>
+        ISolidProxyInvocation GetInvocation(object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null);
+
+        /// <summary>
+        /// Returns a solid proxy invocation representing the specified method.
+        /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        object Invoke(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+
+        /// <summary>
+        /// Invokes the method with supplied args. If the return type of the method 
+        /// is a Task this method does not wait for the task.
+        /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
+        /// <param name="method">The method to invoke</param>
+        /// <param name="args">The method arguments</param>
+        /// <param name="invocationValues">The invocation values to associate with the call</param>
+        /// <returns></returns>
+        object Invoke(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Invokes the method with supplied args. If the return type
         /// of the method is void or Task then the wrapped return value 
         /// will be null.
         /// </summary>
+        /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        Task<object> InvokeAsync(MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        Task<object> InvokeAsync(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using SolidProxy.Core.Configuration.Builder;
@@ -91,7 +92,10 @@ namespace SolidProxy.MicrosoftDI
         /// <param name="adviceType"></param>
         public override void ConfigureAdvice(Type adviceType)
         {
-            DoIfMissing(adviceType, () => { ServiceCollection.AddTransient(adviceType, adviceType); });
+            DoIfMissing(adviceType, () => {
+                ServiceCollection.AddTransient(adviceType, adviceType);
+                AddAdviceDependencies(adviceType);
+            });
         }
         /// <summary>
         /// Configures the proxy
@@ -178,17 +182,19 @@ namespace SolidProxy.MicrosoftDI
             //
             // make sure that all the methods are configured
             //
-            typeof(TProxy).GetMethods().ToList().ForEach(m =>
+            var proxyMethods = GetProxyMethods<TProxy>();
+            foreach (var m in proxyMethods)
             {
                 var methodConfig = interfaceConfig.ConfigureMethod(m);
                 methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
-                methodConfig.AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
-            });
+            }
         }
 
-        private TProxy GetProxy<TProxy>(IServiceProvider sp) where TProxy : class
+        private IEnumerable<MethodInfo> GetProxyMethods<TProxy>() where TProxy : class
         {
-            return sp.GetRequiredService<ISolidProxy<TProxy>>().Proxy;
+            return typeof(TProxy).GetMethods()
+                .Union(typeof(TProxy).GetInterfaces().SelectMany(o => o.GetMethods()))
+                .Distinct();
         }
 
         /// <summary>

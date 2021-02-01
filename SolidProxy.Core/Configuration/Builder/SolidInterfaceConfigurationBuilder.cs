@@ -15,6 +15,8 @@ namespace SolidProxy.Core.Configuration.Builder
     /// <typeparam name="T"></typeparam>
     public class SolidInterfaceConfigurationBuilder<T> : SolidConfigurationScope<T>, ISolidInterfaceConfigurationBuilder<T> where T : class
     {
+        private IDictionary<MethodInfo, ISolidMethodConfigurationBuilder> _methodBuilders;
+
         /// <summary>
         /// Constructs a new instance
         /// </summary>
@@ -23,18 +25,13 @@ namespace SolidProxy.Core.Configuration.Builder
         public SolidInterfaceConfigurationBuilder(SolidAssemblyConfigurationBuilder parent, Type interfaceType)
             : base(SolidScopeType.Interface, parent)
         {
-            MethodBuilders = new ConcurrentDictionary<MethodInfo, ISolidMethodConfigurationBuilder>();
+            _methodBuilders = new ConcurrentDictionary<MethodInfo, ISolidMethodConfigurationBuilder>();
         }
-
-        /// <summary>
-        /// The method builders
-        /// </summary>
-        public ConcurrentDictionary<MethodInfo, ISolidMethodConfigurationBuilder> MethodBuilders { get; }
 
         /// <summary>
         /// The methods
         /// </summary>
-        public IEnumerable<ISolidMethodConfigurationBuilder> Methods => MethodBuilders.Values;
+        public IEnumerable<ISolidMethodConfigurationBuilder> Methods => _methodBuilders.Values;
 
         /// <summary>
         /// The interface type
@@ -61,7 +58,15 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public SolidMethodConfigurationBuilder<T> GetMethodBuilder(MethodInfo methodInfo)
         {
-            return (SolidMethodConfigurationBuilder<T>)MethodBuilders.GetOrAdd(methodInfo, _ => new SolidMethodConfigurationBuilder<T>(this, _));
+            lock(_methodBuilders)
+            {
+                ISolidMethodConfigurationBuilder methodBuilder;
+                if(!_methodBuilders.TryGetValue(methodInfo, out methodBuilder))
+                {
+                    _methodBuilders[methodInfo] = methodBuilder = new SolidMethodConfigurationBuilder<T>(this, methodInfo);
+                }
+                return (SolidMethodConfigurationBuilder<T>)methodBuilder;
+            }
         }
 
         /// <summary>
