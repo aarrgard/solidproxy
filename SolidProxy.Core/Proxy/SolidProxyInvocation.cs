@@ -23,21 +23,9 @@ namespace SolidProxy.Core.Proxy
         private static readonly Func<Task<TAdvice>, TMethod> s_TAdviceToTMethodConverter = TypeConverter.CreateConverter<Task<TAdvice>, TMethod>();
         private static readonly Func<Task<TAdvice>, Task<object>> s_TAdviceToTObjectConverter = TypeConverter.CreateConverter<Task<TAdvice>, Task<object>>();
 
-        private class InvocationValue
-        {
-            public InvocationValue(string key, object value)
-            {
-                Key = key;
-                KeyLower = key.ToLower();
-                Value = value;
-            }
-            public string KeyLower { get; }
-            public string Key { get; }
-            public object Value { get; }
-        }
-
         private Guid _id;
-        private IDictionary<string, InvocationValue> _invocationValues;
+        private IDictionary<string, object> _invocationValues = null;
+        private ConcurrentDictionary<string, string> _invocationValueMap = null;
 
         /// <summary>
         /// Constructs a new instance
@@ -62,9 +50,10 @@ namespace SolidProxy.Core.Proxy
             SolidProxyInvocationConfiguration = invocationConfiguration;
             InvocationAdvices = invocationConfiguration.GetSolidInvocationAdvices();
             Arguments = args;
-            if(invocationValues != null && invocationValues.Any())
+            _invocationValues = invocationValues;
+            if(_invocationValues != null)
             {
-                _invocationValues = invocationValues.Select(o => new InvocationValue(o.Key, o.Value)).ToDictionary(o => o.KeyLower, o => o);
+                _invocationValues.Keys.ToList().ForEach(o => GetInvocationKey(o));
             }
         }
 
@@ -144,25 +133,6 @@ namespace SolidProxy.Core.Proxy
         /// The current advice index
         /// </summary>
         public int InvocationAdviceIdx { get; private set; }
-        /// <summary>
-        /// The invocation values
-        /// </summary>
-        private IDictionary<string, InvocationValue> InvocationValues {
-            get
-            {
-                if(_invocationValues == null)
-                {
-                    lock (this)
-                    {
-                        if (_invocationValues == null)
-                        {
-                            _invocationValues = new ConcurrentDictionary<string, InvocationValue>();
-                        }
-                    }
-                }
-                return _invocationValues;
-            }
-        }
 
         /// <summary>
         /// Returns true if this is the last step.
@@ -172,7 +142,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the keys associated with this invocation.
         /// </summary>
-        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Select(o => o.Value.Key);
+        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Keys;
 
         /// <summary>
         /// The cancellation token source(if configured)
@@ -226,6 +196,35 @@ namespace SolidProxy.Core.Proxy
         }
 
         /// <summary>
+        /// returns the invocation values
+        /// </summary>
+        private IDictionary<string, object> InvocationValues
+        {
+            get
+            {
+                if(_invocationValues != null)
+                {
+                    return _invocationValues;
+                }
+                _invocationValues = new Dictionary<string, object>();
+                return _invocationValues;
+            }
+        }
+
+        /// <summary>
+        /// returns the invocation values
+        /// </summary>
+        private string GetInvocationKey(string key)
+        {
+            if (_invocationValueMap == null)
+            {
+                _invocationValueMap = new ConcurrentDictionary<string, string>();
+            }
+
+            return _invocationValueMap.GetOrAdd(key.ToLower(), _ => key);
+        }
+
+        /// <summary>
         /// Returns the value for supplied key.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -233,12 +232,17 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public T GetValue<T>(string key)
         {
-            InvocationValue res;
-            if(InvocationValues.TryGetValue(key.ToLower(), out res))
+            object res;
+            if(_invocationValues == null)
             {
-                if(typeof(T).IsAssignableFrom(res.Value.GetType()))
+                return default(T);
+            }
+            key = GetInvocationKey(key);
+            if (InvocationValues.TryGetValue(key, out res))
+            {
+                if(typeof(T).IsAssignableFrom(res.GetType()))
                 {
-                    return (T)res.Value;
+                    return (T)res;
                 }
             }
             return default(T);
@@ -251,8 +255,8 @@ namespace SolidProxy.Core.Proxy
         /// <param name="value"></param>
         public void SetValue<T>(string key, T value)
         {
-            var invocationValue = new InvocationValue(key, value);
-            InvocationValues[invocationValue.KeyLower] = invocationValue;
+            key = GetInvocationKey(key);
+            InvocationValues[key] = value;
         }
 
         /// <summary>

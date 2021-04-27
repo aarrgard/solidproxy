@@ -18,7 +18,10 @@ namespace SolidProxy.Tests
         {
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                return Task.FromResult(invocation.GetValue<TAdvice>("result"));
+                var res =  Task.FromResult(invocation.GetValue<TAdvice>("result"));
+                invocation.SetValue("result", 30);
+                invocation.SetValue("another-result", 40);
+                return res;
             }
         }
 
@@ -33,10 +36,14 @@ namespace SolidProxy.Tests
 
             var sp = services.BuildServiceProvider();
 
+            var invocationValues = new Dictionary<string, object>() { { "ReSuLt", 20 } };
             var si = sp.GetRequiredService<ISingletonInterface>();
             var siProxy = (ISolidProxy)si;
-            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, new Dictionary<string, object>() { { "ReSuLt", 20 } });
+            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
             Assert.AreEqual(20, result);
+            Assert.AreEqual(30, invocationValues["ReSuLt"]);
+            Assert.AreEqual(40, invocationValues["another-result"]);
+
         }
     }
 }
