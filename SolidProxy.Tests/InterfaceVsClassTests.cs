@@ -28,9 +28,9 @@ namespace SolidProxy.Tests
 
         public class HasImplementationAdvice<TObject, TReturnType> : ISolidProxyInvocationAdvice<TObject, TReturnType, bool> where TObject : class
         {
-            public async Task<bool> Handle(Func<Task<bool>> next, ISolidProxyInvocation<TObject, TReturnType, bool> invocation)
+            public Task<bool> Handle(Func<Task<bool>> next, ISolidProxyInvocation<TObject, TReturnType, bool> invocation)
             {
-                return invocation.SolidProxyInvocationConfiguration.HasImplementation;
+                return Task.FromResult(invocation.SolidProxyInvocationConfiguration.HasImplementation);
             }
         }
 

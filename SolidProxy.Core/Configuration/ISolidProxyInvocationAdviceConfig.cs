@@ -1,9 +1,6 @@
 ﻿using SolidProxy.Core.Configuration.Runtime;
-using SolidProxy.Core.Proxy;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace SolidProxy.Core.Configuration
 {
@@ -22,7 +19,7 @@ namespace SolidProxy.Core.Configuration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T GetAdviceConfig<T>() where T : ISolidProxyInvocationAdviceConfig;
+        T GetAdviceConfig<T>();
 
 
         /// <summary>

@@ -69,14 +69,14 @@ namespace SolidProxy.Core.Configuration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T ConfigureAdvice<T>() where T : class, ISolidProxyInvocationAdviceConfig;
+        T ConfigureAdvice<T>() where T : class;
 
         /// <summary>
         /// Returns true if the specified advice is enabled on this scope level.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        bool IsAdviceEnabled<T>() where T : class, ISolidProxyInvocationAdviceConfig;
+        bool IsAdviceEnabled<T>() where T : class;
 
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace SolidProxy.Core.Configuration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig;
+        bool IsAdviceConfigured<T>() where T : class;
 
         /// <summary>
         /// Returns true if the advice is configured on this scope or a parent scope.
@@ -92,6 +92,13 @@ namespace SolidProxy.Core.Configuration
         /// <param name="setting"></param>
         /// <returns></returns>
         bool IsAdviceConfigured(Type setting);
+
+        /// <summary>
+        /// Returns the advice configurations that matches the supplied type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        IEnumerable<T> GetAdviceConfigurations<T>();
 
         /// <summary>
         /// Links two advices together. This ensures that if the "afterAdvice" is

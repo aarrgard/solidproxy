@@ -149,16 +149,11 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="TConfig"></typeparam>
         /// <returns></returns>
-        public TConfig ConfigureAdvice<TConfig>() where TConfig: class,ISolidProxyInvocationAdviceConfig
+        public TConfig ConfigureAdvice<TConfig>() where TConfig: class
         {
             var i = (TConfig)ServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
-                //
-                // Fetch advice for configuration.
-                //
-                var adviceTypes = GetScope<ISolidConfigurationBuilder>().GetAdvicesForConfiguration<TConfig>();
-
                 //
                 // configure it
                 //
@@ -172,11 +167,13 @@ namespace SolidProxy.Core.Configuration.Builder
                 SolidConfigurationBuilderServiceProvider.ConfigureProxyInternal(ServiceProvider, proxyConf);
                 i = ServiceProvider.GetRequiredService<TConfig>();
 
+                var adviceConf = i as ISolidProxyInvocationAdviceConfig;
+
                 // we only set set value if we want to change it
                 // otherwise the interceptor won´t look in the parent scope.
-                if (enable)
+                if (enable && adviceConf != null)
                 {
-                    i.Enabled = enable;
+                    adviceConf.Enabled = enable;
                 }
 
                 AdviceConfigured<TConfig>();
@@ -184,7 +181,11 @@ namespace SolidProxy.Core.Configuration.Builder
                 //
                 // Add the advice for the configuration
                 //
-                adviceTypes.ToList().ForEach(adviceType => AddAdvice(adviceType));
+                if (adviceConf != null)
+                {
+                    var adviceTypes = GetScope<ISolidConfigurationBuilder>().GetAdvicesForConfiguration<TConfig>();
+                    adviceTypes.ToList().ForEach(adviceType => AddAdvice(adviceType));
+                }
             }
             return i;
         }
@@ -192,7 +193,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// Overriden in the interface an method scope to configure the proxy.
         /// </summary>
         /// <typeparam name="TConfig"></typeparam>
-        protected virtual void AdviceConfigured<TConfig>() where TConfig : class, ISolidProxyInvocationAdviceConfig
+        protected virtual void AdviceConfigured<TConfig>() where TConfig : class
         {
 
         }
@@ -207,10 +208,10 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool IsAdviceEnabled<T>() where T : class, ISolidProxyInvocationAdviceConfig
+        public bool IsAdviceEnabled<T>() where T : class
         {
             if (!IsAdviceConfigured<T>()) return false;
-            return ConfigureAdvice<T>().Enabled;
+            return (ConfigureAdvice<T>() as ISolidProxyInvocationAdviceConfig)?.Enabled ?? false;
         }
 
         /// <summary>
@@ -218,7 +219,7 @@ namespace SolidProxy.Core.Configuration.Builder
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool IsAdviceConfigured<T>() where T : class, ISolidProxyInvocationAdviceConfig
+        public bool IsAdviceConfigured<T>() where T : class
         {
             return IsAdviceConfigured(typeof(T));
         }
@@ -242,6 +243,16 @@ namespace SolidProxy.Core.Configuration.Builder
                 }
             }
             return isAdviceConfigured;
+        }
+
+        public IEnumerable<T> GetAdviceConfigurations<T>()
+        {
+            var services = ServiceProvider.GetRegistrations()
+                .Where(o => !typeof(ISolidProxyConfigurationStore).IsAssignableFrom(o))
+                .Where(o => !typeof(ISolidConfigurationScope).IsAssignableFrom(o))
+                .Where(o => !typeof(IServiceProvider).IsAssignableFrom(o))
+                .Where(o => typeof(T).IsAssignableFrom(o));
+            return services.Select(o => (T)ServiceProvider.GetService(o));
         }
 
         /// <summary>

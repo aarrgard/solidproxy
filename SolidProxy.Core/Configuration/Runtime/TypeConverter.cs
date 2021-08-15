@@ -100,7 +100,11 @@ namespace SolidProxy.Core.Configuration.Runtime
         private static Func<Task<TTFrom>, TTo> MapFromTask<TTFrom, TTo>()
         {
             var subConverter = CreateConverter<TTFrom, TTo>();
-            return (ttfrom) => subConverter(ttfrom.GetAwaiter().GetResult());
+            return (ttfrom) =>
+            {
+                var res = ttfrom.GetAwaiter().GetResult();
+                return subConverter(res);
+            };
         }
 
         private static Func<TFrom, Task<TTTo>> MapToTask<TFrom, TTTo>()

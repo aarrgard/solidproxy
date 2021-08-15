@@ -158,7 +158,7 @@ namespace SolidProxy.Core.Configuration.Builder
             var advices = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => GetAdviceTypes(a, configType));
             if(!advices.Any())
             {
-                throw new Exception($"Could not find advice for configuration {configType.FullName}");
+                throw new Exception($")Could not find advice for configuration {configType.FullName}");
             }
             return advices;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -91,6 +92,15 @@ namespace SolidProxy.Core.Proxy
         /// Returns the proxy implementing the interface.
         /// </summary>
         new T Proxy { get; }
+
+        /// <summary>
+        /// Returns the invocation for supplied method
+        /// </summary>
+        /// <param name="caller"></param>
+        /// <param name="exp"></param>
+        /// <param name="invocationValues"></param>
+        /// <returns></returns>
+        ISolidProxyInvocation GetInvocation<TRes>(object caller, Expression<Func<T,TRes>> exp, IDictionary<string, object> invocationValues = null);
 
     }
 }

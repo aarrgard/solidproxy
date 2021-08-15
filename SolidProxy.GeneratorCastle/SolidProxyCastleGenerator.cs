@@ -32,7 +32,7 @@ namespace SolidProxy.GeneratorCastle
         public T CreateInterfaceProxy<T>(ISolidProxy<T> solidProxy) where T : class
         {
             var proxy = (SolidProxyCastle<T>) solidProxy;
-            return (T)ProxyGenerator.CreateInterfaceProxyWithoutTarget(typeof(T), new Type[] { typeof(ISolidProxy)}, proxy);
+            return (T)ProxyGenerator.CreateInterfaceProxyWithoutTarget(typeof(T), new Type[] { typeof(ISolidProxy), typeof(ISolidProxy<T>) }, proxy);
         }
 
         /// <summary>

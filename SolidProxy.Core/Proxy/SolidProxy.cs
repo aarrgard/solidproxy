@@ -17,6 +17,12 @@ namespace SolidProxy.Core.Proxy
     {
         private static ConcurrentDictionary<MethodInfo, Func<ISolidProxy, object[], object>> s_SolidProxyDelegates = new ConcurrentDictionary<MethodInfo, Func<ISolidProxy, object[], object>>();
 
+        public static Func<ISolidProxy, object[], object> CreateProxyDelegate<TTarget>(MethodInfo methodInfo)
+        {
+            var del = CreateDelegate<TTarget, object>(methodInfo);
+            return (a1, a2) => del((TTarget)a1, a2);
+        }
+
         /// <summary>
         /// Constructs a delegate to invoke supplied method.
         /// </summary>
@@ -24,10 +30,6 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public static Func<TTarget, object[], TRes> CreateDelegate<TTarget, TRes>(MethodInfo methodInfo)
         {
-            if (!methodInfo.DeclaringType.IsAssignableFrom(typeof(TTarget)))
-            {
-                throw new ArgumentException("Cannot assign generic type to method type");
-            }
             if (!typeof(TRes).IsAssignableFrom(methodInfo.ReturnType))
             {
                 if (methodInfo.ReturnType != typeof(void))
@@ -43,11 +45,24 @@ namespace SolidProxy.Core.Proxy
             {
                 argExprs[i] = Expression.Convert(Expression.ArrayIndex(arrExpr, Expression.Constant(i)), methodParameters[i].ParameterType);
             }
-            var expr = Expression.Lambda(
-                Expression.Call(objExpr, methodInfo, argExprs),
-                objExpr,
-                arrExpr
-            );
+
+            LambdaExpression expr;
+            if (methodInfo.DeclaringType.IsAssignableFrom(typeof(TTarget)))
+            {
+                expr = Expression.Lambda(
+                    Expression.Call(objExpr, methodInfo, argExprs),
+                    objExpr,
+                    arrExpr
+                );
+            }
+            else
+            {
+                expr = Expression.Lambda(
+                    Expression.Call(Expression.Convert(objExpr, methodInfo.DeclaringType), methodInfo, argExprs),
+                    objExpr,
+                    arrExpr
+                );
+            }
             if (methodInfo.ReturnType == typeof(void))
             {
                 var action = (Action<TTarget, object[]>)expr.Compile();
@@ -137,12 +152,20 @@ namespace SolidProxy.Core.Proxy
 
         private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
         {
-            if (method.DeclaringType != typeof(ISolidProxy))
+            Func<ISolidProxy, object[], object> del;
+            if (method.DeclaringType == typeof(ISolidProxy))
+            {
+                del = s_SolidProxyDelegates.GetOrAdd(method, CreateProxyDelegate<ISolidProxy>);
+            }
+            else if (method.DeclaringType == typeof(ISolidProxy<T>))
+            {
+                del = s_SolidProxyDelegates.GetOrAdd(method, CreateProxyDelegate<ISolidProxy<T>>);
+            }
+            else
             {
                 solidProxyResult = null;
                 return false;
             }
-            var del = s_SolidProxyDelegates.GetOrAdd(method, CreateDelegate<ISolidProxy, object>);
             solidProxyResult = del(this, args);
             return true;
         }
@@ -213,6 +236,29 @@ namespace SolidProxy.Core.Proxy
         public IEnumerable<ISolidProxyInvocation> GetInvocations()
         {
             return typeof(T).GetMethods().Select(o => GetInvocation(this, o, null, null, false)).ToList();
+        }
+
+        public ISolidProxyInvocation GetInvocation<TRes>(object caller, Expression<Func<T, TRes>> exp, IDictionary<string, object> invocationValues = null)
+        {
+            // extract method info and arguments
+            var (method, args) = GetMethodInfo(exp);
+            return GetInvocation(caller, method, args, invocationValues);
+        }
+
+        protected static (MethodInfo, object[]) GetMethodInfo(LambdaExpression expr)
+        {
+            if (expr.Body is MethodCallExpression mce)
+            {
+                var args = new List<object>();
+                foreach (var argument in mce.Arguments)
+                {
+                    var le = Expression.Lambda(argument);
+                    args.Add(le.Compile().DynamicInvoke());
+                }
+
+                return (mce.Method, args.ToArray());
+            }
+            throw new Exception("expression should be a method call.");
         }
     }
 }
