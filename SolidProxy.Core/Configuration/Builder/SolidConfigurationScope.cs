@@ -248,9 +248,12 @@ namespace SolidProxy.Core.Configuration.Builder
         public IEnumerable<T> GetAdviceConfigurations<T>()
         {
             var services = ServiceProvider.GetRegistrations()
+                .Where(o => o.IsInterface)
+                .Where(o => !o.IsGenericType)
                 .Where(o => !typeof(ISolidProxyConfigurationStore).IsAssignableFrom(o))
                 .Where(o => !typeof(ISolidConfigurationScope).IsAssignableFrom(o))
                 .Where(o => !typeof(IServiceProvider).IsAssignableFrom(o))
+                .Where(o => !typeof(ISolidProxyGenerator).IsAssignableFrom(o))
                 .Where(o => typeof(T).IsAssignableFrom(o));
             return services.Select(o => (T)ServiceProvider.GetService(o));
         }

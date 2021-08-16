@@ -34,9 +34,25 @@ namespace SolidProxy.Core.IoC
         /// <returns></returns>
         public IEnumerable<Type> GetRegistrations()
         {
-            return _registrations
-                .Where(o => o.Value.Implementations.Where(o2 => o2.RegistrationScope != SolidProxyServiceRegistrationScope.Nonexisting).Any())
-                .Select(o => o.Key);
+            var registrations = new HashSet<Type>();
+            PopulateRegistrations(registrations);
+            return registrations;
+        }
+
+        private void PopulateRegistrations(HashSet<Type> registrations)
+        {
+            foreach(var registration in _registrations)
+            {
+                if(!registration.Value.Implementations.Where(o2 => o2.RegistrationScope != SolidProxyServiceRegistrationScope.Nonexisting).Any())
+                {
+                    continue;
+                }
+                registrations.Add(registration.Key);
+            }
+            if(_parentServiceProvider != null)
+            {
+                _parentServiceProvider.PopulateRegistrations(registrations);
+            }
         }
 
         private int NewRegistrationIdx()

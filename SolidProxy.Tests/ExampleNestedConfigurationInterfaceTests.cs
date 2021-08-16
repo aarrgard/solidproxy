@@ -80,20 +80,39 @@ namespace SolidProxy.Tests
             conf.GetAdviceConfig<INestedConfiguration2>().Setting2 = "678";
 
             var sp = services.BuildServiceProvider();
+            RunTests(sp);
+
+            var sf = sp.GetRequiredService<IServiceScopeFactory>();
+            using (var ssp = sf.CreateScope())
+            {
+                RunTests(ssp.ServiceProvider);
+            }
+        }
+
+        private void RunTests(IServiceProvider sp)
+        {
             var ei = sp.GetRequiredService<IEnabledInterface>();
+
+            var invocConfig = ((ISolidProxy<IEnabledInterface>)ei).GetInvocation(null, o => o.GetSetting()).SolidProxyInvocationConfiguration;
+
+            var allSettings = invocConfig.GetAdviceConfigurations<object>();
+            Assert.AreEqual(4, allSettings.Count());
+            var c1 = allSettings.OfType<INestedConfiguration1>().Single();
+            var c2 = allSettings.OfType<INestedConfiguration2>().Single();
+            var c3 = allSettings.OfType<ITopConfiguration>().Single();
+            var c4 = allSettings.OfType<ISolidProxyInvocationImplAdviceConfig>().Single();
+            var nestedSettings = invocConfig.GetAdviceConfigurations<INestedConfiguration>();
+            Assert.AreEqual(2, nestedSettings.Count());
+
+            var advices = invocConfig.GetSolidInvocationAdvices();
+            Assert.AreEqual(1, advices.Count());
+
+            var nc1 = nestedSettings.OfType<INestedConfiguration1>().Single();
+            var nc2 = nestedSettings.OfType<INestedConfiguration2>().Single();
 
             Assert.AreEqual("xyz", ei.GetSetting());
             Assert.AreEqual("234", ei.GetSetting1());
             Assert.AreEqual("678", ei.GetSetting2());
-
-            var invocConfig = ((ISolidProxy<IEnabledInterface>)ei).GetInvocation(null, o => o.GetSetting()).SolidProxyInvocationConfiguration;
-            var advices = invocConfig.GetSolidInvocationAdvices();
-            Assert.AreEqual(1, advices.Count());
-            var allSettings = invocConfig.GetAdviceConfigurations<object>();
-            Assert.AreEqual(4, allSettings.Count());
-            var nestedSettings = invocConfig.GetAdviceConfigurations<INestedConfiguration>();
-            Assert.AreEqual(2, nestedSettings.Count());
         }
-
     }
 }
