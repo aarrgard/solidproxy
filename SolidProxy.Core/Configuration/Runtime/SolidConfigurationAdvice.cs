@@ -6,16 +6,20 @@ using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Core.Configuration.Runtime
 {
+    public class SolidConfigurationAdvice 
+    {
+        protected static readonly ConcurrentDictionary<Type, MethodInfo> s_ConfigureAdviceMethod = new ConcurrentDictionary<Type, MethodInfo>();
+        protected static readonly ConcurrentDictionary<Type, MethodInfo> s_AddPreInvocationCallbackMethod = new ConcurrentDictionary<Type, MethodInfo>();
+    }
+
     /// <summary>
     /// A handler that accesses the configuration values through an interface.
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TMethod"></typeparam>
     /// <typeparam name="TAdvice"></typeparam>
-    public class SolidConfigurationAdvice<TObject, TMethod, TAdvice> : ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
+    public class SolidConfigurationAdvice<TObject, TMethod, TAdvice> : SolidConfigurationAdvice, ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice> where TObject : class
     {
-        private static readonly ConcurrentDictionary<Type, MethodInfo> s_ConfigureAdviceMethod = new ConcurrentDictionary<Type, MethodInfo>();
-        private static readonly ConcurrentDictionary<Type, MethodInfo> s_AddPreInvocationCallbackMethod = new ConcurrentDictionary<Type, MethodInfo>();
 
         /// <summary>
         /// Handles the invocation

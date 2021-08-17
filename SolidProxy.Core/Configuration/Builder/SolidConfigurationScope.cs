@@ -151,9 +151,11 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public TConfig ConfigureAdvice<TConfig>() where TConfig: class
         {
+            //Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")}:Configuring advice {typeof(TConfig).FullName}@{ServiceProvider.ContainerId}");
             var i = (TConfig)ServiceProvider.GetService(typeof(TConfig));
             if(i == null)
             {
+                //Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")}:Setting up advice {typeof(TConfig).FullName}@{ServiceProvider.ContainerId}");
                 //
                 // configure it
                 //
@@ -176,16 +178,18 @@ namespace SolidProxy.Core.Configuration.Builder
                     adviceConf.Enabled = enable;
                 }
 
-                AdviceConfigured<TConfig>();
-
                 //
                 // Add the advice for the configuration
                 //
                 if (adviceConf != null)
                 {
                     var adviceTypes = GetScope<ISolidConfigurationBuilder>().GetAdvicesForConfiguration<TConfig>();
-                    adviceTypes.ToList().ForEach(adviceType => AddAdvice(adviceType));
+                    foreach(var adviceType in adviceTypes)
+                    {
+                        AddAdvice(adviceType);
+                    }
                 }
+                //Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")}:Advice set up {typeof(TConfig).FullName}@{ServiceProvider.ContainerId}");
             }
             return i;
         }
@@ -231,18 +235,19 @@ namespace SolidProxy.Core.Configuration.Builder
         /// <returns></returns>
         public bool IsAdviceConfigured(Type settingsType)
         {
+            //Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss.fffffff")}:IsAdviceConfigured {settingsType.Name}");
             //
             // The advice is configured if we can find the configuration "service".
             //
-            var isAdviceConfigured = ParentScope?.IsAdviceConfigured(settingsType) ?? false;
-            if(!isAdviceConfigured)
+            if (ServiceProvider.GetService(settingsType) != null)
             {
-                if(ServiceProvider.GetService(settingsType) != null)
-                {
-                    isAdviceConfigured = true;
-                }
+                return true;
             }
-            return isAdviceConfigured;
+            if (ParentScope == null)
+            {
+                return false;
+            }
+            return ParentScope.IsAdviceConfigured(settingsType);
         }
 
         public IEnumerable<T> GetAdviceConfigurations<T>()

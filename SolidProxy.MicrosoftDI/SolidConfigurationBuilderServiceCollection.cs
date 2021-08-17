@@ -104,6 +104,7 @@ namespace SolidProxy.MicrosoftDI
         /// <param name="interfaceConfig"></param>
         public override void ConfigureProxy<TProxy>(ISolidInterfaceConfigurationBuilder<TProxy> interfaceConfig)
         {
+            var configureMethods = false;
             var services = ServiceCollection.Where(o => o.ServiceType == typeof(TProxy)).ToList();
             foreach (var service in services)
             {
@@ -116,7 +117,7 @@ namespace SolidProxy.MicrosoftDI
                     continue;
                 }
 
-                // remove the service difinition - added again later
+                // remove the service definition - added again later
                 ServiceCollection.Remove(service);
 
                 //
@@ -177,16 +178,21 @@ namespace SolidProxy.MicrosoftDI
                         ServiceCollection.AddSingleton(proxiedFactory);
                         break;
                 }
+
+                configureMethods = true;
             };
 
             //
             // make sure that all the methods are configured
             //
-            var proxyMethods = GetProxyMethods<TProxy>();
-            foreach (var m in proxyMethods)
+            if(configureMethods)
             {
-                var methodConfig = interfaceConfig.ConfigureMethod(m);
-                methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                var proxyMethods = GetProxyMethods<TProxy>();
+                foreach (var m in proxyMethods)
+                {
+                    var methodConfig = interfaceConfig.ConfigureMethod(m);
+                    methodConfig.ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+                }
             }
         }
 

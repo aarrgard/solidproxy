@@ -21,7 +21,8 @@ namespace SolidProxy.Core.Configuration.Runtime
         MethodInfo MethodInfo { get; }
 
         /// <summary>
-        /// The pipeline type. The converters uses the Task&lt;T&gt; type where typeof(T) is this type.
+        /// The pipeline type. The converters uses the Task&lt;T&gt; type where typeof(T) is this type. If
+        /// the MethodInfo returns a Type&lt;int&gt; or just int the AdviceType will be int.
         /// </summary>
         Type AdviceType { get; }
 

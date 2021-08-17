@@ -41,7 +41,7 @@ namespace SolidProxy.Core.Configuration.Runtime
         protected override SolidProxyServiceProvider CreateServiceProvider()
         {
             var sp = base.CreateServiceProvider();
-            sp.ContainerId = $"proxy:{RuntimeHelpers.GetHashCode(sp).ToString()}";
+            sp.ContainerId = $"proxy:{RuntimeHelpers.GetHashCode(sp)}";
             return sp;
         }
 

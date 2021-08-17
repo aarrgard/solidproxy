@@ -4,6 +4,7 @@ using NUnit.Framework;
 using SolidProxy.Core.Proxy;
 using System;
 using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Tests
@@ -90,6 +91,30 @@ namespace SolidProxy.Tests
                 var res = await testInterface.GetIntAsync(i);
                 if (res != i) throw new Exception();
             }
+        }
+
+        [Test]
+        public async Task TestGenerateInterface()
+        {
+            var isb = new StringBuilder();
+            var csb = new StringBuilder();
+            isb.AppendLine(@"using System.Threading;
+using System.Threading.Tasks;
+namespace Profiler {");
+            for (int i = 0; i < 100; i++)
+            {
+                isb.AppendLine($"  public interface ITestInterface{i} {{");
+                csb.AppendLine($"  public class TestImplementation{i} : ITestInterface{i} {{");
+                for (int j = 0; j < 100; j++)
+                {
+                    isb.AppendLine($"   Task DoX{j}Async(CancellationToken ct = default);");
+                    csb.AppendLine($"   public Task DoX{j}Async(CancellationToken ct = default) {{ return Task.CompletedTask; }}");
+                }
+                isb.AppendLine($"  }}");
+                csb.AppendLine($"  }}");
+            }
+            isb.Append(csb.ToString());
+            isb.AppendLine("}");
         }
     }
 }
