@@ -74,6 +74,9 @@ namespace SolidProxy.Core.Proxy
             }
         }
 
+        private IDictionary<string, object> _proxyValues = null;
+        private ConcurrentDictionary<string, string> _invocationValueMap = null;
+
         /// <summary>
         /// Constructs a new proxy for an interface.
         /// </summary>
@@ -111,6 +114,70 @@ namespace SolidProxy.Core.Proxy
         /// The proxy
         /// </summary>
         object ISolidProxy.Proxy => Proxy;
+
+        /// <summary>
+        /// returns the invocation values
+        /// </summary>
+        private IDictionary<string, object> InvocationValues
+        {
+            get
+            {
+                if (_proxyValues != null)
+                {
+                    return _proxyValues;
+                }
+                _proxyValues = new Dictionary<string, object>();
+                return _proxyValues;
+            }
+        }
+
+        /// <summary>
+        /// returns the invocation values
+        /// </summary>
+        private string GetInvocationKey(string key)
+        {
+            if (_invocationValueMap == null)
+            {
+                _invocationValueMap = new ConcurrentDictionary<string, string>();
+            }
+
+            return _invocationValueMap.GetOrAdd(key.ToLower(), _ => key);
+        }
+
+        /// <summary>
+        /// Returns the value for supplied key.
+        /// </summary>
+        /// <typeparam name="TVal"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public TVal GetValue<TVal>(string key)
+        {
+            object res;
+            if (_proxyValues == null)
+            {
+                return default(TVal);
+            }
+            key = GetInvocationKey(key);
+            if (InvocationValues.TryGetValue(key, out res))
+            {
+                if (typeof(TVal).IsAssignableFrom(res.GetType()))
+                {
+                    return (TVal)res;
+                }
+            }
+            return default(TVal);
+        }
+        /// <summary>
+        /// Sets the value for supplied key.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void SetValue<T>(string key, T value)
+        {
+            key = GetInvocationKey(key);
+            InvocationValues[key] = value;
+        }
 
         /// <summary>
         /// Invokes the method

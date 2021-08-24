@@ -18,10 +18,13 @@ namespace SolidProxy.Tests
         {
             public Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
             {
-                var res =  Task.FromResult(invocation.GetValue<TAdvice>("result"));
-                invocation.SetValue("result", 30);
-                invocation.SetValue("another-result", 40);
-                return res;
+                var res = invocation.GetValue<TAdvice>("result");
+                invocation.SetValue("result", ((int)(object)res)+10);
+                invocation.SetValue("another-result", 50);
+                var proxyResult = invocation.GetValue<int>("proxy-value");
+                invocation.SetValue("proxy-value", proxyResult + 1, SolidProxyValueScope.Proxy);
+                invocation.SetValue("proxy-result", proxyResult + 1);
+                return Task.FromResult(res);
             }
         }
 
@@ -42,8 +45,14 @@ namespace SolidProxy.Tests
             var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
             Assert.AreEqual(20, result);
             Assert.AreEqual(30, invocationValues["ReSuLt"]);
-            Assert.AreEqual(40, invocationValues["another-result"]);
+            Assert.AreEqual(50, invocationValues["another-result"]);
+            Assert.AreEqual(1, invocationValues["proxy-result"]);
 
+            result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
+            Assert.AreEqual(30, result);
+            Assert.AreEqual(40, invocationValues["ReSuLt"]);
+            Assert.AreEqual(50, invocationValues["another-result"]);
+            Assert.AreEqual(2, invocationValues["proxy-result"]);
         }
     }
 }

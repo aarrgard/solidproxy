@@ -113,15 +113,5 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             advices.Add(advice);
         }
-
-        /// <summary>
-        /// Invoked when an advice has been configured
-        /// </summary>
-        /// <typeparam name="TConfig"></typeparam>
-        protected override void AdviceConfigured<TConfig>()
-        {
-            ConfigureProxy(ProxyConfiguration);
-            base.AdviceConfigured<TConfig>();
-        }
     }
 }

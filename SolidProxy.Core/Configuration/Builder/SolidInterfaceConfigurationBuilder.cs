@@ -138,15 +138,5 @@ namespace SolidProxy.Core.Configuration.Builder
         {
             return GetMethods(typeof(T)).Select(o => ConfigureMethod(o)).ToList();
         }
-
-        /// <summary>
-        /// Invoked when an advice has been configured
-        /// </summary>
-        /// <typeparam name="TConfig"></typeparam>
-        protected override void AdviceConfigured<TConfig>()
-        {
-            ConfigureProxy(this);
-            base.AdviceConfigured<TConfig>();
-        }
     }
 }

@@ -168,6 +168,7 @@ namespace SolidProxy.Core.Configuration.Builder
             var adviceTypes = new HashSet<Type>();
             try
             {
+                if (assembly.IsDynamic) return Type.EmptyTypes;
                 foreach (var adviceType in assembly.GetTypes())
                 {
                     if (!typeof(ISolidProxyInvocationAdvice).IsAssignableFrom(adviceType))
@@ -181,6 +182,10 @@ namespace SolidProxy.Core.Configuration.Builder
                         adviceTypes.Add(adviceType);
                     }
                 }
+                return adviceTypes;
+            }
+            catch (ReflectionTypeLoadException)
+            {
                 return adviceTypes;
             }
             catch (TypeLoadException)

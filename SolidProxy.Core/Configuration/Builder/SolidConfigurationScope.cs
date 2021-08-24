@@ -193,14 +193,6 @@ namespace SolidProxy.Core.Configuration.Builder
             }
             return i;
         }
-        /// <summary>
-        /// Overriden in the interface an method scope to configure the proxy.
-        /// </summary>
-        /// <typeparam name="TConfig"></typeparam>
-        protected virtual void AdviceConfigured<TConfig>() where TConfig : class
-        {
-
-        }
 
         private IEnumerable<MethodInfo> GetMethodInfos()
         {

@@ -27,6 +27,22 @@ namespace SolidProxy.Core.Proxy
         object Proxy { get; }
 
         /// <summary>
+        /// Sets a value on this proxy.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        void SetValue<T>(string key, T value);
+
+        /// <summary>
+        /// Returns a value associated with this proxy.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        T GetValue<T>(string key);
+
+        /// <summary>
         /// Returns all the invocation advices for supplied method.
         /// </summary>
         /// <param name="methodInfo"></param>
@@ -101,6 +117,5 @@ namespace SolidProxy.Core.Proxy
         /// <param name="invocationValues"></param>
         /// <returns></returns>
         ISolidProxyInvocation GetInvocation<TRes>(object caller, Expression<Func<T,TRes>> exp, IDictionary<string, object> invocationValues = null);
-
     }
 }

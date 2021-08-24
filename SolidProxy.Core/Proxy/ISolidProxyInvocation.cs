@@ -22,7 +22,8 @@ namespace SolidProxy.Core.Proxy
         IEnumerable<string> Keys { get; }
 
         /// <summary>
-        /// Returns the scoped value associated with this invocation
+        /// Returns the scoped value associated with this invocation. If the key is not found in the
+        /// invocation then the proxy value will be uses.
         /// </summary>
         /// <typeparam name="T">The type of value</typeparam>
         /// <param name="key">the name of the value</param>
@@ -33,9 +34,10 @@ namespace SolidProxy.Core.Proxy
         /// Sets the value for supplied key.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="key">The key to associated the value with</param>
+        /// <param name="valueScope">Where the value is set.</param>
+        /// <param name="key">The key to associate the value with</param>
         /// <param name="value">The value</param>
-        void SetValue<T>(string key, T value);
+        void SetValue<T>(string key, T value, SolidProxyValueScope valueScope = SolidProxyValueScope.Invocation);
 
         /// <summary>
         /// Invokes supplied function on all the types of supplied type.
@@ -50,7 +52,7 @@ namespace SolidProxy.Core.Proxy
         IServiceProvider ServiceProvider { get; }
 
         /// <summary>
-        /// The proxy that the invocation orignates from
+        /// The proxy that the invocation originates from
         /// </summary>
         ISolidProxy SolidProxy { get; }
 

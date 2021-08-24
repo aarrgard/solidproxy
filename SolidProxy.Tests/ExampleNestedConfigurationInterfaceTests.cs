@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Configuration;
+using SolidProxy.Core.Configuration.Runtime;
 using SolidProxy.Core.Proxy;
 
 namespace SolidProxy.Tests
@@ -87,6 +88,7 @@ namespace SolidProxy.Tests
             {
                 RunTests(ssp.ServiceProvider);
             }
+
         }
 
         private void RunTests(IServiceProvider sp)
@@ -113,6 +115,11 @@ namespace SolidProxy.Tests
             Assert.AreEqual("xyz", ei.GetSetting());
             Assert.AreEqual("234", ei.GetSetting1());
             Assert.AreEqual("678", ei.GetSetting2());
+
+            var configs = sp.GetRequiredService<ISolidProxyConfigurationStore>().ProxyConfigurations
+               .SelectMany(o => o.InvocationConfigurations)
+               .ToList();
+            Assert.AreEqual(3, configs.Count);
         }
     }
 }

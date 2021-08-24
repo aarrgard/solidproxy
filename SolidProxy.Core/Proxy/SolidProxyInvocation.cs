@@ -235,7 +235,7 @@ namespace SolidProxy.Core.Proxy
             object res;
             if(_invocationValues == null)
             {
-                return default(T);
+                return Proxy.GetValue<T>(key);
             }
             key = GetInvocationKey(key);
             if (InvocationValues.TryGetValue(key, out res))
@@ -245,7 +245,7 @@ namespace SolidProxy.Core.Proxy
                     return (T)res;
                 }
             }
-            return default(T);
+            return Proxy.GetValue<T>(key);
         }
         /// <summary>
         /// Sets the value for supplied key.
@@ -253,8 +253,14 @@ namespace SolidProxy.Core.Proxy
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public void SetValue<T>(string key, T value)
+        /// <param name="valueScope"></param>
+        public void SetValue<T>(string key, T value, SolidProxyValueScope valueScope = SolidProxyValueScope.Invocation)
         {
+            if(valueScope == SolidProxyValueScope.Proxy)
+            {
+                Proxy.SetValue<T>(key, value);
+                return;
+            }
             key = GetInvocationKey(key);
             InvocationValues[key] = value;
         }
