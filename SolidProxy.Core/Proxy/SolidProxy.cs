@@ -182,12 +182,13 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Invokes the method
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller"></param>
         /// <param name="method"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public object Invoke(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        public object Invoke(IServiceProvider serviceProvider, object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
             object solidProxyResult;
             if(InvokeSolidProxy(method, args, out solidProxyResult))
@@ -195,18 +196,19 @@ namespace SolidProxy.Core.Proxy
                 return solidProxyResult;
             }
 
-            return GetInvocation(caller, method, args, invocationValues, false).GetReturnValue();
+            return GetInvocation(serviceProvider, caller, method, args, invocationValues, false).GetReturnValue();
         }
 
         /// <summary>
         /// Invokes the method async.
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller"></param>
         /// <param name="method"></param>
         /// <param name="args"></param>
         /// <param name="invocationValues"></param>
         /// <returns></returns>
-        public Task<object> InvokeAsync(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        public Task<object> InvokeAsync(IServiceProvider serviceProvider, object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
             object solidProxyResult;
             if (InvokeSolidProxy(method, args, out solidProxyResult))
@@ -214,7 +216,7 @@ namespace SolidProxy.Core.Proxy
                 return Task.FromResult(solidProxyResult);
             }
 
-            return GetInvocation(caller, method, args, invocationValues, false).GetReturnValueAsync();
+            return GetInvocation(serviceProvider, caller, method, args, invocationValues, false).GetReturnValueAsync();
         }
 
         private bool InvokeSolidProxy(MethodInfo method, object[] args, out object solidProxyResult)
@@ -237,7 +239,7 @@ namespace SolidProxy.Core.Proxy
             return true;
         }
 
-        public ISolidProxyInvocation GetInvocation(object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null)
+        public ISolidProxyInvocation GetInvocation(IServiceProvider serviceProvider, object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null)
         {
             var mi = ProxyConfiguration.InvocationConfigurations
                 .Select(o => o.MethodInfo)
@@ -245,12 +247,12 @@ namespace SolidProxy.Core.Proxy
                 .Where(o => AreAssignable(o.GetParameters().Select(o2 => o2.ParameterType).ToList(), args))
                 .FirstOrDefault();
             if (mi == null) throw new ArgumentException("Cannot find method matching name and arguments");
-            return GetInvocation(caller, mi, args, invocationValues, true);
+            return GetInvocation(serviceProvider, caller, mi, args, invocationValues, true);
         }
 
-        public ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
+        public ISolidProxyInvocation GetInvocation(IServiceProvider serviceProvider, object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null)
         {
-            return GetInvocation(caller, method, args, invocationValues, true);
+            return GetInvocation(serviceProvider, caller, method, args, invocationValues, true);
         }
 
         private bool AreAssignable(IEnumerable<Type> paramTypes, IEnumerable<object> args)
@@ -275,13 +277,13 @@ namespace SolidProxy.Core.Proxy
             return !ae.MoveNext();
         }
 
-        private ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues, bool canCancel)
+        private ISolidProxyInvocation GetInvocation(IServiceProvider serviceProvider, object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues, bool canCancel)
         {
             //
             // create the proxy invocation and return the result,
             //
             var proxyInvocationConfiguration = ProxyConfiguration.GetProxyInvocationConfiguration(method);
-            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(caller, this, args, invocationValues, canCancel);
+            var proxyInvocation = proxyInvocationConfiguration.CreateProxyInvocation(serviceProvider, caller, this, args, invocationValues, canCancel);
             return proxyInvocation;
         }
 
@@ -302,14 +304,14 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public IEnumerable<ISolidProxyInvocation> GetInvocations()
         {
-            return typeof(T).GetMethods().Select(o => GetInvocation(this, o, null, null, false)).ToList();
+            return typeof(T).GetMethods().Select(o => GetInvocation(ServiceProvider, this, o, null, null, false)).ToList();
         }
 
-        public ISolidProxyInvocation GetInvocation<TRes>(object caller, Expression<Func<T, TRes>> exp, IDictionary<string, object> invocationValues = null)
+        public ISolidProxyInvocation GetInvocation<TRes>(IServiceProvider serviceProvider, object caller, Expression<Func<T, TRes>> exp, IDictionary<string, object> invocationValues = null)
         {
             // extract method info and arguments
             var (method, args) = GetMethodInfo(exp);
-            return GetInvocation(caller, method, args, invocationValues);
+            return GetInvocation(serviceProvider, caller, method, args, invocationValues);
         }
 
         protected static (MethodInfo, object[]) GetMethodInfo(LambdaExpression expr)

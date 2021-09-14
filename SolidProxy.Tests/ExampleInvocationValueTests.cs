@@ -42,13 +42,13 @@ namespace SolidProxy.Tests
             var invocationValues = new Dictionary<string, object>() { { "ReSuLt", 20 } };
             var si = sp.GetRequiredService<ISingletonInterface>();
             var siProxy = (ISolidProxy)si;
-            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
+            var result = siProxy.Invoke(sp, this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
             Assert.AreEqual(20, result);
             Assert.AreEqual(30, invocationValues["ReSuLt"]);
             Assert.AreEqual(50, invocationValues["another-result"]);
             Assert.AreEqual(1, invocationValues["proxy-result"]);
 
-            result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
+            result = siProxy.Invoke(sp, this, typeof(ISingletonInterface).GetMethods()[0], null, invocationValues);
             Assert.AreEqual(30, result);
             Assert.AreEqual(40, invocationValues["ReSuLt"]);
             Assert.AreEqual(50, invocationValues["another-result"]);

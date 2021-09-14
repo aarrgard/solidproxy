@@ -58,45 +58,69 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns a solid proxy invocation representing the specified method.
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="methodName">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        ISolidProxyInvocation GetInvocation(object caller, string methodName, object[] args, IDictionary<string, object> invocationValues = null);
+        ISolidProxyInvocation GetInvocation(
+            IServiceProvider serviceProvider, 
+            object caller, 
+            string methodName, 
+            object[] args, 
+            IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Returns a solid proxy invocation representing the specified method.
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        ISolidProxyInvocation GetInvocation(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        ISolidProxyInvocation GetInvocation(
+            IServiceProvider serviceProvider, 
+            object caller, 
+            MethodInfo method, 
+            object[] args, 
+            IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Invokes the method with supplied args. If the return type of the method 
         /// is a Task this method does not wait for the task.
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        object Invoke(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        object Invoke(
+            IServiceProvider serviceProvider, 
+            object caller, 
+            MethodInfo method, 
+            object[] args, 
+            IDictionary<string, object> invocationValues = null);
 
         /// <summary>
         /// Invokes the method with supplied args. If the return type
         /// of the method is void or Task then the wrapped return value 
         /// will be null.
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller">The object invoking the method - usually "this"</param>
         /// <param name="method">The method to invoke</param>
         /// <param name="args">The method arguments</param>
         /// <param name="invocationValues">The invocation values to associate with the call</param>
         /// <returns></returns>
-        Task<object> InvokeAsync(object caller, MethodInfo method, object[] args, IDictionary<string, object> invocationValues = null);
+        Task<object> InvokeAsync(
+            IServiceProvider serviceProvider, 
+            object caller, 
+            MethodInfo method,
+            object[] args, 
+            IDictionary<string, object> invocationValues = null);
     }
 
     /// <summary>
@@ -112,10 +136,15 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the invocation for supplied method
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller"></param>
         /// <param name="exp"></param>
         /// <param name="invocationValues"></param>
         /// <returns></returns>
-        ISolidProxyInvocation GetInvocation<TRes>(object caller, Expression<Func<T,TRes>> exp, IDictionary<string, object> invocationValues = null);
+        ISolidProxyInvocation GetInvocation<TRes>(
+            IServiceProvider serviceProvider, 
+            object caller, 
+            Expression<Func<T,TRes>> exp, 
+            IDictionary<string, object> invocationValues = null);
     }
 }

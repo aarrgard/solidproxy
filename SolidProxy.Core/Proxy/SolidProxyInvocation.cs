@@ -30,6 +30,7 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Constructs a new instance
         /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <param name="caller"></param>
         /// <param name="proxy"></param>
         /// <param name="invocationConfiguration"></param>
@@ -37,6 +38,7 @@ namespace SolidProxy.Core.Proxy
         /// <param name="invocationValues"></param>
         /// <param name="canCancel"></param>
         public SolidProxyInvocation(
+            IServiceProvider serviceProvider,
             object caller,
             ISolidProxy<TObject> proxy,
             ISolidProxyInvocationConfiguration<TObject, TMethod, TAdvice> invocationConfiguration,
@@ -44,6 +46,7 @@ namespace SolidProxy.Core.Proxy
             IDictionary<string, object> invocationValues,
             bool canCancel) 
         {
+            ServiceProvider = serviceProvider;
             CancellationTokenSource = SetupCancellationTokenSource(args, canCancel);
             Caller = caller;
             Proxy = proxy;
@@ -97,6 +100,11 @@ namespace SolidProxy.Core.Proxy
         }
 
         /// <summary>
+        /// The service provider
+        /// </summary>
+        public IServiceProvider ServiceProvider { get; }
+
+        /// <summary>
         /// The caller
         /// </summary>
         public object Caller { get; }
@@ -112,10 +120,7 @@ namespace SolidProxy.Core.Proxy
         public ISolidProxy SolidProxy => Proxy;
 
         ISolidProxy<TObject> ISolidProxyInvocation<TObject, TMethod, TAdvice>.SolidProxy => Proxy;
-        /// <summary>
-        /// The service provider
-        /// </summary>
-        public IServiceProvider ServiceProvider => Proxy.ServiceProvider;
+
         /// <summary>
         /// The invocation configuration
         /// </summary>

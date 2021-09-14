@@ -35,7 +35,7 @@ namespace SolidProxy.Tests
 
             var si = sp.GetRequiredService<ISingletonInterface>();
             var siProxy = (ISolidProxy)si;
-            var result = siProxy.Invoke(this, typeof(ISingletonInterface).GetMethods()[0], null);
+            var result = siProxy.Invoke(sp, this, typeof(ISingletonInterface).GetMethods()[0], null);
             Assert.AreSame(this, result);
 
             result = si.GetCaller();

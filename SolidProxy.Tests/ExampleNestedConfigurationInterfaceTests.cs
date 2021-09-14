@@ -95,7 +95,7 @@ namespace SolidProxy.Tests
         {
             var ei = sp.GetRequiredService<IEnabledInterface>();
 
-            var invocConfig = ((ISolidProxy<IEnabledInterface>)ei).GetInvocation(null, o => o.GetSetting()).SolidProxyInvocationConfiguration;
+            var invocConfig = ((ISolidProxy<IEnabledInterface>)ei).GetInvocation(sp, null, o => o.GetSetting()).SolidProxyInvocationConfiguration;
 
             var allSettings = invocConfig.GetAdviceConfigurations<object>();
             Assert.AreEqual(4, allSettings.Count());

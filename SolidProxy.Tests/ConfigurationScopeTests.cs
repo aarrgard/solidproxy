@@ -137,7 +137,7 @@ namespace SolidProxy.Tests
             Assert.AreEqual(typeof(AnotherImplementation), sp.GetRequiredService<IAnotherTestInterface>().GetType());
             var solidProxy = ((ISolidProxy)sp.GetRequiredService<ITestInterface>());
             Assert.IsNotNull(solidProxy);
-            var invocation = solidProxy.GetInvocation(null, typeof(ITestInterface).GetMethod(nameof(ITestInterface.Get1Value)), new object[0]);
+            var invocation = solidProxy.GetInvocation(sp, null, typeof(ITestInterface).GetMethod(nameof(ITestInterface.Get1Value)), new object[0]);
             var advices = invocation.SolidProxyInvocationConfiguration.GetSolidInvocationAdvices();
             Assert.AreEqual(3, advices.Count());
             Assert.AreEqual(typeof(Advice2WithConfiguration<,,>), advices.Skip(0).First().GetType().GetGenericTypeDefinition());
