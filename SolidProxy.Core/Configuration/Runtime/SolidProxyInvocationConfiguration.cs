@@ -112,54 +112,65 @@ namespace SolidProxy.Core.Configuration.Runtime
                 var stepTypes = MethodConfiguration.GetSolidInvocationAdviceTypes();
                 var sp = ProxyConfiguration.SolidProxyConfigurationStore.ServiceProvider;
 
-                //
-                // create advices
-                //
-                _advices = stepTypes.Select(t =>
+                try
                 {
-                    if (t.IsGenericTypeDefinition)
+                    //
+                    // create advices
+                    //
+                    _advices = stepTypes.Select(t =>
                     {
-                        switch (t.GetGenericArguments().Length)
+                        if (t.IsGenericTypeDefinition)
                         {
-                            case 1:
-                                t = t.MakeGenericType(new[] { typeof(TObject) });
-                                break;
-                            case 2:
-                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod) });
-                                break;
-                            case 3:
-                                t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod), typeof(TAdvice) });
-                                break;
-                            default:
-                                throw new Exception("Cannot create handler.");
+                            switch (t.GetGenericArguments().Length)
+                            {
+                                case 1:
+                                    t = t.MakeGenericType(new[] { typeof(TObject) });
+                                    break;
+                                case 2:
+                                    t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod) });
+                                    break;
+                                case 3:
+                                    t = t.MakeGenericType(new[] { typeof(TObject), typeof(TMethod), typeof(TAdvice) });
+                                    break;
+                                default:
+                                    throw new Exception("Cannot create handler.");
+                            }
+                        }
+
+                        var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
+                        if (step == null)
+                        {
+                            throw new Exception($"Advice not registered in service provider:{t.FullName}");
+                        }
+                        return step;
+                    }).ToList();
+
+                    _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
+
+                    //
+                    // configure the advices - remove the ones that return false
+                    // in config method. Do this in reverse order - thus removing
+                    // the implementation advice before any other advice is configured.
+                    // This lets the other advices determine if an implementation exists
+                    // based on if the implementation advice exists.
+                    //
+                    foreach(var advice in _advices.Reverse())
+                    {
+                        if (!SolidConfigurationHelper.ConfigureAdvice(advice, this))
+                        {
+                            _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices.Where(o => o != advice).ToList());
                         }
                     }
-
-                    var step = (ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>)sp.GetService(t);
-                    if (step == null)
-                    {
-                        throw new Exception($"Advice not registered in service provider:{t.FullName}");
-                    }
-                    return step;
-                }).ToList();
-
-                _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices);
-
-                //
-                // configure the advices - remove the ones that return false
-                // in config method. Do this in reverse order - thus removing
-                // the implementation advice before any other advice is configured.
-                // This lets the other advices determine if an implementation exists
-                // based on if the implementation advice exists.
-                //
-                foreach(var advice in _advices.Reverse())
-                {
-                    if (!SolidConfigurationHelper.ConfigureAdvice(advice, this))
-                    {
-                        _advices = new ReadOnlyCollection<ISolidProxyInvocationAdvice<TObject, TMethod, TAdvice>>(_advices.Where(o => o != advice).ToList());
-                    }
+                    return _advices;
                 }
-                return _advices;
+                catch
+                {
+                    //
+                    // reinitialze the advices on next invocation.
+                    //
+                    _advices = null;
+                    throw;
+                }
             }
         }
     }
