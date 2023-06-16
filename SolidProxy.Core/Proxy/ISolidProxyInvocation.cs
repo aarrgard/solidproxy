@@ -23,7 +23,16 @@ namespace SolidProxy.Core.Proxy
 
         /// <summary>
         /// Returns the scoped value associated with this invocation. If the key is not found in the
-        /// invocation then the proxy value will be uses.
+        /// invocation then the proxy value will be used.
+        /// </summary>
+        /// <typeparam name="T">The type of value</typeparam>
+        /// <param name="key">the name of the value</param>
+        /// <returns></returns>
+        object GetValue(string key);
+
+        /// <summary>
+        /// Returns the scoped value associated with this invocation. If the key is not found in the
+        /// invocation then the proxy value will be used.
         /// </summary>
         /// <typeparam name="T">The type of value</typeparam>
         /// <param name="key">the name of the value</param>
@@ -102,6 +111,19 @@ namespace SolidProxy.Core.Proxy
         /// The object invoking this method
         /// </summary>
         object Caller { get; }
+
+        /// <summary>
+        /// Invoked to chain invocations.
+        /// </summary>
+        /// <param name="parentInvocation"></param>
+        /// <returns></returns>
+        ISolidProxyInvocation StartChildInvocation(ISolidProxyInvocation parentInvocation);
+
+        /// <summary>
+        /// Invoked to chain invocations.
+        /// </summary>
+        /// <returns></returns>
+        ISolidProxyInvocation EndChildInvocation();
     }
 
     /// <summary>

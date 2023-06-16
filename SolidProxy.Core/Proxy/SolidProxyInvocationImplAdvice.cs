@@ -121,23 +121,17 @@ namespace SolidProxy.Core.Proxy
         /// <returns></returns>
         public async Task<TAdvice> Handle(Func<Task<TAdvice>> next, ISolidProxyInvocation<TObject, TMethod, TAdvice> invocation)
         {
-            //var m1 = invocation.SolidProxyInvocationConfiguration.MethodInfo;
-            //var m2 = MethodInfo;
-            //if (m1 != m2)
-            //{
-            //    throw new Exception($"Invocation method not same as configured method! {m1.Name} {m2.Name}");
-            //}
             await PreInvocationCallbacks(invocation);
             TMethod res;
             try
             {
-                s_currentInvocation.Value = invocation;
+                s_currentInvocation.Value = invocation.StartChildInvocation(s_currentInvocation.Value);
                 var target = GetTarget(invocation);
                 res = Delegate(target, invocation.Arguments);
             } 
             finally
             {
-                s_currentInvocation.Value = null;
+                s_currentInvocation.Value = invocation.EndChildInvocation();
             }
             return await s_converter.Invoke(res);
         }

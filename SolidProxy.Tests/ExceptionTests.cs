@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using SolidProxy.Core.Proxy;
 using System;
 
@@ -27,11 +28,17 @@ namespace SolidProxy.Tests
         {
             var sc = SetupServiceCollection();
             sc.AddSingleton<ITestInterface, TestImplementation>();
-            sc.GetSolidConfigurationBuilder().AddAdvice(typeof(SolidProxyInvocationImplAdvice<,,>));
+
+            sc.GetSolidConfigurationBuilder()
+                .ConfigureInterface<ITestInterface>()
+                .ConfigureAdvice<ISolidProxyInvocationImplAdviceConfig>();
+
             var sp = sc.BuildServiceProvider();
             try
             {
-                sp.GetRequiredService<ITestInterface>().ThrowException("Testexception");
+                var impl = sp.GetRequiredService<ITestInterface>();
+                Assert.IsTrue(typeof(ISolidProxy).IsAssignableFrom(impl.GetType()));
+                impl.ThrowException("Testexception");
             }
             catch (MyException e)
             {

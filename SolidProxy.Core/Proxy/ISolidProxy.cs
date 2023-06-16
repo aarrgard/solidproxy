@@ -40,6 +40,14 @@ namespace SolidProxy.Core.Proxy
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
+        object GetValue(string key);
+
+        /// <summary>
+        /// Returns a value associated with this proxy.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
         T GetValue<T>(string key);
 
         /// <summary>

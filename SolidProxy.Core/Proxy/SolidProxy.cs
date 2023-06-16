@@ -147,25 +147,39 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the value for supplied key.
         /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public object GetValue(string key)
+        {
+            object res;
+            if (_proxyValues == null)
+            {
+                return null;
+            }
+            key = GetInvocationKey(key);
+            if (InvocationValues.TryGetValue(key, out res))
+            {
+                return res;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the value for supplied key.
+        /// </summary>
         /// <typeparam name="TVal"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
         public TVal GetValue<TVal>(string key)
         {
-            object res;
-            if (_proxyValues == null)
+            var val = GetValue(key);
+            if (val == null) return default;
+            if (typeof(TVal).IsAssignableFrom(val.GetType()))
             {
-                return default(TVal);
+                return (TVal)val;
             }
-            key = GetInvocationKey(key);
-            if (InvocationValues.TryGetValue(key, out res))
-            {
-                if (typeof(TVal).IsAssignableFrom(res.GetType()))
-                {
-                    return (TVal)res;
-                }
-            }
-            return default(TVal);
+            return default;
         }
         /// <summary>
         /// Sets the value for supplied key.
