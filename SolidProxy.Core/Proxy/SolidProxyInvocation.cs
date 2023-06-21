@@ -49,7 +49,23 @@ namespace SolidProxy.Core.Proxy
         /// <summary>
         /// Returns the keys associated with this invocation.
         /// </summary>
-        public IEnumerable<string> Keys => (_invocationValues == null) ? EmptyStringList : _invocationValues.Keys;
+        public IEnumerable<string> Keys
+        {
+            get
+            {
+                IEnumerable<string> keys = EmptyStringList;
+                var parent = _parentInvocation;
+                if(parent != null) 
+                {
+                    keys = _parentInvocation.Keys;
+                }
+                if(_invocationValues != null)
+                {
+                    keys = keys.Union(_invocationValues.Keys).ToList();
+                }
+                return keys;
+            }
+        }
 
         /// <summary>
         /// returns the invocation values

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SolidProxy.Core.Proxy;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SolidProxy.Tests
@@ -11,11 +12,13 @@ namespace SolidProxy.Tests
         public interface IFrontInterface
         {
             public int GetX(int val);
+            public IEnumerable<string> GetKeys();
         }
 
         public interface IBackInterface
         {
             public int GetY();
+            public IEnumerable<string> GetKeys();
         }
 
         public class FrontImpl : IFrontInterface
@@ -26,6 +29,13 @@ namespace SolidProxy.Tests
             }
 
             public IBackInterface Back { get; }
+
+            public IEnumerable<string> GetKeys()
+            {
+                var currentInvocation = SolidProxyInvocationImplAdvice.CurrentInvocation;
+                currentInvocation.SetValue("Value", 1);
+                return Back.GetKeys();
+            }
 
             public int GetX(int val)
             {
@@ -38,6 +48,12 @@ namespace SolidProxy.Tests
 
         public class BackImpl : IBackInterface
         {
+            public IEnumerable<string> GetKeys()
+            {
+                var currentInvocation = SolidProxyInvocationImplAdvice.CurrentInvocation;
+                return currentInvocation.Keys;
+            }
+
             public int GetY()
             {
                 var currentInvocation = SolidProxyInvocationImplAdvice.CurrentInvocation;
@@ -75,7 +91,7 @@ namespace SolidProxy.Tests
         {
             await Task.Yield();
             Assert.AreEqual(i, test.GetX(i));
-            
+            Assert.AreEqual("Value", test.GetKeys().Single());
         }
     }
 }
